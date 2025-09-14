@@ -11,7 +11,7 @@ echo "----------------------------------------------------"
 # Verifica se o ambiente virtual já existe para não recriá-lo
 if [ ! -d ".venv" ]; then
     echo "1. Criando ambiente virtual (.venv)..."
-    python -m venv .venv
+    python3 -m venv .venv
 else
     echo "1. Ambiente virtual (.venv) já existe. Pulando a criação."
 fi
@@ -23,7 +23,7 @@ echo "2. Ativando o ambiente virtual e instalando dependências..."
 source .venv/bin/activate
 
 # Aqui vamos instalar as bibliotecas. 
-# pip install -r requirements.txt
+ pip install -r requirements.txt
 
 deactivate
 

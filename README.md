@@ -59,5 +59,22 @@ Follow the steps below to set up and run the project on your local machine.
 
 *(This section will be filled in as the project progresses)*
 
+
+---
+## 🛠️ How to Use
+
+*(This section will be filled in as the project progresses)*
+
+## 🤔 Troubleshooting
+
+Here are solutions to common issues you might encounter during setup.
+
+### 1. `zsh: permission denied: ./setup.sh`
+
+**Problem:** Your system is blocking the script from running for security reasons.
+
+**Solution:** You need to give the script execution permissions. This only needs to be done once.
+```bash
+chmod +x setup.sh
 ---
 This project is under development.

@@ -58,6 +58,29 @@ Siga os passos abaixo para configurar e executar o projeto em sua máquina local
 ## 🛠️ Como Usar
 
 *(Esta seção será preenchida conforme o projeto avança)*
+---
 
+---
+
+### **Passo 2: Editando o `README-pt.md` (Versão em Português)**
+
+Agora, vamos fazer o mesmo para a versão em português. Abra o arquivo `README-pt.md` e adicione a seção traduzida.
+
+```markdown
+## 🛠️ Como Usar
+
+*(Esta seção será preenchida conforme o projeto avança)*
+
+## 🤔 Solução de Problemas (Troubleshooting)
+
+Aqui estão as soluções para problemas comuns que você pode encontrar durante a configuração.
+
+### 1. `zsh: permission denied: ./setup.sh`
+
+**Problema:** Seu sistema está bloqueando a execução do script por razões de segurança.
+
+**Solução:** Você precisa dar permissão de execução ao script. Isso só precisa ser feito uma vez.
+```bash
+chmod +x setup.sh
 ---
 Este projeto está em desenvolvimento.

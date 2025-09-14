@@ -1,0 +1,8 @@
+# Arquivo de dependências do projeto QA Oráculo
+
+# Para interagir com a API do Google Generative AI
+google-generativeai
+langchain-google-genai
+
+# Para carregar variáveis de ambiente (nossa chave de API) de forma segura
+python-dotenv
