@@ -1,80 +1,81 @@
-<div align="right">
-  <a href="README.md">🇺🇸 English</a> | <a href="README-pt.md">🇧🇷 Português</a>
-</div>
-# 🔮 QA Oracle: AI-Powered Requirements Analysis
+<nav aria-label="Language switcher" style="text-align: right;">
+  <a href="README-en.md">🇺🇸 English</a> | <a href="README.md" aria-current="page">🇧🇷 **Português**</a>
+</nav>
 
-An AI-powered analyzer for Software Requirements to identify ambiguities, contradictions, and risks before development begins. This project is built with a focus on accessibility and a *mobile-first* approach.
+# 🔮 QA Oráculo: Análise de Requisitos com IA
 
-## 🚀 Getting Started
+Analisador de Requisitos de Software com IA para identificar ambiguidades, contradições e riscos antes do desenvolvimento. Este projeto foi construído com foco em acessibilidade e uma abordagem *mobile-first*.
 
-Follow the steps below to set up and run the project on your local machine.
+## 🚀 Começando (Getting Started)
 
-### Prerequisites
+Siga os passos abaixo para configurar e executar o projeto em sua máquina local.
+
+### Pré-requisitos
 
 - [Git](https://git-scm.com/)
 - [Python 3.10+](https://www.python.org/)
 
-### Installation
+### Instalação
 
-1.  **Clone the repository:**
+1.  **Clone o repositório:**
     ```bash
-    git clone https://github.com/your-username/qa-oraculo-requisitos.git
+    git clone https://github.com/seu-nome/qa-oraculo-requisitos.git
     cd qa-oraculo-requisitos
     ```
-    > **Note:** Remember to replace `your-username` with your actual GitHub username.
 
-2.  **Run the setup script:**
-    This command will create an isolated virtual environment (`.venv`) and install all the necessary dependencies.
+2.  **Execute o script de setup:**
+    Este comando irá criar um ambiente virtual isolado (`.venv`) e instalar todas as dependências necessárias.
 
-    -   **For Windows (run in CMD or PowerShell):**
+    -   **Para Windows (execute no CMD ou PowerShell):**
         ```bash
         setup.bat
         ```
 
-    -   **For Mac or Linux (run in Terminal):**
-        > First, give the script execution permission (you only need to do this once).
+    -   **Para Mac ou Linux (execute no Terminal):**
+        > Primeiro, dê permissão de execução para o script (você só precisa fazer isso uma vez).
         ```bash
         chmod +x setup.sh
         ```
-        > Now, run the script.
+        > Agora, execute o script.
         ```bash
         ./setup.sh
         ```
 
-3.  **Activate the Virtual Environment:**
-    After the setup is complete, you need to activate the environment to start working.
+3.  **Ative o Ambiente Virtual:**
+    Após o setup, você precisa ativar o ambiente para começar a trabalhar.
 
-    -   **On Windows:**
+    -   **No Windows:**
         ```bash
         .\.venv\Scripts\activate
         ```
 
-    -   **On Mac or Linux:**
+    -   **No Mac ou Linux:**
         ```bash
         source .venv/bin/activate
         ```
-    > Your terminal prompt should now start with `(.venv)`, indicating that the environment is active.
+    > O seu terminal agora deve mostrar `(.venv)` no início da linha, indicando que o ambiente está ativo.
 
-## 🛠️ How to Use
+## 🛠️ Como Usar
 
-*(This section will be filled in as the project progresses)*
-
+*(Esta seção será preenchida conforme o projeto avança)*
+---
 
 ---
-## 🛠️ How to Use
+```markdown
+## 🛠️ Como Usar
 
-*(This section will be filled in as the project progresses)*
+*(Esta seção será preenchida conforme o projeto avança)*
 
-## 🤔 Troubleshooting
+## 🤔 Solução de Problemas (Troubleshooting)
 
-Here are solutions to common issues you might encounter during setup.
+Aqui estão as soluções para problemas comuns que você pode encontrar durante a configuração.
 
 ### 1. `zsh: permission denied: ./setup.sh`
 
-**Problem:** Your system is blocking the script from running for security reasons.
+**Problema:** Seu sistema está bloqueando a execução do script por razões de segurança.
 
-**Solution:** You need to give the script execution permissions. This only needs to be done once.
+**Solução:** Você precisa dar permissão de execução ao script. Isso só precisa ser feito uma vez.
 ```bash
 chmod +x setup.sh
 ---
-This project is under development.
+Este projeto está em desenvolvimento.
