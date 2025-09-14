@@ -61,7 +61,7 @@ Siga os passos abaixo para configurar e executar o projeto em sua máquina local
 ---
 
 ---
-```markdown
+
 ## 🛠️ Como Usar
 
 *(Esta seção será preenchida conforme o projeto avança)*
