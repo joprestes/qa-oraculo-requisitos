@@ -1,59 +1,63 @@
-# 🔮 QA Oráculo: Análise de Requisitos com IA
+<div align="right">
+  <a href="README.md">🇺🇸 English</a> | <a href="README-pt.md">🇧🇷 Português</a>
+</div>
+# 🔮 QA Oracle: AI-Powered Requirements Analysis
 
-Analisador de Requisitos de Software com IA para identificar ambiguidades, contradições e riscos antes do desenvolvimento. Este projeto foi construído com foco em acessibilidade e uma abordagem *mobile-first*.
+An AI-powered analyzer for Software Requirements to identify ambiguities, contradictions, and risks before development begins. This project is built with a focus on accessibility and a *mobile-first* approach.
 
-## 🚀 Começando (Getting Started)
+## 🚀 Getting Started
 
-Siga os passos abaixo para configurar e executar o projeto em sua máquina local.
+Follow the steps below to set up and run the project on your local machine.
 
-### Pré-requisitos
+### Prerequisites
 
 - [Git](https://git-scm.com/)
 - [Python 3.10+](https://www.python.org/)
 
-### Instalação
+### Installation
 
-1.  **Clone o repositório:**
+1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/seu-nome/qa-oraculo-requisitos.git
+    git clone https://github.com/your-username/qa-oraculo-requisitos.git
     cd qa-oraculo-requisitos
     ```
+    > **Note:** Remember to replace `your-username` with your actual GitHub username.
 
-2.  **Execute o script de setup:**
-    Este comando irá criar um ambiente virtual isolado (`.venv`) e instalar todas as dependências necessárias.
+2.  **Run the setup script:**
+    This command will create an isolated virtual environment (`.venv`) and install all the necessary dependencies.
 
-    -   **Para Windows (execute no CMD ou PowerShell):**
+    -   **For Windows (run in CMD or PowerShell):**
         ```bash
         setup.bat
         ```
 
-    -   **Para Mac ou Linux (execute no Terminal):**
-        > Primeiro, dê permissão de execução para o script (você só precisa fazer isso uma vez).
+    -   **For Mac or Linux (run in Terminal):**
+        > First, give the script execution permission (you only need to do this once).
         ```bash
         chmod +x setup.sh
         ```
-        > Agora, execute o script.
+        > Now, run the script.
         ```bash
         ./setup.sh
         ```
 
-3.  **Ative o Ambiente Virtual:**
-    Após o setup, você precisa ativar o ambiente para começar a trabalhar.
+3.  **Activate the Virtual Environment:**
+    After the setup is complete, you need to activate the environment to start working.
 
-    -   **No Windows:**
+    -   **On Windows:**
         ```bash
         .\.venv\Scripts\activate
         ```
 
-    -   **No Mac ou Linux:**
+    -   **On Mac or Linux:**
         ```bash
         source .venv/bin/activate
         ```
-    > O seu terminal agora deve mostrar `(.venv)` no início da linha, indicando que o ambiente está ativo.
+    > Your terminal prompt should now start with `(.venv)`, indicating that the environment is active.
 
-## 🛠️ Como Usar
+## 🛠️ How to Use
 
-*(Esta seção será preenchida conforme o projeto avança)*
+*(This section will be filled in as the project progresses)*
 
 ---
-Este projeto está em desenvolvimento.
+This project is under development.
