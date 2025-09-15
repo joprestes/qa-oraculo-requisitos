@@ -212,7 +212,9 @@ workflow.add_edge("gerador_relatorio", END)
 grafo = workflow.compile()
 
 # --- Execução ---
-if __name__ == "__main__":
+
+def main():
+    """Função principal que executa o workflow do Oráculo."""
     print("--- 🔮 Bem-vindo ao QA Oráculo de Requisitos (v2 - LangGraph) ---")
     
     REQUISITOS_EXEMPLO = """
@@ -227,3 +229,7 @@ if __name__ == "__main__":
     print("\n--- Relatório Final ---")
     print(resultado_final.get("relatorio_final", "Nenhum relatório foi gerado."))
     print("---------------------")
+
+
+if __name__ == "__main__":
+    main()
