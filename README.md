@@ -1,12 +1,8 @@
-```{=html}
 <nav aria-label="Language switcher" style="text-align: right;">
-```
-`<a href="README-en.md">`{=html}🇺🇸 English`</a>`{=html} \|
-`<a href="README.md" aria-current="page">`{=html}🇧🇷
-**Português**`</a>`{=html}
-```{=html}
+  <a href="README-en.md">🇺🇸 English</a> | 
+  <a href="README.md" aria-current="page">🇧🇷 <strong>Português</strong></a>
 </nav>
-```
+
 # 🔮 QA Oráculo: Análise de Requisitos com IA
 
 Analisador de Requisitos de Software com IA para identificar
