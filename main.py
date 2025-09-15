@@ -11,25 +11,19 @@ from langgraph.graph import StateGraph, START, END
 # --- Funções Auxiliares ---
 
 def extrair_json_da_resposta(texto_resposta: str) -> str | None:
-    """
-    Recebe o texto bruto da IA e tenta extrair uma string JSON.
-    Procura por blocos de código Markdown (```json ... ```) ou JSONs brutos.
-    Retorna a string JSON limpa ou None se nada for encontrado.
-    """
+    """Extrai uma string JSON de dentro de um texto bruto, limpando formatação Markdown."""
     match = re.search(r"```json\s*([\s\S]*?)\s*```", texto_resposta)
     if match:
         return match.group(1).strip()
-    
     match = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", texto_resposta)
     if match:
         return match.group(0).strip()
-        
     return None
 
 # --- CONFIGURAÇÕES GLOBAIS ---
 NOME_MODELO = "gemini-1.5-flash"
-CONFIG_GERACAO_PADRAO = {"temperature": 0.1}
-CONFIG_GERACAO_ESCRITA = {"temperature": 0.25}
+CONFIG_GERACAO_ANALISE = {"temperature": 0.2}
+CONFIG_GERACAO_RELATORIO = {"temperature": 0.3}
 
 # --- Configuração Inicial da API ---
 load_dotenv()
@@ -37,160 +31,80 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # --- Prompts dos Especialistas ---
 
-PROMPT_DIVISAO = """
-Sua tarefa é analisar o texto fornecido e dividi-lo em uma lista de requisitos de software individuais e distintos.
-Cada item na sua resposta deve ser um requisito completo e autocontido.
-Responda APENAS com uma lista em formato JSON, onde cada item da lista é uma string contendo um requisito.
-NÃO adicione nenhum texto introdutório ou formatação extra. Sua resposta deve começar com '[' e terminar com ']'.
-"""
-
-PROMPT_ANALISE_INDIVIDUAL = """
-Você é um Analista de QA Sênior, especialista em Engenharia de Requisitos.
-Sua tarefa é analisar UM único requisito de software e retornar uma avaliação detalhada em formato JSON.
-Regras:
-1. Seja Cético: Procure ativamente por ambiguidades, omissões e termos vagos.
-2. Seja Construtivo: Sugira Critérios de Aceitação claros no formato "Dado-Quando-Então".
-3. Pense em Riscos: Identifique riscos potenciais em categorias como: Funcional, Performance, Segurança, Usabilidade.
-Formato de Saída JSON Obrigatório:
+PROMPT_ANALISE_US = """
+Você é um Analista de QA Sênior com vasta experiência em metodologias ágeis e um profundo entendimento de negócios.
+Sua tarefa é analisar a User Story (US) a seguir e fornecer um feedback estruturado para o QA do time.
+A análise deve ser completa, cética e focada em garantir que a história seja testável e que todas as ambiguidades sejam resolvidas ANTES do desenvolvimento começar.
+Para a User Story fornecida, sua resposta deve ser APENAS um objeto JSON com a seguinte estrutura:
 {
-  "avaliacao_qualidade": {
-    "clareza": "CLARO|AMBÍGUO|INCOMPLETO",
-    "pontos_fortes": "Descreva o que está bem definido.",
-    "pontos_ambiguos": ["Liste os termos ou frases vagas."],
-    "sugestao_melhoria": "Ofereça uma sugestão de como reescrever o requisito."
+  "analise_ambiguidade": {
+    "avaliacao_geral": "Uma avaliação de 1 a 2 frases sobre a clareza da US.",
+    "pontos_ambiguos": ["Liste aqui cada ponto vago, termo subjetivo (ex: 'rápido', 'fácil'), ou informação faltante que você encontrou."]
   },
-  "sugestao_criterios_aceite": ["Dado [contexto], Quando [ação], Então [resultado]."],
-  "riscos_sugeridos": ["CATEGORIA: Descrição do risco."]
+  "perguntas_para_po": ["Formule uma lista de perguntas claras e específicas que o QA deve fazer ao Product Owner (PO) para esclarecer cada um dos pontos ambíguos. As perguntas devem ser acionáveis."],
+  "sugestao_criterios_aceite": [
+    "Com base no seu entendimento da US, escreva uma lista inicial de Critérios de Aceite (ACs) em formato de lista simples e direta. Cada critério deve ser uma afirmação verificável."]
 }
+NÃO adicione nenhum texto introdutório. Sua resposta deve começar com '{' e terminar com '}'.
 """
 
-PROMPT_ANALISE_CRUZADA = """
-Você é um Arquiteto de Software Sênior. Sua tarefa é analisar uma lista de requisitos e identificar
-quaisquer CONTRADIÇÕES lógicas ou SOBREPOSIÇÕES (funcionalidades duplicadas) entre eles.
-Sua resposta deve ser APENAS uma lista de objetos JSON. Se nenhum problema for encontrado, retorne uma lista vazia [].
-A estrutura de cada objeto de problema deve ser:
-{
-  "tipo": "CONTRADIÇÃO" | "SOBREPOSIÇÃO",
-  "descricao": "Uma explicação clara do problema.",
-  "ids_envolvidos": [lista_de_IDs_dos_requisitos_com_problema]
-}
-"""
-
-PROMPT_GERAR_RELATORIO = """
-Você é um Escritor Técnico criando um relatório de análise de requisitos.
-Use os dados JSON fornecidos para gerar um relatório em formato Markdown.
-Estrutura:
-1. Título: `# Relatório de Análise do Oráculo de Requisitos`.
-2. Seção `## Resumo Geral`: Um parágrafo resumindo os achados.
-3. Seção `## Análise de Contradições e Sobreposições`: Liste os problemas (❌ para contradições, ⚠️ para sobreposições) ou diga "Nenhum problema encontrado.".
-4. Seção `## Análise Detalhada dos Requisitos`: Para cada requisito:
-   - Use um subtítulo `### Requisito {id}: {texto do requisito}`.
-   - Apresente a análise de forma clara e organizada.
+PROMPT_GERAR_RELATORIO_US = """
+Você é um Escritor Técnico criando um relatório de análise de uma User Story para um time ágil.
+Use os dados JSON fornecidos para gerar um relatório claro e bem formatado em Markdown.
+Estrutura do Relatório:
+1. Título: `# Análise da User Story`.
+2. Seção `## User Story Analisada`: Apresente a US original.
+3. Seção `## 🔍 Análise de Ambiguidade`: Apresente a avaliação geral e a lista de pontos ambíguos.
+4. Seção `## ❓ Perguntas para o Product Owner`: Liste as perguntas que o QA deve fazer. Esta é a seção mais importante, destaque-a.
+5. Seção `## ✅ Sugestão de Critérios de Aceite`: Liste os ACs sugeridos como uma lista de marcadores (bullet points).
 Use a formatação Markdown para melhorar a legibilidade.
 """
 
-
-# --- Estado do Agente (AgentState) ---
+# --- Estado do Agente (AgentState) Simplificado ---
 
 class AgentState(TypedDict):
-    texto_bruto: str
-    requisitos_individuais: List[Dict[str, Any]]
-    analise_cruzada: List[Dict[str, Any]]
+    user_story: str
+    analise_da_us: Dict[str, Any]
     relatorio_final: str
 
-# --- Nós do Grafo ---
+# --- Nós do Grafo Simplificado ---
 
-def node_dividir_requisitos(state: AgentState) -> AgentState:
-    """Nó 1: Divide o texto bruto do usuário em uma lista de requisitos."""
-    print("--- Etapa 1: Interpretando e dividindo os requisitos ---")
-    texto = state["texto_bruto"]
+def node_analisar_historia(state: AgentState) -> AgentState:
+    """Nó 1: Pega a User Story e usa a IA para gerar a análise completa."""
+    print("--- Etapa 1: Analisando a User Story... ---")
+    us = state["user_story"]
     
-    model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_PADRAO)
-    prompt_completo = f"{PROMPT_DIVISAO}\n\nTexto para dividir:\n---\n{texto}"
+    model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_ANALISE)
+    prompt_completo = f"{PROMPT_ANALISE_US}\n\nUser Story para Análise:\n---\n{us}"
     response = model.generate_content(prompt_completo)
     
-    lista_requisitos = []
+    analise_json = {}
     json_limpo = extrair_json_da_resposta(response.text)
     
     if json_limpo:
         try:
-            lista_requisitos = json.loads(json_limpo)
-            if not isinstance(lista_requisitos, list):
-                lista_requisitos = []
+            analise_json = json.loads(json_limpo)
         except json.JSONDecodeError:
-            pass
-            
-    if not lista_requisitos:
-        print("⚠️ Usando divisão simples como fallback.")
-        lista_requisitos = [req.strip() for req in texto.split('\n\n') if req.strip()]
-
-    requisitos_formatados = [{"id": i + 1, "texto": texto} for i, texto in enumerate(lista_requisitos)]
-    print(f"Divisão concluída. {len(requisitos_formatados)} requisitos identificados.")
-    
-    return {"requisitos_individuais": requisitos_formatados}
-
-def node_analise_individual(state: AgentState) -> AgentState:
-    """Nó 2: Itera sobre cada requisito e realiza a análise de qualidade."""
-    print("--- Etapa 2: Analisando a qualidade de cada requisito individualmente ---")
-    
-    model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_PADRAO)
-    requisitos_analisados = []
-    
-    for req in state["requisitos_individuais"]:
-        print(f"Analisando requisito {req['id']}: '{req['texto'][:50]}...'")
+            print("⚠️ Alerta: JSON inválido retornado pela análise da US.")
+            analise_json = {"erro": "Falha ao decodificar o JSON da análise."}
+    else:
+        print("⚠️ Alerta: Nenhum JSON retornado pela IA para a análise.")
+        analise_json = {"erro": "Nenhum JSON retornado pela IA."}
         
-        prompt_completo = f"{PROMPT_ANALISE_INDIVIDUAL}\n\nRequisito para Análise:\n---\n{req['texto']}"
-        response = model.generate_content(prompt_completo)
-        
-        json_limpo = extrair_json_da_resposta(response.text)
-        
-        if json_limpo:
-            try:
-                req['analise'] = json.loads(json_limpo)
-            except json.JSONDecodeError:
-                req['analise'] = {"erro": "Falha ao decodificar o JSON da análise."}
-        else:
-            req['analise'] = {"erro": "Nenhum JSON retornado para a análise."}
-            
-        requisitos_analisados.append(req)
-
-    return {"requisitos_individuais": requisitos_analisados}
-
-def node_analise_cruzada(state: AgentState) -> AgentState:
-    """Nó 3: Compara todos os requisitos para encontrar contradições."""
-    print("--- Etapa 3: Cruzando informações em busca de contradições ---")
-    
-    requisitos_para_comparacao = [{"id": req["id"], "texto": req["texto"]} for req in state["requisitos_individuais"]]
-    requisitos_str = json.dumps(requisitos_para_comparacao, indent=2, ensure_ascii=False)
-    
-    model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_PADRAO)
-    prompt_completo = f"{PROMPT_ANALISE_CRUZADA}\n\nLista de Requisitos para Análise:\n---\n{requisitos_str}"
-    response = model.generate_content(prompt_completo)
-    
-    analise_final = []
-    json_limpo = extrair_json_da_resposta(response.text)
-    
-    if json_limpo:
-        try:
-            analise_final = json.loads(json_limpo)
-        except json.JSONDecodeError:
-            print("⚠️ Alerta: JSON inválido retornado pela análise cruzada.")
-            pass
-            
-    return {"analise_cruzada": analise_final}
+    return {"analise_da_us": analise_json}
 
 def node_gerar_relatorio(state: AgentState) -> AgentState:
-    """Nó 4: Consolida todas as informações em um relatório final em Markdown."""
-    print("--- Etapa 4: Compilando o relatório de análise ---")
+    """Nó 2: Consolida a análise em um relatório final em Markdown."""
+    print("--- Etapa 2: Compilando o relatório de análise ---")
     
     contexto_completo = {
-        "analise_individual": state["requisitos_individuais"],
-        "analise_cruzada": state["analise_cruzada"]
+        "user_story_original": state["user_story"],
+        "analise": state["analise_da_us"]
     }
     contexto_str = json.dumps(contexto_completo, indent=2, ensure_ascii=False)
     
-    model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_ESCRITA)
-    prompt_completo = f"{PROMPT_GERAR_RELATORIO}\n\nDados para o Relatório:\n---\n{contexto_str}"
+    model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_RELATORIO)
+    prompt_completo = f"{PROMPT_GERAR_RELATORIO_US}\n\nDados para o Relatório:\n---\n{contexto_str}"
     response = model.generate_content(prompt_completo)
     
     return {"relatorio_final": response.text}
@@ -198,15 +112,11 @@ def node_gerar_relatorio(state: AgentState) -> AgentState:
 # --- Construção do Grafo ---
 workflow = StateGraph(AgentState)
 
-workflow.add_node("divisor", node_dividir_requisitos)
-workflow.add_node("analista_individual", node_analise_individual)
-workflow.add_node("analista_cruzado", node_analise_cruzada)
+workflow.add_node("analista_us", node_analisar_historia)
 workflow.add_node("gerador_relatorio", node_gerar_relatorio)
 
-workflow.add_edge(START, "divisor")
-workflow.add_edge("divisor", "analista_individual")
-workflow.add_edge("analista_individual", "analista_cruzado")
-workflow.add_edge("analista_cruzado", "gerador_relatorio")
+workflow.add_edge(START, "analista_us")
+workflow.add_edge("analista_us", "gerador_relatorio")
 workflow.add_edge("gerador_relatorio", END)
 
 grafo = workflow.compile()
@@ -215,15 +125,11 @@ grafo = workflow.compile()
 
 def main():
     """Função principal que executa o workflow do Oráculo."""
-    print("--- 🔮 Iniciando Análise do QA Oráculo ---")
+    print("--- 🔮 Iniciando Análise de User Story com QA Oráculo ---")
     
-    REQUISITOS_EXEMPLO = """
-    Como usuário, quero poder me cadastrar usando email e senha, com a senha tendo no mínimo 6 caracteres.
-    Como administrador, quero poder ver a lista de todos os usuários.
-    Como usuário de segurança, a política de senhas da empresa exige que todas as senhas tenham no mínimo 10 caracteres.
-    """
+    USER_STORY_EXEMPLO = "Como um usuário premium, eu quero poder exportar meu relatório de atividades para um arquivo CSV, para que eu possa fazer uma análise mais aprofundada em outra ferramenta."
     
-    inputs = {"texto_bruto": REQUISITOS_EXEMPLO}
+    inputs = {"user_story": USER_STORY_EXEMPLO}
     resultado_final = grafo.invoke(inputs)
     
     print("\n--- ✅ Relatório de Análise Gerado com Sucesso ---")
