@@ -6,3 +6,6 @@ langchain-google-genai
 
 # Para carregar variáveis de ambiente (nossa chave de API) de forma segura
 python-dotenv
+
+# Para criar workflows e agentes com grafos de estado
+langgraph

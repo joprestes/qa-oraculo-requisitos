@@ -32,11 +32,11 @@ Siga os passos abaixo para configurar e executar o projeto em sua máquina local
         ```
 
     -   **Para Mac ou Linux (execute no Terminal):**
-        > Primeiro, dê permissão de execução para o script (você só precisa fazer isso uma vez).
+        Primeiro, dê permissão de execução para o script (você só precisa fazer isso uma vez):
         ```bash
         chmod +x setup.sh
         ```
-        > Agora, execute o script.
+        Agora, execute o script:
         ```bash
         ./setup.sh
         ```
@@ -46,36 +46,67 @@ Siga os passos abaixo para configurar e executar o projeto em sua máquina local
 
     -   **No Windows:**
         ```bash
-        .\.venv\Scripts\activate
+        .\.venv\Scriptsctivate
         ```
 
     -   **No Mac ou Linux:**
         ```bash
         source .venv/bin/activate
         ```
-    > O seu terminal agora deve mostrar `(.venv)` no início da linha, indicando que o ambiente está ativo.
+    > O seu terminal agora deve mostrar `(.venv)` no início da linha.
 
 ## 🛠️ Como Usar
 
-*(Esta seção será preenchida conforme o projeto avança)*
----
+Com o ambiente ativo, execute o script principal usando o caminho explícito para garantir que o Python correto seja usado:
 
----
+```bash
+# Para Mac/Linux
+./.venv/bin/python main.py
 
-## 🛠️ Como Usar
+# Para Windows
+# .\.venv\Scripts\python.exe main.py
+```
 
-*(Esta seção será preenchida conforme o projeto avança)*
+(Esta seção será melhorada conforme o projeto avança)
 
 ## 🤔 Solução de Problemas (Troubleshooting)
 
-Aqui estão as soluções para problemas comuns que você pode encontrar durante a configuração.
+Aqui estão as soluções para problemas comuns que você pode encontrar.
 
-### 1. `zsh: permission denied: ./setup.sh`
-
-**Problema:** Seu sistema está bloqueando a execução do script por razões de segurança.
-
-**Solução:** Você precisa dar permissão de execução ao script. Isso só precisa ser feito uma vez.
+### 1. zsh: permission denied: ./setup.sh
+**Problema:** Seu sistema está bloqueando a execução do script por razões de segurança.  
+**Solução:** Dê permissão de execução ao script (só precisa ser feito uma vez):  
 ```bash
 chmod +x setup.sh
----
+```
+
+### 2. ./setup.sh: python: command not found
+**Problema:** O script não encontrou sua instalação do Python com o comando `python`. Isso é comum no macOS e Linux, que usam `python3`.  
+**Solução:**
+- Abra o arquivo `setup.sh`.
+- Altere a linha `python -m venv .venv` para `python3 -m venv .venv`.
+- Apague a pasta `.venv` que pode ter sido criada parcialmente (`rm -rf .venv`) e execute o setup novamente.
+
+### 3. ModuleNotFoundError: No module named 'google'
+**Problema:** As bibliotecas Python não estão instaladas no seu ambiente virtual, ou o interpretador Python errado está sendo usado.  
+**Solução:**
+- Garanta que seu ambiente virtual está ativo (você deve ver `(.venv)` no terminal).
+- Execute a instalação manualmente usando o pip do ambiente:
+```bash
+./.venv/bin/python -m pip install -r requirements.txt
+```
+- Sempre execute seu script usando o caminho explícito para o Python do ambiente virtual para evitar este erro:
+```bash
+./.venv/bin/python main.py
+```
+
+### 4. error: externally-managed-environment
+**Problema:** Seu Sistema Operacional está protegendo a instalação principal do Python para que não seja modificada.  
+**Solução:** Use sempre o caminho explícito para o pip do ambiente virtual para instalar dependências:
+```bash
+./.venv/bin/python -m pip install -r requirements.txt
+```
+
+----
+
 Este projeto está em desenvolvimento.

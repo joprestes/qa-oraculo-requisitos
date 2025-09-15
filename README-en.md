@@ -25,57 +25,79 @@ Follow the steps below to set up and run the project on your local machine.
     > **Note:** Remember to replace `your-username` with your actual GitHub username.
 
 2.  **Run the setup script:**
-    This command will create an isolated virtual environment (`.venv`) and install all the necessary dependencies.
-
-    -   **For Windows (run in CMD or PowerShell):**
+    -   **For Windows:**
         ```bash
         setup.bat
         ```
-
-    -   **For Mac or Linux (run in Terminal):**
-        > First, give the script execution permission (you only need to do this once).
+    -   **For Mac or Linux:**
         ```bash
         chmod +x setup.sh
-        ```
-        > Now, run the script.
-        ```bash
         ./setup.sh
         ```
 
 3.  **Activate the Virtual Environment:**
-    After the setup is complete, you need to activate the environment to start working.
-
     -   **On Windows:**
         ```bash
-        .\.venv\Scripts\activate
+        .\.venv\Scriptsctivate
         ```
-
     -   **On Mac or Linux:**
         ```bash
         source .venv/bin/activate
         ```
-    > Your terminal prompt should now start with `(.venv)`, indicating that the environment is active.
+    > Your terminal prompt should now start with `(.venv)`.
 
 ## 🛠️ How to Use
 
-*(This section will be filled in as the project progresses)*
+With the environment active, run the main script using the explicit path to ensure the correct Python is used:
 
+```bash
+# For Mac/Linux
+./.venv/bin/python main.py
 
----
-## 🛠️ How to Use
+# For Windows
+# .\.venv\Scripts\python.exe main.py
+```
 
-*(This section will be filled in as the project progresses)*
+(This section will be improved as the project progresses.)
 
 ## 🤔 Troubleshooting
 
-Here are solutions to common issues you might encounter during setup.
+Solutions to common setup issues.
 
-### 1. `zsh: permission denied: ./setup.sh`
-
-**Problem:** Your system is blocking the script from running for security reasons.
-
-**Solution:** You need to give the script execution permissions. This only needs to be done once.
+### 1. zsh: permission denied: ./setup.sh
+**Problem:** Your system is blocking the script from running.  
+**Solution:** Grant execution permission (only needs to be done once):
 ```bash
 chmod +x setup.sh
+```
+
+### 2. ./setup.sh: python: command not found
+**Problem:** The script can't find Python using the `python` command, common on macOS/Linux which use `python3`.  
+**Solution:**
+- Open `setup.sh`.
+- Change `python -m venv .venv` to `python3 -m venv .venv`.
+- Delete any partial `.venv` folder (`rm -rf .venv`) and run the setup again.
+
+### 3. ModuleNotFoundError: No module named 'google'
+**Problem:** Python libraries are not installed in your virtual environment, or the wrong Python interpreter is being used.  
+**Solution:**
+- Ensure your virtual environment is active (you should see `(.venv)` in your prompt).
+- Manually run the installation using the environment's pip:
+```bash
+./.venv/bin/python -m pip install -r requirements.txt
+```
+- Always run your script using the explicit path to the environment's Python to avoid this error:
+```bash
+./.venv/bin/python main.py
+```
+
+### 4. error: externally-managed-environment
+**Problem:** Your OS is protecting the system's base Python installation.  
+**Solution:** Always use the explicit path to the environment's pip to install dependencies:
+```bash
+./.venv/bin/python -m pip install -r requirements.txt
+```
+
+
 ---
 This project is under development.
