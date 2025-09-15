@@ -101,8 +101,8 @@ class AgentState(TypedDict):
 # --- Nós do Grafo ---
 
 def node_dividir_requisitos(state: AgentState) -> AgentState:
-    """Nó 1: Usa a IA para dividir o texto bruto do usuário em uma lista de requisitos."""
-    print("--- Executando Nó: Dividir Requisitos (com IA) ---")
+    """Nó 1: Divide o texto bruto do usuário em uma lista de requisitos."""
+    print("--- Etapa 1: Interpretando e dividindo os requisitos ---")
     texto = state["texto_bruto"]
     
     model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_PADRAO)
@@ -125,13 +125,13 @@ def node_dividir_requisitos(state: AgentState) -> AgentState:
         lista_requisitos = [req.strip() for req in texto.split('\n\n') if req.strip()]
 
     requisitos_formatados = [{"id": i + 1, "texto": texto} for i, texto in enumerate(lista_requisitos)]
-    print(f"Divisão concluída. Encontrados {len(requisitos_formatados)} requisitos.")
+    print(f"Divisão concluída. {len(requisitos_formatados)} requisitos identificados.")
     
     return {"requisitos_individuais": requisitos_formatados}
 
 def node_analise_individual(state: AgentState) -> AgentState:
-    """Nó 2: Itera sobre cada requisito e usa a IA para realizar a análise de qualidade."""
-    print("--- Executando Nó: Análise Individual (com IA) ---")
+    """Nó 2: Itera sobre cada requisito e realiza a análise de qualidade."""
+    print("--- Etapa 2: Analisando a qualidade de cada requisito individualmente ---")
     
     model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_PADRAO)
     requisitos_analisados = []
@@ -150,7 +150,7 @@ def node_analise_individual(state: AgentState) -> AgentState:
             except json.JSONDecodeError:
                 req['analise'] = {"erro": "Falha ao decodificar o JSON da análise."}
         else:
-            req['analise'] = {"erro": "Nenhum JSON retornado pela IA."}
+            req['analise'] = {"erro": "Nenhum JSON retornado para a análise."}
             
         requisitos_analisados.append(req)
 
@@ -158,7 +158,7 @@ def node_analise_individual(state: AgentState) -> AgentState:
 
 def node_analise_cruzada(state: AgentState) -> AgentState:
     """Nó 3: Compara todos os requisitos para encontrar contradições."""
-    print("--- Executando Nó: Análise Cruzada (com IA) ---")
+    print("--- Etapa 3: Cruzando informações em busca de contradições ---")
     
     requisitos_para_comparacao = [{"id": req["id"], "texto": req["texto"]} for req in state["requisitos_individuais"]]
     requisitos_str = json.dumps(requisitos_para_comparacao, indent=2, ensure_ascii=False)
@@ -181,7 +181,7 @@ def node_analise_cruzada(state: AgentState) -> AgentState:
 
 def node_gerar_relatorio(state: AgentState) -> AgentState:
     """Nó 4: Consolida todas as informações em um relatório final em Markdown."""
-    print("--- Executando Nó: Gerar Relatório Final (com IA) ---")
+    print("--- Etapa 4: Compilando o relatório de análise ---")
     
     contexto_completo = {
         "analise_individual": state["requisitos_individuais"],
@@ -215,7 +215,7 @@ grafo = workflow.compile()
 
 def main():
     """Função principal que executa o workflow do Oráculo."""
-    print("--- 🔮 Bem-vindo ao QA Oráculo de Requisitos (v2 - LangGraph) ---")
+    print("--- 🔮 Iniciando Análise do QA Oráculo ---")
     
     REQUISITOS_EXEMPLO = """
     Como usuário, quero poder me cadastrar usando email e senha, com a senha tendo no mínimo 6 caracteres.
@@ -226,9 +226,9 @@ def main():
     inputs = {"texto_bruto": REQUISITOS_EXEMPLO}
     resultado_final = grafo.invoke(inputs)
     
-    print("\n--- Relatório Final ---")
+    print("\n--- ✅ Relatório de Análise Gerado com Sucesso ---")
     print(resultado_final.get("relatorio_final", "Nenhum relatório foi gerado."))
-    print("---------------------")
+    print("---------------------------------------------")
 
 
 if __name__ == "__main__":

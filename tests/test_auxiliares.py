@@ -3,11 +3,9 @@ import unittest
 import sys
 import os
 
-# Adiciona o diretório raiz do projeto ao path do Python
-# Isso permite que a gente importe módulos do nosso projeto, como o main.py
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Agora podemos importar a função que queremos testar
 from main import extrair_json_da_resposta
 
 class TestFuncoesAuxiliares(unittest.TestCase):

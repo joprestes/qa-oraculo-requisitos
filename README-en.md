@@ -1,103 +1,118 @@
+```{=html}
 <nav aria-label="Language switcher" style="text-align: right;">
-  <a href="README-en.md" aria-current="page">🇺🇸 **English**</a> | <a href="README.md">🇧🇷 Português</a>
+```
+`<a href="README-en.md" aria-current="page">`{=html}🇺🇸
+**English**`</a>`{=html} \| `<a href="README.md">`{=html}🇧🇷
+Português`</a>`{=html}
+```{=html}
 </nav>
-
+```
 # 🔮 QA Oracle: AI-Powered Requirements Analysis
 
-An AI-powered analyzer for Software Requirements to identify ambiguities, contradictions, and risks before development begins. This project is built with a focus on accessibility and a *mobile-first* approach.
+An AI-powered analyzer for Software Requirements to identify
+ambiguities, contradictions, and risks before development begins. This
+project is built with a focus on code quality, testability, and
+accessibility.
+
+## ✨ Features
+
+-   **Quality Analysis:** Evaluates the clarity of each requirement,
+    pointing out vague terms and suggesting improvements.
+-   **Conflict Detection:** Analyzes the entire set of requirements to
+    find logical contradictions and overlaps.
+-   **Report Generation:** Consolidates all findings into a detailed
+    report in Markdown format.
 
 ## 🚀 Getting Started
 
-Follow the steps below to set up and run the project on your local machine.
+Follow the steps below to set up and run the project on your local
+machine.
 
 ### Prerequisites
 
-- [Git](https://git-scm.com/)
-- [Python 3.10+](https://www.python.org/)
+-   [Git](https://git-scm.com/)
+-   [Python 3.10+](https://www.python.org/)
 
 ### Installation
 
 1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/qa-oraculo-requisitos.git
-    cd qa-oraculo-requisitos
-    ```
-    > **Note:** Remember to replace `your-username` with your actual GitHub username.
+    `bash     git clone https://github.com/your-username/qa-oraculo-requisitos.git     cd qa-oraculo-requisitos`
 
-2.  **Run the setup script:**
-    -   **For Windows:**
-        ```bash
-        setup.bat
-        ```
-    -   **For Mac or Linux:**
-        ```bash
-        chmod +x setup.sh
-        ./setup.sh
-        ```
+2.  **Run the setup script:** This command will create a virtual
+    environment (`.venv`) and install dependencies.
 
-3.  **Activate the Virtual Environment:**
-    -   **On Windows:**
-        ```bash
-        .\.venv\Scriptsctivate
-        ```
-    -   **On Mac or Linux:**
-        ```bash
-        source .venv/bin/activate
-        ```
-    > Your terminal prompt should now start with `(.venv)`.
+    -   **For Windows:** `setup.bat`
+    -   **For Mac/Linux:** `chmod +x setup.sh` then `./setup.sh`
+
+3.  **Set up your API Key:**
+
+    -   Copy the `.env.example` file to a new file named `.env`.
+    -   Enter your Google Gemini API key in the `.env` file.
+
+4.  **Activate the Virtual Environment:**
+
+    -   **On Windows:** `.\.venv\Scriptsctivate`
+    -   **On Mac or Linux:** `source .venv/bin/activate`
 
 ## 🛠️ How to Use
 
-With the environment active, run the main script using the explicit path to ensure the correct Python is used:
+With the environment active, run the main script to see an example
+analysis:
 
-```bash
-# For Mac/Linux
+``` bash
+# Use the explicit path to ensure the correct Python is used
 ./.venv/bin/python main.py
-
-# For Windows
-# .\.venv\Scripts\python.exe main.py
 ```
 
-(This section will be improved as the project progresses.)
+## 🧪 Testing
+
+This project uses Python's built-in **unittest** library to ensure code
+quality.\
+To run the test suite, execute the following command from the project
+root:
+
+``` bash
+./.venv/bin/python -m unittest discover tests/
+```
 
 ## 🤔 Troubleshooting
 
-Solutions to common setup issues.
+1.  **zsh: permission denied: ./setup.sh**
+    -   Problem: Your system is blocking the script from running for
+        security reasons.\
 
-### 1. zsh: permission denied: ./setup.sh
-**Problem:** Your system is blocking the script from running.  
-**Solution:** Grant execution permission (only needs to be done once):
-```bash
-chmod +x setup.sh
-```
+    -   Solution: Grant execution permission (only needs to be done
+        once):
 
-### 2. ./setup.sh: python: command not found
-**Problem:** The script can't find Python using the `python` command, common on macOS/Linux which use `python3`.  
-**Solution:**
-- Open `setup.sh`.
-- Change `python -m venv .venv` to `python3 -m venv .venv`.
-- Delete any partial `.venv` folder (`rm -rf .venv`) and run the setup again.
+        ``` bash
+        chmod +x setup.sh
+        ```
+2.  **./setup.sh: python: command not found**
+    -   Problem: The script couldn't find `python`. This is common on
+        macOS/Linux, which use `python3`.\
+    -   Solution: Change the line `python -m venv .venv` to
+        `python3 -m venv .venv` in the `setup.sh` file and run the setup
+        again.
+3.  **ModuleNotFoundError**
+    -   Problem: Libraries are not installed in the virtual environment,
+        or the wrong Python interpreter is being used.\
 
-### 3. ModuleNotFoundError: No module named 'google'
-**Problem:** Python libraries are not installed in your virtual environment, or the wrong Python interpreter is being used.  
-**Solution:**
-- Ensure your virtual environment is active (you should see `(.venv)` in your prompt).
-- Manually run the installation using the environment's pip:
-```bash
-./.venv/bin/python -m pip install -r requirements.txt
-```
-- Always run your script using the explicit path to the environment's Python to avoid this error:
-```bash
-./.venv/bin/python main.py
-```
+    -   Solution: Ensure the environment is active and run your script
+        with the explicit path:
 
-### 4. error: externally-managed-environment
-**Problem:** Your OS is protecting the system's base Python installation.  
-**Solution:** Always use the explicit path to the environment's pip to install dependencies:
-```bash
-./.venv/bin/python -m pip install -r requirements.txt
-```
+        ``` bash
+        ./.venv/bin/python main.py
+        ```
+4.  **error: externally-managed-environment**
+    -   Problem: Your OS is protecting its base Python installation.\
 
+    -   Solution: Always use the explicit path to the environment's pip
+        to install dependencies:
 
----
-This project is under development.
+        ``` bash
+        ./.venv/bin/python -m pip install -r requirements.txt
+        ```
+
+------------------------------------------------------------------------
+
+📌 This project is under development.
