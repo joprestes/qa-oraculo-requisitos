@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main import extrair_json_da_resposta
+from graph import extrair_json_da_resposta
 
 class TestFuncoesAuxiliares(unittest.TestCase):
     """
