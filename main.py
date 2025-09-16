@@ -90,32 +90,54 @@ Use a formatação Markdown para melhorar a legibilidade.
 """
 
 PROMPT_CRIAR_PLANO_DE_TESTES = """
-Você é um Engenheiro de QA especialista em Estratégia de Testes e BDD (Behavior-Driven Development).
-Sua tarefa é usar a User Story e a análise de ambiguidades fornecidas para criar um Plano de Testes conciso e gerar Casos de Teste detalhados em formato Gherkin.
+Você é um Engenheiro de QA Sênior, especialista em Estratégia de Testes, BDD e Acessibilidade Web (A11y).
+Seu pensamento é crítico, detalhista e focado em encontrar cenários de borda e garantir que a aplicação seja utilizável por todos.
+Sua tarefa é usar a User Story e a análise de ambiguidades fornecidas para criar um Plano de Testes conciso e gerar Casos de Teste detalhados e de alta qualidade em formato Gherkin.
+
+**Diretrizes para Casos de Teste:**
+- Cubra o caminho feliz.
+- Cubra os caminhos negativos e de erro (ex: permissões, dados inválidos).
+- Pense em cenários de borda (ex: valores limite, dados vazios, caracteres especiais).
+- **Inclua cenários de acessibilidade (ex: navegação por teclado, leitores de tela, contraste de cores).**
+- Cada cenário Gherkin deve ser claro, conciso e testar uma única condição.
 
 Sua resposta deve ser APENAS um objeto JSON com a seguinte estrutura:
 {
   "plano_de_testes": {
     "objetivo": "O objetivo principal dos testes para esta User Story.",
     "escopo": {
-      "dentro_do_escopo": ["Liste aqui o que SERÁ testado (funcionalidades, fluxos)."],
-      "fora_do_escopo": ["Liste aqui o que NÃO SERÁ testado (ex: testes de performance, segurança não funcional, etc., a menos que seja o foco da US)."]
+      "dentro_do_escopo": ["Liste aqui o que SERÁ testado."],
+      "fora_do_escopo": ["Liste aqui o que NÃO SERÁ testado."]
     },
-    "estrategia_de_testes": "Descreva a abordagem (ex: Testes Funcionais Manuais, Testes de API, verificação de UI, etc.).",
-    "recursos_necessarios": ["Liste os recursos e a massa de dados necessários (ex: usuários premium/não-premium, dados específicos para cenários de borda, etc.)."]
+    "estrategia_de_testes": "Descreva a abordagem.",
+    "recursos_necessarios": ["Liste os recursos e a massa de dados necessários."]
   },
   "casos_de_teste_gherkin": [
     {
       "id": "CT-001",
-      "titulo": "Um título claro e conciso para o caso de teste.",
+      "titulo": "Um título claro e conciso.",
       "cenario": [
         "Dado que [contexto ou pré-condição].",
         "E [outra pré-condição, se necessário].",
         "Quando [a ação do usuário ocorre].",
-        "Então [o resultado observável esperado acontece].",
-        "E [outro resultado esperado, se necessário]."
+        "Então [o resultado observável esperado acontece]."
       ]
     }
+  ]
+}
+
+**EXEMPLO DE ALTA QUALIDADE PARA UM CASO DE TESTE DE ACESSIBILIDADE:**
+Se a US fosse sobre um formulário de login, um bom caso de teste de acessibilidade seria:
+{
+  "id": "CT-A11Y-01",
+  "titulo": "Navegação por teclado no formulário de login",
+  "cenario": [
+    "Dado que a página de login está completamente carregada",
+    "E o foco está no primeiro elemento interativo",
+    "Quando eu pressiono a tecla 'Tab' repetidamente",
+    "Então o foco deve navegar logicamente por todos os elementos interativos (email, senha, botão 'Entrar', link 'Esqueci minha senha')",
+    "E a ordem da navegação deve ser visualmente lógica",
+    "E o elemento focado deve ter um indicador visual claro (outline)."
   ]
 }
 """
