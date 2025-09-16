@@ -5,112 +5,110 @@
 
 # 🔮 QA Oráculo: Análise de Requisitos com IA
 
-Analisador de Requisitos de Software com IA para identificar
-ambiguidades, contradições e riscos antes do início do desenvolvimento.
-Este projeto é construído com foco em qualidade de código, testabilidade
-e acessibilidade.
+👋 Bem-vindo ao **QA Oráculo**!  
+Um assistente de QA sênior movido por IA que ajuda você a transformar User Stories (US) em especificações claras, reduzindo riscos e acelerando o planejamento de testes.  
 
-## ✨ Funcionalidades
+---
 
--   **Análise de Qualidade:** Avalia a clareza de cada requisito,
-    apontando termos vagos e sugerindo melhorias.
--   **Detecção de Conflitos:** Analisa o conjunto de requisitos para
-    encontrar contradições lógicas e sobreposições.
--   **Geração de Relatório:** Consolida toda a análise em um relatório
-    detalhado em formato Markdown.
+## ✨ Por que usar o QA Oráculo?
 
-## 🚀 Começando (Getting Started)
+- 🔍 **Detecta ambiguidades** em User Stories antes do desenvolvimento  
+- ❓ **Sugere perguntas para o PO**, facilitando alinhamento rápido  
+- ✅ **Gera critérios de aceite** simples e verificáveis  
+- 📝 **Propõe planos de teste interativos** e casos em Gherkin  
+- ♿ **Inclui cenários de acessibilidade (A11y)** já na base dos testes  
 
-Siga os passos abaixo para configurar e executar o projeto em sua
-máquina local.
+---
 
-### Pré-requisitos
+## 🚀 Começando
 
--   [Git](https://git-scm.com/)
--   [Python 3.10+](https://www.python.org/)
+Pronto para rodar? Siga os 4 passos:
 
-### Instalação
+1. **Clone o repositório**  
+   ```bash
+   git clone https://github.com/seu-nome/qa-oraculo-requisitos.git
+   cd qa-oraculo-requisitos
+   ```
 
-1.  **Clone o repositório:**
-    `bash     git clone https://github.com/seu-nome/qa-oraculo-requisitos.git     cd qa-oraculo-requisitos`
+2. **Execute o setup**  
+   - Windows: `setup.bat`  
+   - Mac/Linux: `chmod +x setup.sh && ./setup.sh`
 
-2.  **Execute o script de setup:** Este comando irá criar um ambiente
-    virtual (`.venv`) e instalar as dependências.
+3. **Configure sua API Key**  
+   Copie `.env.example` → `.env` e adicione sua chave do Google Gemini.
 
-    -   **Para Windows:** `setup.bat`
-    -   **Para Mac/Linux:** `chmod +x setup.sh` e depois `./setup.sh`
+4. **Ative o ambiente virtual**  
+   - Windows: `.\.venv\Scripts\activate`  
+   - Mac/Linux: `source .venv/bin/activate`
 
-3.  **Configure sua Chave de API:**
-
-    -   Copie o arquivo `.env.example` para um novo arquivo chamado
-        `.env`.
-    -   Insira sua chave da API do Google Gemini no arquivo `.env`.
-
-4.  **Ative o Ambiente Virtual:**
-
-    -   **No Windows:** `.\.venv\Scriptsctivate`
-    -   **No Mac ou Linux:** `source .venv/bin/activate`
+---
 
 ## 🛠️ Como Usar
 
-Com o ambiente ativo, execute o script principal para ver uma análise de
-exemplo:
+O fluxo é simples:
 
-``` bash
-# Use o caminho explícito para garantir que o Python correto seja usado
-./.venv/bin/python main.py
-```
+1. **Rode o script**  
+   ```bash
+   ./.venv/bin/python main.py
+   ```
+
+2. **Etapa 1:** análise da US → ambiguidade, perguntas ao PO e critérios de aceite.  
+3. **Etapa 2:** você decide:  
+   - Digite `s` → gerar plano de testes + casos Gherkin  
+   - Digite `n` → encerrar  
+
+---
 
 ## 🧪 Testes
 
-Este projeto utiliza a biblioteca **unittest** do Python para garantir a
-qualidade do código.\
-Para executar a suíte de testes, rode o seguinte comando na raiz do
-projeto:
+Este projeto utiliza `unittest` para garantir a qualidade do código. Para rodar a suíte de testes:
 
-``` bash
+```bash
 ./.venv/bin/python -m unittest discover tests/
 ```
 
-## 🤔 Solução de Problemas (Troubleshooting)
+---
 
-1.  **zsh: permission denied: ./setup.sh**
-    -   Problema: Seu sistema está bloqueando a execução do script por
-        segurança.\
+## 🤔 Solução de Problemas
 
-    -   Solução: Dê permissão de execução ao script (só precisa ser
-        feito uma vez):
+1. **zsh: permission denied: ./setup.sh**  
+   ➡ Dê permissão de execução ao script:  
+   ```bash
+   chmod +x setup.sh
+   ```
 
-        ``` bash
-        chmod +x setup.sh
-        ```
-2.  **./setup.sh: python: command not found**
-    -   Problema: O script não encontrou python. Isso é comum no macOS e
-        Linux, que usam `python3`.\
-    -   Solução: Altere a linha `python -m venv .venv` para
-        `python3 -m venv .venv` no arquivo `setup.sh` e execute o setup
-        novamente.
-3.  **ModuleNotFoundError**
-    -   Problema: As bibliotecas não estão instaladas no ambiente
-        virtual, ou o interpretador Python errado está sendo usado.\
+2. **./setup.sh: python: command not found**  
+   ➡ No macOS/Linux, use `python3`:  
+   ```bash
+   ➡ No setup.sh, altere a linha python -m venv .venv para python3 -m venv .venv.
+   ```
 
-    -   Solução: Garanta que o ambiente está ativo e execute seu script
-        com o caminho explícito:
+3. **ModuleNotFoundError**  
+   ➡ Ative o ambiente virtual e rode:  
+   ```bash
+   ./.venv/bin/python main.py
+   ```
 
-        ``` bash
-        ./.venv/bin/python main.py
-        ```
-4.  **error: externally-managed-environment**
-    -   Problema: Seu SO está protegendo a instalação principal do
-        Python.\
+4. **error: externally-managed-environment**  
+   ➡ Instale dependências pelo pip do ambiente:  
+   ```bash
+   ./.venv/bin/python -m pip install -r requirements.txt
+   ```
 
-    -   Solução: Use o caminho explícito para o pip do ambiente para
-        instalar dependências:
+---
 
-        ``` bash
-        ./.venv/bin/python -m pip install -r requirements.txt
-        ```
+## 🤝 Contribua
+
+Adoramos colaborações!  
+- Abra uma *issue* para sugerir melhorias  
+- Envie um *PR* para novas funcionalidades  
+
+⭐ Se este projeto te ajudou, não esqueça de dar uma estrela no repositório!
+
+---
+
+📌 Este projeto ainda está em evolução.  
+💡 Sua opinião é super importante — contribua, teste e ajude a moldar o futuro do QA Oráculo!
+
 
 ------------------------------------------------------------------------
-
-📌 Este projeto está em desenvolvimento.

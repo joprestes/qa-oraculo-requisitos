@@ -3,112 +3,109 @@
   <a href="README.md">🇧🇷 Português</a>
 </nav>
 
-# 🔮 QA Oracle: AI-Powered Requirements Analysis
+# 🔮 QA Oracle: Requirements Analysis with AI
 
-An AI-powered analyzer for Software Requirements to identify
-ambiguities, contradictions, and risks before development begins. This
-project is built with a focus on code quality, testability, and
-accessibility.
+👋 Welcome to **QA Oracle**!  
+A senior QA assistant powered by AI that helps you transform User Stories (US) into clear specifications, reducing risks and speeding up test planning.  
 
-## ✨ Features
+---
 
--   **Quality Analysis:** Evaluates the clarity of each requirement,
-    pointing out vague terms and suggesting improvements.
--   **Conflict Detection:** Analyzes the entire set of requirements to
-    find logical contradictions and overlaps.
--   **Report Generation:** Consolidates all findings into a detailed
-    report in Markdown format.
+## ✨ Why use QA Oracle?
+
+- 🔍 **Detects ambiguities** in User Stories before development  
+- ❓ **Suggests questions for the PO**, enabling quick alignment  
+- ✅ **Generates acceptance criteria** that are simple and verifiable  
+- 📝 **Proposes interactive test plans** and Gherkin test cases  
+- ♿ **Includes accessibility (A11y) scenarios** by default  
+
+---
 
 ## 🚀 Getting Started
 
-Follow the steps below to set up and run the project on your local
-machine.
+Ready to run? Follow these 4 steps:
 
-### Prerequisites
+1. **Clone the repository**  
+   ```bash
+   git clone https://github.com/your-name/qa-oracle-requirements.git
+   cd qa-oracle-requirements
+   ```
 
--   [Git](https://git-scm.com/)
--   [Python 3.10+](https://www.python.org/)
+2. **Run the setup**  
+   - Windows: `setup.bat`  
+   - Mac/Linux: `chmod +x setup.sh && ./setup.sh`
 
-### Installation
+3. **Configure your API Key**  
+   Copy `.env.example` → `.env` and add your Google Gemini API key.
 
-1.  **Clone the repository:**
-    `bash     git clone https://github.com/your-username/qa-oraculo-requisitos.git     cd qa-oraculo-requisitos`
+4. **Activate the virtual environment**  
+   - Windows: `.\.venv\Scriptsctivate`  
+   - Mac/Linux: `source .venv/bin/activate`
 
-2.  **Run the setup script:** This command will create a virtual
-    environment (`.venv`) and install dependencies.
-
-    -   **For Windows:** `setup.bat`
-    -   **For Mac/Linux:** `chmod +x setup.sh` then `./setup.sh`
-
-3.  **Set up your API Key:**
-
-    -   Copy the `.env.example` file to a new file named `.env`.
-    -   Enter your Google Gemini API key in the `.env` file.
-
-4.  **Activate the Virtual Environment:**
-
-    -   **On Windows:** `.\.venv\Scriptsctivate`
-    -   **On Mac or Linux:** `source .venv/bin/activate`
+---
 
 ## 🛠️ How to Use
 
-With the environment active, run the main script to see an example
-analysis:
+The flow is simple:
 
-``` bash
-# Use the explicit path to ensure the correct Python is used
-./.venv/bin/python main.py
-```
+1. **Run the script**  
+   ```bash
+   ./.venv/bin/python main.py
+   ```
 
-## 🧪 Testing
+2. **Step 1:** US analysis → ambiguity, PO questions, and acceptance criteria.  
+3. **Step 2:** you decide:  
+   - Type `y` → generate test plan + Gherkin cases  
+   - Type `n` → exit  
 
-This project uses Python's built-in **unittest** library to ensure code
-quality.\
-To run the test suite, execute the following command from the project
-root:
+---
 
-``` bash
+## 🧪 Tests
+
+This project uses `unittest` to ensure code quality. To run the test suite:
+
+```bash
 ./.venv/bin/python -m unittest discover tests/
 ```
 
+---
+
 ## 🤔 Troubleshooting
 
-1.  **zsh: permission denied: ./setup.sh**
-    -   Problem: Your system is blocking the script from running for
-        security reasons.\
+1. **zsh: permission denied: ./setup.sh**  
+   ➡ Grant execution permission:  
+   ```bash
+   chmod +x setup.sh
+   ```
 
-    -   Solution: Grant execution permission (only needs to be done
-        once):
+2. **./setup.sh: python: command not found**  
+   ➡ On macOS/Linux, use `python3`:  
+   ```bash
+   python3 -m venv .venv
+   ```
 
-        ``` bash
-        chmod +x setup.sh
-        ```
-2.  **./setup.sh: python: command not found**
-    -   Problem: The script couldn't find `python`. This is common on
-        macOS/Linux, which use `python3`.\
-    -   Solution: Change the line `python -m venv .venv` to
-        `python3 -m venv .venv` in the `setup.sh` file and run the setup
-        again.
-3.  **ModuleNotFoundError**
-    -   Problem: Libraries are not installed in the virtual environment,
-        or the wrong Python interpreter is being used.\
+3. **ModuleNotFoundError**  
+   ➡ Activate the virtual environment and run:  
+   ```bash
+   ./.venv/bin/python main.py
+   ```
 
-    -   Solution: Ensure the environment is active and run your script
-        with the explicit path:
+4. **error: externally-managed-environment**  
+   ➡ Install dependencies using pip from the environment:  
+   ```bash
+   ./.venv/bin/python -m pip install -r requirements.txt
+   ```
 
-        ``` bash
-        ./.venv/bin/python main.py
-        ```
-4.  **error: externally-managed-environment**
-    -   Problem: Your OS is protecting its base Python installation.\
+---
 
-    -   Solution: Always use the explicit path to the environment's pip
-        to install dependencies:
+## 🤝 Contribute
 
-        ``` bash
-        ./.venv/bin/python -m pip install -r requirements.txt
-        ```
+We love contributions!  
+- Open an *issue* to suggest improvements  
+- Submit a *PR* for new features  
 
-------------------------------------------------------------------------
+⭐ If this project helped you, don’t forget to give it a star on the repository!
 
-📌 This project is under development.
+---
+
+📌 This project is still evolving.  
+💡 Your feedback is super important — contribute, test, and help shape the future of QA Oracle!
