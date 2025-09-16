@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from typing import TypedDict, List, Dict, Any
 import time
 from google.api_core.exceptions import ResourceExhausted
+import datetime
+from pathlib import Path
 
 # --- Imports do LangGraph ---
 from langgraph.graph import StateGraph, START, END
@@ -21,6 +23,35 @@ def extrair_json_da_resposta(texto_resposta: str) -> str | None:
     if match:
         return match.group(0).strip()
     return None
+
+def salvar_relatorio_em_arquivo(relatorio: str, user_story: str):
+    """
+    Salva o relatório em um arquivo Markdown na pasta 'output'.
+    O nome do arquivo é gerado dinamicamente.
+    """
+    try:
+        # Garante que a pasta 'output' exista
+        output_dir = Path("output")
+        output_dir.mkdir(exist_ok=True)
+
+        # Gera um nome de arquivo seguro a partir do título da US
+        primeira_linha_us = user_story.split('\n')[0].lower()
+        nome_base = re.sub(r'[^\w\s-]', '', primeira_linha_us).strip()
+        nome_base = re.sub(r'[-\s]+', '-', nome_base)[:50] # Limita o tamanho
+
+        # Adiciona um timestamp para garantir que o nome seja único
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        nome_arquivo = f"{nome_base}_{timestamp}.md"
+        
+        caminho_arquivo = output_dir / nome_arquivo
+
+        # Escreve o conteúdo do relatório no arquivo
+        caminho_arquivo.write_text(relatorio, encoding="utf-8")
+        
+        print(f"\n✅ Relatório salvo com sucesso em: {caminho_arquivo}")
+
+    except Exception as e:
+        print(f"\n❌ Ocorreu um erro ao salvar o relatório: {e}")
 
 def chamar_modelo_com_retry(model, prompt_completo, tentativas=3, espera=60):
     """
@@ -361,27 +392,37 @@ def main():
     """Função principal que executa o workflow do Oráculo de forma interativa."""
     print("--- 🔮 Bem-vindo ao QA Oráculo de User Stories ---")
     
-    # Nova lógica para obter a US do usuário
     user_story = obter_user_story_do_usuario()
     
     if not user_story:
         print("\nNenhuma User Story fornecida. Encerrando.")
-        return # Sai da função se o input estiver vazio
+        return
 
     print("\nUser Story recebida. Iniciando análise...")
     print("-----------------------------------------")
 
     inputs = {"user_story": user_story}
-    
     resultado_final = grafo.invoke(inputs)
     
     print("\n--- 🚀 Processo Finalizado ---")
+
+    # Determina qual relatório exibir e salvar
+    relatorio_final = None
     if "relatorio_final_completo" in resultado_final:
         print("\n--- ✅ Relatório Completo Gerado com Sucesso ---")
-        print(resultado_final.get("relatorio_final_completo"))
+        relatorio_final = resultado_final.get("relatorio_final_completo")
+        print(relatorio_final)
         print("---------------------------------------------")
     else:
-        print("Finalizado após a análise inicial. O relatório foi exibido acima.")
+        # Se o usuário disse 'n', o relatório inicial já foi impresso no nó.
+        relatorio_final = resultado_final.get("relatorio_analise_inicial")
+        print("Finalizado após a análise inicial.")
+
+    # --- LÓGICA PARA SALVAR O ARQUIVO ---
+    if relatorio_final:
+        resposta_salvar = input("\nDeseja salvar este relatório em um arquivo? (s/n): ").lower()
+        if resposta_salvar == 's':
+            salvar_relatorio_em_arquivo(relatorio_final, user_story)
 
 if __name__ == "__main__":
     main()
