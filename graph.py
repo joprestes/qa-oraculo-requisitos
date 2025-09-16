@@ -1,11 +1,15 @@
 import json
 import os
 import re
-import google.generativeai as genai
+import time
 from typing import TypedDict, List, Dict, Any
+
+import google.generativeai as genai
+from google.api_core.exceptions import ResourceExhausted
+from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 
-# Importa de outros módulos do nosso projeto
+# Importa de outros módulos do projeto
 from config import NOME_MODELO, CONFIG_GERACAO_ANALISE, CONFIG_GERACAO_RELATORIO
 from prompts import (
     PROMPT_ANALISE_US,
@@ -14,26 +18,18 @@ from prompts import (
     PROMPT_GERAR_RELATORIO_COMPLETO
 )
 
-# --- Funções Auxiliares e Configs da API (ficam aqui com a lógica) ---
-from dotenv import load_dotenv
-import time
-from google.api_core.exceptions import ResourceExhausted
-
+# Configuração da API
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-def extrair_json_da_resposta(texto_resposta: str) -> str | None:
-    """
-    Extrai uma string JSON de dentro de um texto bruto, limpando formatação Markdown.
+# --- Funções Auxiliares ---
 
-    """
-    # Procura por ```json ... ``` ou apenas ``` ... ```
+def extrair_json_da_resposta(texto_resposta: str) -> str | None:
+    """Extrai uma string JSON de um texto bruto, limpando formatação comum."""
     match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", texto_resposta)
     if match:
         return match.group(1).strip()
     
-    # Se não encontrar o bloco de código, procura por um JSON que comece com '{' ou '['
-    # Isso ajuda a remover textos introdutórios
     match = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", texto_resposta)
     if match:
         return match.group(0).strip()
@@ -42,30 +38,26 @@ def extrair_json_da_resposta(texto_resposta: str) -> str | None:
 
 def chamar_modelo_com_retry(model, prompt_completo, tentativas=3, espera=60):
     """
-    Função wrapper que chama a IA, com lógica de retry para erros de cota.
+    Executa uma chamada ao modelo generativo com lógica de retry para erros de cota.
     """
     for tentativa in range(tentativas):
         try:
-            # Tenta fazer a chamada à API
             resposta = model.generate_content(prompt_completo)
-            return resposta # Se bem-sucedido, retorna a resposta
-        
+            return resposta
         except ResourceExhausted as e:
-            print(f"⚠️ Alerta de Limite de API (Tentativa {tentativa + 1}/{tentativas}): {e.message}")
+            print(f"⚠️ Alerta de Limite de Requisições (Tentativa {tentativa + 1}/{tentativas}).")
             if tentativa < tentativas - 1:
                 print(f"Aguardando {espera} segundos para tentar novamente...")
-                time.sleep(espera) # Pausa a execução
+                time.sleep(espera)
             else:
-                print("❌ Esgotado o número de tentativas. A chamada à API falhou.")
-                return None # Se todas as tentativas falharem, retorna None
-        
+                print("❌ Esgotado o número de tentativas. A chamada falhou.")
+                return None
         except Exception as e:
-            # Captura outros erros inesperados
-            print(f"❌ Ocorreu um erro inesperado na chamada à API: {e}")
+            print(f"❌ Ocorreu um erro inesperado na comunicação: {e}")
             return None
     return None
 
-# --- Estado do Agente (AgentState) Simplificado ---
+# --- Estruturas de Dados ---
 
 class AgentState(TypedDict):
     user_story: str
@@ -75,10 +67,10 @@ class AgentState(TypedDict):
     plano_e_casos_de_teste: Dict[str, Any]
     relatorio_final_completo: str   
 
-# --- Nós do Grafo Simplificado ---
+# --- Nós do Grafo ---
 
 def node_analisar_historia(state: AgentState) -> AgentState:
-    """Nó 1: Pega a User Story e usa a IA para gerar a análise completa."""
+    """Gera a análise de qualidade inicial da User Story."""
     print("--- Etapa 1: Analisando a User Story... ---")
     us = state["user_story"]
     
@@ -89,26 +81,24 @@ def node_analisar_historia(state: AgentState) -> AgentState:
     analise_json = {}
 
     if not response or not response.text:
-        # Se a chamada com retry falhou, response será None ou sem texto
-        print("❌ Falha na comunicação com a API após múltiplas tentativas.")
-        analise_json = {"erro": "Falha na comunicação com a API após múltiplas tentativas."}
+        print("❌ Falha na comunicação com o serviço de análise.")
+        analise_json = {"erro": "Falha na comunicação com o serviço de análise."}
     else:
-        # A chamada à API foi bem-sucedida, agora tentamos processar o texto
         json_limpo = extrair_json_da_resposta(response.text)
-        
         if json_limpo:
             try:
                 analise_json = json.loads(json_limpo)
             except json.JSONDecodeError:
-                print("⚠️ Alerta: A IA retornou um JSON mal formatado.")
-                analise_json = {"erro": "Falha ao decodificar o JSON da análise."}
+                print("⚠️ Alerta: A resposta da análise continha um formato inválido.")
+                analise_json = {"erro": "Falha ao decodificar a resposta da análise."}
         else:
-            print("⚠️ Alerta: A IA não retornou um JSON em sua resposta.")
-            analise_json = {"erro": "Nenhum JSON encontrado na resposta da IA."}
+            print("⚠️ Alerta: A resposta da análise não continha dados estruturados.")
+            analise_json = {"erro": "Nenhum dado estruturado encontrado na resposta."}
         
     return {"analise_da_us": analise_json}
 
 def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
+    """Compila e formata o relatório de análise inicial."""
     print("--- Etapa 2: Compilando relatório de análise inicial... ---")
     contexto = {
         "user_story_original": state["user_story"],
@@ -120,18 +110,15 @@ def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
 
     response = chamar_modelo_com_retry(model, prompt_completo)
     
-    # Verifica se a chamada foi bem-sucedida e tem texto
     if response and response.text:
-        # Se sim, retorna o relatório
         return {"relatorio_analise_inicial": response.text}
     else:
-        # Se falhou, retorna uma mensagem de erro como o relatório
         print("❌ Falha ao gerar o relatório de análise inicial.")
-        relatorio_de_erro = "# Erro na Geração do Relatório\n\nA comunicação com a API falhou após múltiplas tentativas."
+        relatorio_de_erro = "# Erro na Geração do Relatório\n\nO serviço de geração de relatórios não respondeu."
         return {"relatorio_analise_inicial": relatorio_de_erro}
 
 def node_perguntar_plano_de_testes(state: AgentState) -> AgentState:
-    """Nó Intermediário: Mostra o relatório inicial e pergunta ao usuário."""
+    """Apresenta o relatório inicial e solicita o próximo passo ao usuário."""
     print("\n--- ✅ Relatório de Análise Inicial Gerado ---")
     print(state.get("relatorio_analise_inicial", "Erro ao gerar relatório inicial."))
     print("-------------------------------------------\n")
@@ -140,9 +127,8 @@ def node_perguntar_plano_de_testes(state: AgentState) -> AgentState:
     return {"decisao_usuario_plano_testes": resposta}
 
 def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
-    """Nó Opcional: Usa a IA para gerar o Plano de Testes e os Casos de Teste em Gherkin."""
+    """Gera o Plano de Testes detalhado e os Casos de Teste em Gherkin."""
     print("--- Etapa Extra: Criando Plano e Casos de Teste... ---")
-
     contexto_para_plano = {
         "user_story": state["user_story"],
         "analise_ambiguidade": state["analise_da_us"].get("analise_ambiguidade", {})
@@ -156,29 +142,25 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
     plano_json = {}
 
     if not response or not response.text:
-        # Se a chamada com retry falhou
-        print("❌ Falha na comunicação com a API para criar o plano de testes.")
-        plano_json = {"erro": "Falha na comunicação com a API após múltiplas tentativas."}
+        print("❌ Falha na comunicação com o serviço de planejamento de testes.")
+        plano_json = {"erro": "Falha na comunicação com o serviço de planejamento de testes."}
     else:
-        # A chamada foi bem-sucedida, agora processamos o texto
         json_limpo = extrair_json_da_resposta(response.text)
-        
         if json_limpo:
             try:
                 plano_json = json.loads(json_limpo)
             except json.JSONDecodeError:
-                print("⚠️ Alerta: A IA retornou um JSON mal formatado para o plano de testes.")
-                plano_json = {"erro": "Falha ao decodificar o JSON do plano de testes."}
+                print("⚠️ Alerta: A resposta do plano de testes continha um formato inválido.")
+                plano_json = {"erro": "Falha ao decodificar a resposta do plano de testes."}
         else:
-            print("⚠️ Alerta: A IA não retornou um JSON em sua resposta para o plano de testes.")
-            plano_json = {"erro": "Nenhum JSON encontrado na resposta da IA."}
+            print("⚠️ Alerta: A resposta do plano de testes não continha dados estruturados.")
+            plano_json = {"erro": "Nenhum dado estruturado encontrado na resposta do plano."}
 
     return {"plano_e_casos_de_teste": plano_json}
 
 def node_gerar_relatorio_completo(state: AgentState) -> AgentState:
-    """Nó Final: Consolida TODA a análise em um relatório final em Markdown."""
+    """Compila e formata o relatório final, incluindo o plano de testes."""
     print("--- Etapa 4: Compilando o relatório completo... ---")
-    
     contexto = {
         "user_story_original": state["user_story"],
         "analise": state.get("analise_da_us", {}),
@@ -191,27 +173,21 @@ def node_gerar_relatorio_completo(state: AgentState) -> AgentState:
 
     response = chamar_modelo_com_retry(model, prompt_completo)
     
-    # Verifica se a chamada foi bem-sucedida e tem texto
     if response and response.text:
-        # Se sim, retorna o relatório completo
         return {"relatorio_final_completo": response.text}
     else:
-        # Se falhou, retorna uma mensagem de erro como o relatório final
         print("❌ Falha ao gerar o relatório completo.")
-        relatorio_de_erro = "# Erro na Geração do Relatório Final\n\nA comunicação com a API falhou após múltiplas tentativas."
+        relatorio_de_erro = "# Erro na Geração do Relatório Final\n\nO serviço de geração de relatórios não respondeu."
         return {"relatorio_final_completo": relatorio_de_erro}
 
-
-
-# --- Construção do Grafo ---
 def decidir_proximo_passo(state: AgentState):
-    """Decide se o fluxo deve gerar o plano de testes ou terminar."""
+    """Decide o próximo passo do fluxo com base na entrada do usuário."""
     if state.get("decisao_usuario_plano_testes") == "s":
         return "criar_plano_e_casos"
     else:
-        return "fim" # Rota para terminar o grafo
+        return "fim"
 
-# --- Construção do Grafo ---
+# --- Construção e Compilação do Grafo ---
 workflow = StateGraph(AgentState)
 
 workflow.add_node("analista_us", node_analisar_historia)
@@ -228,7 +204,7 @@ workflow.add_conditional_edges(
     decidir_proximo_passo,
     {
         "criar_plano_e_casos": "criador_plano_testes",
-        "fim": END  # Se a decisão for 'fim', o grafo termina aqui.
+        "fim": END
     }
 )
 workflow.add_edge("criador_plano_testes", "gerador_relatorio_completo")
