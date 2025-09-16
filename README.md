@@ -49,7 +49,7 @@ O fluxo é simples:
 
 1. **Rode o script**  
    ```bash
-   ./.venv/bin/python main.py
+   ./.venv/bin/python app.py
    ```
 
 2. **Etapa 1:** análise da US → ambiguidade, perguntas ao PO e critérios de aceite.  

@@ -49,7 +49,7 @@ The flow is simple:
 
 1. **Run the script**  
    ```bash
-   ./.venv/bin/python main.py
+   ./.venv/bin/python app.py
    ```
 
 2. **Step 1:** US analysis → ambiguity, PO questions, and acceptance criteria.  
