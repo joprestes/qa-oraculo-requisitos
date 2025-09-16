@@ -334,10 +334,44 @@ workflow.add_edge("gerador_relatorio_completo", END)
 grafo = workflow.compile()
 
 # --- Execução ---
+def obter_user_story_do_usuario() -> str:
+    """
+    Solicita que o usuário cole uma User Story, permitindo múltiplas linhas.
+    A entrada termina quando o usuário digita 'analisar' em uma nova linha.
+    """
+    print("\nPor favor, cole sua User Story abaixo.")
+    print("Quando terminar, digite 'analisar' em uma linha separada e pressione Enter.")
+    print("--------------------------------------------------------------------")
+    
+    linhas_da_us = []
+    while True:
+        try:
+            linha = input()
+            if linha.strip().lower() == 'analisar':
+                break
+            linhas_da_us.append(linha)
+        except EOFError:
+            # Permite que o usuário use Ctrl+D (Linux/Mac) ou Ctrl+Z (Windows) para terminar a entrada
+            break
+            
+    return "\n".join(linhas_da_us).strip()
+
+
 def main():
-    print("--- 🔮 Iniciando Análise de User Story com QA Oráculo ---")
-    USER_STORY_EXEMPLO = "Como um usuário premium, eu quero poder exportar meu relatório de atividades para um arquivo CSV, para que eu possa fazer uma análise mais aprofundada em outra ferramenta."
-    inputs = {"user_story": USER_STORY_EXEMPLO}
+    """Função principal que executa o workflow do Oráculo de forma interativa."""
+    print("--- 🔮 Bem-vindo ao QA Oráculo de User Stories ---")
+    
+    # Nova lógica para obter a US do usuário
+    user_story = obter_user_story_do_usuario()
+    
+    if not user_story:
+        print("\nNenhuma User Story fornecida. Encerrando.")
+        return # Sai da função se o input estiver vazio
+
+    print("\nUser Story recebida. Iniciando análise...")
+    print("-----------------------------------------")
+
+    inputs = {"user_story": user_story}
     
     resultado_final = grafo.invoke(inputs)
     
@@ -347,7 +381,6 @@ def main():
         print(resultado_final.get("relatorio_final_completo"))
         print("---------------------------------------------")
     else:
-        # Se não gerou o relatório completo, significa que o usuário parou após a análise inicial.
         print("Finalizado após a análise inicial. O relatório foi exibido acima.")
 
 if __name__ == "__main__":
