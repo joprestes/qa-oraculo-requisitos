@@ -58,7 +58,7 @@ It’s like having a **senior QA always available**, accelerating planning and c
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-user/qa-oracle-requirements.git
+git clone https://github.com/joprestes/qa-oracle-requirements.git
 cd qa-oracle-requirements
 
 # Create and activate virtual environment
