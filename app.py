@@ -1,97 +1,130 @@
-import re
+import streamlit as st
 import datetime
-from pathlib import Path
+import re
+import pandas as pd
 
-# Importa nosso grafo compilado do novo módulo 'graph'
-from graph import grafo
+from graph import grafo_analise, grafo_plano_testes
 
-# --- Funções de Interação com o Usuário ---
+# --- Configuração da Página ---
+st.set_page_config(page_title="QA Oráculo", page_icon="🤖", layout="wide") 
 
-def obter_user_story_do_usuario() -> str:
-    """
-    Solicita que o usuário cole uma User Story, permitindo múltiplas linhas.
-    A entrada termina quando o usuário digita 'analisar' em uma nova linha.
-    """
-    print("\nPor favor, cole sua User Story abaixo.")
-    print("Quando terminar, digite 'analisar' em uma linha separada e pressione Enter.")
-    print("--------------------------------------------------------------------")
-    
-    linhas_da_us = []
-    while True:
-        try:
-            linha = input()
-            if linha.strip().lower() == 'analisar':
-                break
-            linhas_da_us.append(linha)
-        except EOFError:
-            break
-            
-    return "\n".join(linhas_da_us).strip()
+# --- Gerenciamento de Estado da Sessão ---
+if "analysis_state" not in st.session_state:
+    st.session_state.analysis_state = None
+if "test_plan_report" not in st.session_state:
+    st.session_state.test_plan_report = None
+if "show_generate_plan_button" not in st.session_state:
+    st.session_state.show_generate_plan_button = False
+if "user_story_input" not in st.session_state:
+    st.session_state.user_story_input = ""
 
-def salvar_relatorio_em_arquivo(relatorio: str, user_story: str):
-    """
-    Salva o relatório em um arquivo Markdown na pasta 'output'.
-    O nome do arquivo é gerado dinamicamente.
-    """
-    try:
-        # Garante que a pasta 'output' exista
-        output_dir = Path("output")
-        output_dir.mkdir(exist_ok=True)
-
-        # Gera um nome de arquivo seguro a partir do título da US
-        primeira_linha_us = user_story.split('\n')[0].lower()
-        nome_base = re.sub(r'[^\w\s-]', '', primeira_linha_us).strip()
-        nome_base = re.sub(r'[-\s]+', '-', nome_base)[:50] # Limita o tamanho
-
-        # Adiciona um timestamp para garantir que o nome seja único
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        nome_arquivo = f"{nome_base}_{timestamp}.md"
-        
-        caminho_arquivo = output_dir / nome_arquivo
-
-        # Escreve o conteúdo do relatório no arquivo
-        caminho_arquivo.write_text(relatorio, encoding="utf-8")
-        
-        print(f"\n✅ Relatório salvo com sucesso em: {caminho_arquivo}")
-
-    except Exception as e:
-        print(f"\n❌ Ocorreu um erro ao salvar o relatório: {e}")
-
-def main():
-    """Função principal que executa o workflow do Oráculo de forma interativa."""
-    print("--- 🔮 Bem-vindo ao QA Oráculo de User Stories ---")
-    
-    user_story = obter_user_story_do_usuario()
-    
+# --- Funções Auxiliares ---
+def gerar_nome_arquivo_seguro(user_story: str) -> str:
     if not user_story:
-        print("\nNenhuma User Story fornecida. Encerrando.")
-        return
+        return "relatorio_qa_oraculo.md"
+    primeira_linha_us = user_story.split('\n')[0].lower()
+    nome_base = re.sub(r'[^\w\s-]', '', primeira_linha_us).strip()
+    nome_base = re.sub(r'[-\s]+', '-', nome_base)[:50]
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    return f"{nome_base}_{timestamp}.md"
 
-    print("\nUser Story recebida. Iniciando análise...")
-    print("-----------------------------------------")
+# --- Interface do Usuário (UI) ---
+st.title("🤖 QA Oráculo")
+st.markdown("Bem-vindo ao seu assistente de QA Sênior. Cole uma User Story abaixo para iniciar a análise.")
 
-    inputs = {"user_story": user_story}
-    resultado_final = grafo.invoke(inputs)
-    
-    print("\n--- 🚀 Processo Finalizado ---")
+user_story = st.text_area(
+    "Insira a User Story aqui:",
+    height=250,
+    placeholder="Ex: Como um cliente registrado, eu quero poder visualizar meu histórico de pedidos...",
+    key="user_story_input"
+)
 
-    # Determina qual relatório exibir e salvar
-    relatorio_final = None
-    if "relatorio_final_completo" in resultado_final:
-        print("\n--- ✅ Relatório Completo Gerado com Sucesso ---")
-        relatorio_final = resultado_final.get("relatorio_final_completo")
-        print(relatorio_final)
-        print("---------------------------------------------")
+if st.button("Analisar User Story", type="primary"):
+    if st.session_state.user_story_input and st.session_state.user_story_input.strip():
+        st.session_state.analysis_state = None
+        st.session_state.test_plan_report = None
+        st.session_state.show_generate_plan_button = False
+        with st.spinner("🔮 O Oráculo está realizando a análise inicial..."):
+            try:
+                resultado_analise = grafo_analise.invoke({"user_story": st.session_state.user_story_input})
+                st.session_state.analysis_state = resultado_analise
+                st.session_state.show_generate_plan_button = True
+            except Exception as e:
+                st.error(f"Ocorreu um erro crítico durante a análise: {e}")
     else:
-        # Se o usuário disse 'n', o relatório inicial já foi impresso no nó.
-        relatorio_final = resultado_final.get("relatorio_analise_inicial")
-        print("Finalizado após a análise inicial.")
+        st.warning("Por favor, insira uma User Story antes de analisar.")
 
-    # Lógica para salvar o arquivo
-    if relatorio_final:
-        resposta_salvar = input("\nDeseja salvar este relatório em um arquivo? (s/n): ").lower()
-        if resposta_salvar == 's':
-            salvar_relatorio_em_arquivo(relatorio_final, user_story)
+# --- Exibição dos Resultados e Fluxo Interativo ---
 
-if __name__ == "__main__":
-    main()
+if st.session_state.analysis_state:
+    analysis_report = st.session_state.analysis_state.get("relatorio_analise_inicial", "")
+    analysis_json = st.session_state.analysis_state.get("analise_da_us")
+    st.markdown("---")
+    st.subheader("1. Análise Inicial da User Story")
+    st.markdown(analysis_report, unsafe_allow_html=True)
+    if analysis_json:
+        with st.expander("Ver detalhes da Análise em JSON"):
+            st.json(analysis_json)
+    
+    if st.session_state.show_generate_plan_button:
+        st.markdown("---")
+        st.info("Deseja aprofundar a análise e criar um Plano de Testes detalhado?")
+        if st.button("Sim, Gerar Plano de Testes"):
+            with st.spinner("🤖 O Oráculo está elaborando o Plano de Testes..."):
+                try:
+                    resultado_plano = grafo_plano_testes.invoke(st.session_state.analysis_state)
+                    st.session_state.analysis_state.update(resultado_plano)
+                    st.session_state.test_plan_report = resultado_plano.get("relatorio_plano_de_testes")
+                    st.session_state.show_generate_plan_button = False
+                except Exception as e:
+                    st.error(f"Ocorreu um erro crítico ao gerar o plano de testes: {e}")
+
+
+if st.session_state.test_plan_report:
+    test_plan_json = st.session_state.analysis_state.get("plano_e_casos_de_teste", {})
+
+    st.markdown("---")
+    st.subheader("2. Plano de Testes Detalhado")
+
+    if test_plan_json:
+        # Pega o objeto 'plano_de_testes' de dentro do JSON
+        plano = test_plan_json.get("plano_de_testes", {})
+        
+        # Exibe o relatório em Markdown gerado pelo backend (que já está bem formatado)
+        st.markdown(st.session_state.test_plan_report, unsafe_allow_html=True)
+
+        # Pega a lista de casos de teste da nova chave 'casos_de_teste_gherkin'
+        casos_de_teste = test_plan_json.get("casos_de_teste_gherkin")
+        if casos_de_teste and isinstance(casos_de_teste, list) and len(casos_de_teste) > 0:
+            st.subheader("Tabela de Casos de Teste Interativa")
+            try:
+                df = pd.DataFrame(casos_de_teste)
+                
+                # Junta a lista de strings do 'cenario' em uma única string com quebras de linha
+                if 'cenario' in df.columns:
+                    df['cenario'] = df['cenario'].apply(lambda x: '\n'.join(x) if isinstance(x, list) else x)
+                
+                st.dataframe(df, use_container_width=True)
+            except Exception as e:
+                st.error(f"Não foi possível formatar os casos de teste em uma tabela interativa: {e}")
+
+        with st.expander("Ver JSON completo do Plano de Testes"):
+            st.json(test_plan_json)
+    else:
+        # Fallback caso o JSON não seja gerado corretamente
+        st.markdown(st.session_state.test_plan_report, unsafe_allow_html=True)
+            
+    st.markdown("---")
+    
+    relatorio_completo_para_download = (
+        f"{st.session_state.analysis_state.get('relatorio_analise_inicial', '')}\n\n"
+        f"---\n\n"
+        f"{st.session_state.test_plan_report}"
+    )
+    
+    st.download_button(
+        label="📥 Baixar Relatório Completo",
+        data=relatorio_completo_para_download.encode("utf-8"),
+        file_name=gerar_nome_arquivo_seguro(st.session_state.user_story_input),
+        mime="text/markdown",
+    )
