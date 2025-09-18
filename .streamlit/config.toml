@@ -1,0 +1,16 @@
+
+[theme]
+# A cor principal para elementos interativos (botões, etc.)
+primaryColor = "#1E88E5"
+
+# Cor de fundo principal da aplicação
+backgroundColor = "#FFFFFF"
+
+# Cor de fundo para widgets e containers
+secondaryBackgroundColor = "#F5F5F5"
+
+# Cor do texto principal
+textColor = "#0a0a0a"
+
+# Fonte principal
+font = "sans serif"

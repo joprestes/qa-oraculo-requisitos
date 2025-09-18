@@ -25,6 +25,11 @@ Em minutos, você terá:
 É como ter um **QA sênior sempre disponível**, acelerando o planejamento e reduzindo falhas antes mesmo do primeiro bug aparecer.  
 
 ---
+## 📸 Preview da Interface
+
+![QA Oráculo Demo](assets/qa_oraculo_cartoon_demo.gif)
+
+---
 
 ## 🚀 Principais Funcionalidades
 

@@ -38,6 +38,11 @@ It’s like having a **senior QA always available**, accelerating planning and c
 - 📥 **Export Reports** in Markdown format.  
 
 ---
+## 📸  Interface Preview
+
+![QA Oráculo Demo](assets/qa_oraculo_cartoon_demo.gif)
+
+---
 
 ## 🛠️ Tech Stack
 
