@@ -27,17 +27,6 @@ It’s like having a **senior QA always available**, accelerating planning and c
 
 ---
 
-## ✨ Interface Demo
-
-📸 *Example running on Streamlit:*
-
-**[IMPORTANT: Don’t forget to replace the link below with a real screenshot of your app!]**
-![QA Oracle Screenshot](https://i.imgur.com/example.png)
-
-> The interface guides the analyst step by step, from initial analysis to generating a complete test plan.
-
----
-
 ## 🚀 Key Features
 
 - 💻 **Interactive Web Interface** built with **Streamlit**.  
