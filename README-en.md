@@ -1,111 +1,145 @@
 <nav aria-label="Language switcher" style="text-align: right;">
-  <a href="README-en.md" aria-current="page">🇺🇸 <strong>English</strong></a> | 
-  <a href="README.md">🇧🇷 Português</a>
+  <a href="README.md" aria-current="page">🇺🇸 <strong>English</strong></a> | 
+  <a href="README-pt.md">🇧🇷 Português</a>
 </nav>
 
-# 🔮 QA Oracle: Requirements Analysis with AI
+# 🔮 QA Oracle: AI-Powered Requirements Analysis
 
-👋 Welcome to **QA Oracle**!  
-A senior QA assistant powered by AI that helps you transform User Stories (US) into clear specifications, reducing risks and speeding up test planning.  
-
----
-
-## ✨ Why use QA Oracle?
-
-- 🔍 **Detects ambiguities** in User Stories before development  
-- ❓ **Suggests questions for the PO**, enabling quick alignment  
-- ✅ **Generates acceptance criteria** that are simple and verifiable  
-- 📝 **Proposes interactive test plans** and Gherkin test cases  
-- ♿ **Includes accessibility (A11y) scenarios** by default  
+![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-red.svg)
+![Test Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Why QA Oracle?
 
-Ready to run? Follow these 4 steps:
+Tired of **vague User Stories** and endless meetings to “align expectations”?  
+**QA Oracle** uses **cutting-edge AI** to turn raw requirements into **test-ready specifications**.  
 
-1. **Clone the repository**  
-   ```bash
-   git clone https://github.com/your-name/qa-oracle-requirements.git
-   cd qa-oracle-requirements
-   ```
+In just minutes, you’ll get:  
+- ✅ Clear acceptance criteria.  
+- ❓ Smart questions for the Product Owner.  
+- 📝 Structured, ready-to-use test plans.  
+- 🧪 On-demand Gherkin scenarios.  
 
-2. **Run the setup**  
-   - Windows: `setup.bat`  
-   - Mac/Linux: `chmod +x setup.sh && ./setup.sh`
-
-3. **Configure your API Key**  
-   Copy `.env.example` → `.env` and add your Google Gemini API key.
-
-4. **Activate the virtual environment**  
-   - Windows: `.\.venv\Scriptsctivate`  
-   - Mac/Linux: `source .venv/bin/activate`
+It’s like having a **senior QA always available**, accelerating planning and catching risks before the first bug appears.  
 
 ---
 
-## 🛠️ How to Use
+## ✨ Interface Demo
 
-The flow is simple:
+📸 *Example running on Streamlit:*
 
-1. **Run the script**  
-   ```bash
-   ./.venv/bin/python app.py
-   ```
+**[IMPORTANT: Don’t forget to replace the link below with a real screenshot of your app!]**
+![QA Oracle Screenshot](https://i.imgur.com/example.png)
 
-2. **Step 1:** US analysis → ambiguity, PO questions, and acceptance criteria.  
-3. **Step 2:** you decide:  
-   - Type `y` → generate test plan + Gherkin cases  
-   - Type `n` → exit  
+> The interface guides the analyst step by step, from initial analysis to generating a complete test plan.
 
 ---
 
-## 🧪 Tests
+## 🚀 Key Features
 
-This project uses `unittest` to ensure code quality. To run the test suite:
+- 💻 **Interactive Web Interface** built with **Streamlit**.  
+- 🔍 **Ambiguity detection** with follow-up questions for the PO.  
+- ✅ **Objective Acceptance Criteria** generation.  
+- 📝 **Interactive Test Plans** and on-demand Gherkin scenarios.  
+- ♿ **Accessibility focus (A11y)** with WCAG-based test scenarios.  
+- 📊 **Interactive Test Case Table** sortable via **Pandas**.  
+- 📥 **Export Reports** in Markdown format.  
 
+---
+
+## 🛠️ Tech Stack
+
+- 🐍 **Python 3.11+**  
+- 🌐 **Streamlit** (Web UI Framework)  
+- 🧠 **LangGraph & Google Gemini** (AI Orchestration and Model)  
+- 📊 **Pandas** (Data handling for the UI)  
+- 🧪 **Unittest & Coverage.py** (Testing and Coverage)  
+
+---
+
+## ⚙️ Running Locally
+
+### Requirements
+- Python 3.11+  
+- Google API Key ([get it here](https://aistudio.google.com/app/apikey))  
+
+### Installation
 ```bash
-./.venv/bin/python -m unittest discover tests/
+# Clone the repository
+git clone https://github.com/your-user/qa-oracle-requirements.git
+cd qa-oracle-requirements
+
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # Mac/Linux
+# .\.venv\Scripts\activate  # Windows
+
+# Install dependencies
+pip install -r requirements.txt
 ```
+
+### API Setup
+Create a `.env` file at the project root with the following content:  
+
+```env
+GOOGLE_API_KEY="your_api_key_here"
+```
+
+### Run the App
+```bash
+streamlit run app.py
+```
+
+🎉 Done! QA Oracle will open in your browser.  
+
+---
+
+## 🧪 Quality & Testing
+
+The project is backed by a robust unit test suite validating backend logic.  
+
+- **Test Coverage**: business logic in `graph.py` reached **99% line coverage**, ensuring reliability.  
+- **Run Tests**:  
+  ```bash
+  python -m unittest discover tests/
+  ```
+- **Check Coverage**:  
+  ```bash
+  coverage run -m unittest discover tests/ && coverage report -m
+  ```
 
 ---
 
 ## 🤔 Troubleshooting
 
-1. **zsh: permission denied: ./setup.sh**  
-   ➡ Grant execution permission:  
-   ```bash
-   chmod +x setup.sh
-   ```
+❌ **Error**: Invalid API Key  
+✔️ Make sure `.env` is at the project root and the “Generative Language” API is enabled in Google Cloud.  
 
-2. **./setup.sh: python: command not found**  
-   ➡ On macOS/Linux, use `python3`:  
-   ```bash
-   python3 -m venv .venv
-   ```
-
-3. **ModuleNotFoundError**  
-   ➡ Activate the virtual environment and run:  
-   ```bash
-   ./.venv/bin/python main.py
-   ```
-
-4. **error: externally-managed-environment**  
-   ➡ Install dependencies using pip from the environment:  
-   ```bash
-   ./.venv/bin/python -m pip install -r requirements.txt
-   ```
+❌ **Error**: `streamlit` command not found  
+✔️ Ensure your virtual environment `.venv` is activated. Reinstall dependencies if needed.  
 
 ---
 
-## 🤝 Contribute
+## 📌 Roadmap
 
-We love contributions!  
-- Open an *issue* to suggest improvements  
-- Submit a *PR* for new features  
-
-⭐ If this project helped you, don’t forget to give it a star on the repository!
+- ✅ Interactive web interface with Streamlit  
+- ✅ Acceptance criteria and PO questions generation  
+- ✅ On-demand complete test plans  
+- 📄 PDF report export  
+- 🔗 Jira API integration for issue creation and updates  
+- 📦 Batch analysis of multiple requirements  
 
 ---
 
-📌 This project is still evolving.  
-💡 Your feedback is super important — contribute, test, and help shape the future of QA Oracle!
+## 🤝 Contributing
+
+Contributions are welcome!  
+- Open an **issue** to report bugs or suggest improvements.  
+- Send a **Pull Request** with new features.  
+- ⭐ If this project helped you, leave a star on the repo!  
+
+---
+
