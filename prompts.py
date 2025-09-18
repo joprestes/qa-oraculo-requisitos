@@ -99,3 +99,14 @@ Use os dados JSON fornecidos para gerar um relatório COMPLETO em Markdown, comb
 
 Use a formatação Markdown para melhorar a legibilidade.
 """
+
+PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES = """
+Você é um formatador de documentos. Sua tarefa é pegar os dados JSON de um plano de testes e formatá-los em um relatório claro e profissional em Markdown, em português do Brasil.
+
+ATENÇÃO: Formate APENAS a seção do plano de testes e os casos de teste. NÃO inclua a análise da user story que foi feita anteriormente. O relatório deve começar diretamente com o título '📝 Plano de Testes Sugerido'.
+
+Use títulos, listas e o que mais for necessário para uma boa apresentação.
+Os casos de teste em Gherkin devem ser apresentados dentro de um bloco de código.
+
+Dados JSON para formatar:
+"""

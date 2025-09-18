@@ -2,7 +2,7 @@ import json
 import os
 import re
 import time
-from typing import TypedDict, List, Dict, Any
+from typing import TypedDict, Any
 
 import google.generativeai as genai
 from google.api_core.exceptions import ResourceExhausted
@@ -15,14 +15,14 @@ from prompts import (
     PROMPT_ANALISE_US,
     PROMPT_CRIAR_PLANO_DE_TESTES,
     PROMPT_GERAR_RELATORIO_ANALISE,
-    PROMPT_GERAR_RELATORIO_COMPLETO
+    PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES
 )
 
 # Configuração da API
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# --- Funções Auxiliares ---
+# --- Funções Auxiliares  ---
 
 def extrair_json_da_resposta(texto_resposta: str) -> str | None:
     """Extrai uma string JSON de um texto bruto, limpando formatação comum."""
@@ -61,13 +61,12 @@ def chamar_modelo_com_retry(model, prompt_completo, tentativas=3, espera=60):
 
 class AgentState(TypedDict):
     user_story: str
-    analise_da_us: Dict[str, Any]
+    analise_da_us: dict[str, Any]
     relatorio_analise_inicial: str 
-    decisao_usuario_plano_testes: str
-    plano_e_casos_de_teste: Dict[str, Any]
-    relatorio_final_completo: str   
+    user_response: str  
+    plano_e_casos_de_teste: dict[str, Any]
+    relatorio_plano_de_testes: str     
 
-# --- Nós do Grafo ---
 
 def node_analisar_historia(state: AgentState) -> AgentState:
     """Gera a análise de qualidade inicial da User Story."""
@@ -117,14 +116,6 @@ def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
         relatorio_de_erro = "# Erro na Geração do Relatório\n\nO serviço de geração de relatórios não respondeu."
         return {"relatorio_analise_inicial": relatorio_de_erro}
 
-def node_perguntar_plano_de_testes(state: AgentState) -> AgentState:
-    """Apresenta o relatório inicial e solicita o próximo passo ao usuário."""
-    print("\n--- ✅ Relatório de Análise Inicial Gerado ---")
-    print(state.get("relatorio_analise_inicial", "Erro ao gerar relatório inicial."))
-    print("-------------------------------------------\n")
-    
-    resposta = input("Deseja prosseguir com a criação do Plano e Casos de Teste? (s/n): ").lower()
-    return {"decisao_usuario_plano_testes": resposta}
 
 def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
     """Gera o Plano de Testes detalhado e os Casos de Teste em Gherkin."""
@@ -158,31 +149,32 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
 
     return {"plano_e_casos_de_teste": plano_json}
 
-def node_gerar_relatorio_completo(state: AgentState) -> AgentState:
-    """Compila e formata o relatório final, incluindo o plano de testes."""
-    print("--- Etapa 4: Compilando o relatório completo... ---")
-    contexto = {
-        "user_story_original": state["user_story"],
-        "analise": state.get("analise_da_us", {}),
-        "plano_de_testes": state.get("plano_e_casos_de_teste")
-    }
+def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
+    """Compila e formata APENAS o relatório do plano de testes."""
+    print("--- Etapa 4: Compilando o relatório do plano de testes... ---")
+    
+    
+    contexto = state.get("plano_e_casos_de_teste", {})
     
     contexto_str = json.dumps(contexto, indent=2, ensure_ascii=False)
     model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_RELATORIO)
-    prompt_completo = f"{PROMPT_GERAR_RELATORIO_COMPLETO}\n\nDados:\n---\n{contexto_str}"
+    
+    prompt_completo = f"{PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES}\n\nDados:\n---\n{contexto_str}"
 
     response = chamar_modelo_com_retry(model, prompt_completo)
     
     if response and response.text:
-        return {"relatorio_final_completo": response.text}
+      
+        return {"relatorio_plano_de_testes": response.text}
     else:
-        print("❌ Falha ao gerar o relatório completo.")
-        relatorio_de_erro = "# Erro na Geração do Relatório Final\n\nO serviço de geração de relatórios não respondeu."
-        return {"relatorio_final_completo": relatorio_de_erro}
+        print("❌ Falha ao gerar o relatório do plano de testes.")
+        relatorio_de_erro = "### Erro na Geração do Plano de Testes\n\nO serviço não respondeu."
+        return {"relatorio_plano_de_testes": relatorio_de_erro}
 
 def decidir_proximo_passo(state: AgentState):
-    """Decide o próximo passo do fluxo com base na entrada do usuário."""
-    if state.get("decisao_usuario_plano_testes") == "s":
+    """Decide o próximo passo com base na resposta fornecida pela UI."""
+    # O app.py nos envia 'y' ou 'n' (ou qualquer outra coisa) dentro do estado.
+    if state.get("user_response", "n").lower() in ["s", "y"]:
         return "criar_plano_e_casos"
     else:
         return "fim"
@@ -192,22 +184,20 @@ workflow = StateGraph(AgentState)
 
 workflow.add_node("analista_us", node_analisar_historia)
 workflow.add_node("gerador_relatorio_analise", node_gerar_relatorio_analise)
-workflow.add_node("perguntar_usuario", node_perguntar_plano_de_testes)
 workflow.add_node("criador_plano_testes", node_criar_plano_e_casos_de_teste)
-workflow.add_node("gerador_relatorio_completo", node_gerar_relatorio_completo)
-
+workflow.add_node("gerador_relatorio_plano_de_testes", node_gerar_relatorio_plano_de_testes)
 workflow.set_entry_point("analista_us")
 workflow.add_edge("analista_us", "gerador_relatorio_analise")
-workflow.add_edge("gerador_relatorio_analise", "perguntar_usuario")
+
 workflow.add_conditional_edges(
-    "perguntar_usuario",
+    "gerador_relatorio_analise", 
     decidir_proximo_passo,
     {
         "criar_plano_e_casos": "criador_plano_testes",
         "fim": END
     }
 )
-workflow.add_edge("criador_plano_testes", "gerador_relatorio_completo")
-workflow.add_edge("gerador_relatorio_completo", END)
+workflow.add_edge("criador_plano_testes", "gerador_relatorio_plano_de_testes")
+workflow.add_edge("gerador_relatorio_plano_de_testes", END)
 
 grafo = workflow.compile()
