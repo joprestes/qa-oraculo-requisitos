@@ -8,8 +8,7 @@
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-App-red.svg)
-![Test Coverage](./assets/cobertura.jpg)
-
+![Test Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)
 ---
 
 ## 🚀 Por que o QA Oráculo?
