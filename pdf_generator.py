@@ -1,13 +1,8 @@
-# pdf_generator.py (Sua versão, com a correção final)
-
 from fpdf import FPDF
 import pandas as pd
 from datetime import datetime
 import matplotlib.font_manager as fm
 
-# -------------------------------
-# Classe PDF com cabeçalho/rodapé
-# -------------------------------
 class PDF(FPDF):
     def header(self):
         if self.page_no() > 1:
@@ -25,11 +20,17 @@ class PDF(FPDF):
             self.cell(0, 10, f'Página {self.page_no()-1}', 0, 0, 'R')
             self.set_text_color(0, 0, 0)
 
-# -------------------------------
-# Funções utilitárias
-# -------------------------------
+    def divider(self):
+        """Desenha uma linha divisória suave."""
+        self.ln(3) # Pequeno espaço antes da linha
+        self.set_draw_color(220, 220, 220)
+        self.cell(0, 1, '', 'T', 1)
+        self.ln(5)
+        self.set_draw_color(0, 0, 0)
+
 def clean_text_for_pdf(text: str) -> str:
-    """Limpa emojis não suportados e substitui por símbolos/textos."""
+    """Limpa emojis e garante que o texto seja uma string."""
+    text = str(text)
     replacements = {
         "📌": "- ", "✅": "[OK] ", "🎯": "-> ", "•": "-",
         "🔍": "[Análise] ", "❓": "[?] ", "🚩": "[Alerta] "
@@ -39,10 +40,10 @@ def clean_text_for_pdf(text: str) -> str:
     return text
 
 def add_cover(pdf: PDF):
-    """Cria uma página de capa para o relatório."""
+    """Cria a página de capa do relatório."""
     pdf.add_page()
     pdf.set_font('DejaVu', 'B', 24)
-    pdf.cell(0, 80, '', 0, 1) # Espaçador
+    pdf.cell(0, 80, '', 0, 1)
     pdf.cell(0, 20, 'Relatório de Análise de QA', 0, 1, 'C')
     pdf.ln(10)
     pdf.set_font('DejaVu', 'B', 18)
@@ -53,88 +54,78 @@ def add_cover(pdf: PDF):
     pdf.set_text_color(120, 120, 120)
     pdf.cell(0, 10, f'Gerado em: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}', 0, 1, 'C')
     pdf.set_text_color(0, 0, 0)
-    # A próxima página é adicionada automaticamente no fluxo principal
 
 def add_section_title(pdf: PDF, text: str):
     """Adiciona um título de seção formatado."""
     pdf.set_font('DejaVu', 'B', 16)
-    pdf.set_text_color(0, 51, 102) # Azul escuro
+    pdf.set_text_color(0, 51, 102)
     pdf.cell(0, 12, text, border=0, ln=1, align='L')
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
 
-# -------------------------------
-# Função principal do relatório
-# -------------------------------
 def generate_pdf_report(analysis_report: str, test_plan_df: pd.DataFrame) -> bytes:
     pdf = PDF()
     
     try:
         font_path = fm.findfont('DejaVu Sans')
+        pdf.add_font('DejaVu', '', font_path, uni=True)
+        pdf.add_font('DejaVu', 'B', font_path, uni=True)
+        pdf.add_font('DejaVu', 'I', font_path, uni=True)
     except Exception:
         raise RuntimeError("Fonte 'DejaVu Sans' não encontrada.")
-        
-    pdf.add_font('DejaVu', '', font_path, uni=True)
-    pdf.add_font('DejaVu', 'B', font_path, uni=True)
-    pdf.add_font('DejaVu', 'I', font_path, uni=True)
-
-    # Capa
+    
+    # 1. Adiciona a capa
     add_cover(pdf)
-
-    # Inicia a primeira página de conteúdo
+    
+    # 2. Adiciona a primeira página de conteúdo
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    # --- Seção 1: Análise da User Story ---
+    # --- Seção 1: Análise ---
     add_section_title(pdf, "1. Análise de Qualidade da User Story")
     pdf.set_font('DejaVu', '', 12)
-    analysis_report_cleaned = clean_text_for_pdf(analysis_report)
-    pdf.multi_cell(0, 8, analysis_report_cleaned)
+    pdf.multi_cell(0, 8, clean_text_for_pdf(analysis_report))
     pdf.ln(10)
 
     # --- Seção 2: Plano de Testes Detalhado ---
     add_section_title(pdf, "2. Plano de Testes Detalhado")
 
-    if not test_plan_df.empty and len(test_plan_df.columns) > 0:
-        page_width = pdf.w - pdf.l_margin - pdf.r_margin
-        col_count = len(test_plan_df.columns)
+    if not test_plan_df.empty:
+        friendly_names = {
+            "criterio_de_aceitacao_relacionado": "Critérios Relacionados",
+            "justificativa_acessibilidade": "Justificativa de Acessibilidade",
+            "titulo": "Título",
+            "prioridade": "Prioridade",
+            "cenario": "Cenário"
+        }
 
-        if col_count == 4:
-            weights = [0.08, 0.22, 0.45, 0.25]
-        else:
-            weights = [1/col_count] * col_count
-        
-        col_widths = [w * page_width for w in weights]
+        for index, row in test_plan_df.iterrows():
+            test_id = row.get("id", f"CT-{index+1:03d}")
+            test_id = clean_text_for_pdf(test_id)
 
-        pdf.set_font('DejaVu', 'B', 10)
-        pdf.set_fill_color(200, 220, 255)
-        for i, header in enumerate(test_plan_df.columns):
-            pdf.cell(col_widths[i], 10, str(header), 1, 0, 'C', fill=True)
-        pdf.ln()
+            pdf.set_font('DejaVu', 'B', 12)
+            pdf.set_fill_color(240, 240, 240)
+            pdf.cell(0, 10, f"Caso de Teste: {test_id}", border=1, ln=1, fill=True)
 
-        pdf.set_font('DejaVu', '', 10)
-        for row_index, row in test_plan_df.iterrows():
-            cleaned_row = [clean_text_for_pdf(str(item)) for item in row]
-            
-            # Define a cor de preenchimento para a linha
-            if row_index % 2 == 0:
-                pdf.set_fill_color(245, 245, 245)
-                fill = True
-            else:
-                fill = False
+            for col_name in test_plan_df.columns:
+                if col_name.lower() == "id":
+                    continue
 
-            max_lines = 0
-            for i, item in enumerate(cleaned_row):
-                lines = len(pdf.multi_cell(col_widths[i], 5, item, split_only=True))
-                if lines > max_lines:
-                    max_lines = lines
-            
-            row_height = max(10, max_lines * 5.5) # Garante uma altura mínima
+                cell_value = row.get(col_name, "")
+                
+                cell_value_str = str(cell_value)
+                if cell_value_str.strip() == '' or cell_value_str.lower() == 'nan':
+                    continue
 
-            for i, item in enumerate(cleaned_row):
-                align = 'C' if i == 0 else 'L'
-                pdf.multi_cell(col_widths[i], row_height, item, border=1, align=align,
-                               new_x="RIGHT", new_y="TOP", fill=fill)
-            pdf.ln(row_height)
+                label = friendly_names.get(col_name, col_name.replace("_", " ").title())
+
+                pdf.set_font('DejaVu', 'B', 11)
+                pdf.cell(50, 8, f"{label}:", border=0)
+
+                pdf.set_font('DejaVu', '', 11)
+                pdf.multi_cell(0, 8, clean_text_for_pdf(cell_value_str), border=0)
+                pdf.ln(2)
+
+            pdf.divider()
 
     return bytes(pdf.output())
