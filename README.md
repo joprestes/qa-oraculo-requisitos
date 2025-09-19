@@ -40,7 +40,10 @@ Em minutos, você terá:
 -   📝 **Planos de Teste interativos** e casos de teste em Gherkin sob demanda.  
 -   ♿ **Foco em Acessibilidade (A11y)**, com cenários baseados nas diretrizes da WCAG.  
 -   📊 **Tabela de Casos de Teste** interativa e ordenável, renderizada com **Pandas**.  
--   📥 **Download de Relatórios** em **Markdown** ou **PDF formatado profissionalmente**.  
+-   📥 **Download de Relatórios** em **Markdown** ou **PDF formatado profissionalmente**.
+- **📄 Exportação para PDF:** Gere um relatório profissional e completo em formato PDF, com capa, cabeçalho, rodapé e casos de teste formatados.
+- **🚀 Exportação para Azure DevOps:** Exporte os casos de teste para um arquivo `.xlsx` no formato exato para importação em massa no Azure Test Plans. A interface permite customizar os campos `Area Path` e `Assigned To` para compatibilidade com qualquer projeto.
+- **🔄 Fluxo de Análise Flexível:** Controle o fluxo da aplicação, escolhendo se deseja ou não gerar o plano de testes detalhado, e reinicie todo o processo com o botão "Realizar Nova Análise" para maior agilidade.  
 
 ---
 
@@ -52,6 +55,7 @@ Em minutos, você terá:
 -   📊 **Pandas** (Manipulação de Dados para a UI)  
 -   🧪 **Unittest & Coverage.py** (Testes e Cobertura de Código)  
 -   📄 **FPDF** (Geração de Relatórios em PDF)  
+-   📈 **Openpyxl:** Para a criação e manipulação de arquivos Excel (`.xlsx`), utilizado na exportação para o Azure DevOps.
 
 ---
 
@@ -91,6 +95,19 @@ streamlit run app.py
 🎉 Pronto! O QA Oráculo abrirá no seu navegador.  
 
 ---
+### 📋 Como Usar
+
+1.  **Insira a User Story:** Cole a User Story que deseja analisar no campo de texto principal.
+2.  **Inicie a Análise:** Clique no botão "Analisar User Story". A IA irá realizar uma análise de qualidade inicial e exibir o primeiro relatório.
+3.  **Decida o Próximo Passo:** A aplicação irá perguntar se você deseja continuar.
+    - Clique em **"Sim, Gerar Plano"** para que a IA crie os casos de teste detalhados.
+    - Clique em **"Não, Encerrar"** para finalizar o processo apenas com a análise inicial.
+4.  **Exporte os Resultados:** Após a conclusão, utilize os botões de download disponíveis:
+    - **.md:** Para uma versão de texto simples da análise.
+    - **.pdf:** Para um relatório completo e profissional.
+    - **.xlsx (Azure DevOps):** Para exportar os casos de teste. **Importante:** Preencha os campos `Area Path` e `Atribuído a` que aparecerão na tela para garantir que o arquivo seja compatível com o seu projeto no Azure.
+5.  **Comece de Novo:** Clique em "Realizar Nova Análise" para limpar a tela e iniciar um novo ciclo.
+---
 
 ## 🧪 Qualidade e Testes
 
@@ -123,9 +140,9 @@ A qualidade deste projeto é garantida por uma suíte de testes unitários robus
 - ✅ Interface web interativa com Streamlit  
 - ✅ Geração de critérios de aceite e perguntas ao PO  
 - ✅ Geração de plano de testes completo sob demanda  
-- ✅ Exportação de relatórios em formato PDF com capa, tabelas coloridas e rodapé elegante  
+- ✅ Exportação de relatórios em formato PDF com capa e rodapé elegante  
 - 🔗 Integração com APIs do Jira para criar e popular issues  
-- 📦 Análise automática de múltiplos requisitos em lote  
+  
 
 ---
 

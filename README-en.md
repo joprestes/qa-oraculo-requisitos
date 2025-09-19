@@ -41,6 +41,9 @@ It’s like having a **senior QA always available**, speeding up planning and re
 -   ♿ **Accessibility (A11y) focus**, with scenarios based on WCAG guidelines.  
 -   📊 **Interactive and sortable Test Case Table**, rendered with **Pandas**.  
 -   📥 **Download Reports** in **Markdown** or **professionally formatted PDF**.  
+- **📄 PDF Export:** Generate a professional and complete report in PDF format, featuring a cover page, header, footer, and formatted test cases.
+- **🚀 Azure DevOps Export:** Export test cases to an `.xlsx` file in the exact format required for bulk import into Azure Test Plans. The interface allows customizing the `Area Path` and `Assigned To` fields for compatibility with any project.
+- **🔄 Flexible Analysis Flow:** Control the application's workflow by choosing whether to generate the detailed test plan, and restart the entire process with the "Perform New Analysis" button for greater agility.
 
 ---
 
@@ -52,6 +55,7 @@ It’s like having a **senior QA always available**, speeding up planning and re
 -   📊 **Pandas** (Data Manipulation for UI)  
 -   🧪 **Unittest & Coverage.py** (Testing and Code Coverage)  
 -   📄 **FPDF** (PDF Report Generation)  
+-   📈 **Openpyxl** For creating and manipulating Excel (`.xlsx`) files, used for the Azure DevOps export.
 
 ---
 
@@ -91,6 +95,19 @@ streamlit run app.py
 🎉 Done! QA Oracle will open in your browser.  
 
 ---
+### 📋 How to Use
+
+1.  **Insert the User Story:** Paste the User Story you wish to analyze into the main text area.
+2.  **Start the Analysis:** Click the "Analyze User Story" button. The AI will perform an initial quality analysis and display the first report.
+3.  **Decide the Next Step:** The application will ask if you want to proceed.
+    - Click **"Yes, Generate Plan"** for the AI to create detailed test cases.
+    - Click **"No, End Analysis"** to finish the process with only the initial analysis.
+4.  **Export the Results:** Once the process is complete, use the available download buttons:
+    - **.md:** For a plain text version of the analysis.
+    - **.pdf:** For a complete, professional report.
+    - **.xlsx (Azure DevOps):** To export the test cases. **Important:** Fill in the `Area Path` and `Assigned To` fields that appear on screen to ensure the file is compatible with your Azure DevOps project.
+5.  **Start Over:** Click "Perform New Analysis" to clear the interface and begin a new cycle.
+---
 
 ## 🧪 Quality and Testing
 
@@ -123,9 +140,8 @@ Project quality is ensured by a robust unit test suite that validates backend lo
 - ✅ Interactive web interface with Streamlit  
 - ✅ Generation of acceptance criteria and PO questions  
 - ✅ On-demand full test plan generation  
-- ✅ Export of reports in PDF format with cover page, colored tables, and elegant footer  
+- ✅ Export of reports in PDF format with cover page and elegant footer  
 - 🔗 Integration with Jira APIs to create and populate issues  
-- 📦 Automatic batch analysis of multiple requirements  
 
 ---
 
