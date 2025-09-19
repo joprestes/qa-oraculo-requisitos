@@ -3,70 +3,71 @@
   <a href="README-pt.md">🇧🇷 Português</a>
 </nav>
 
-# 🔮 QA Oracle: AI-Powered Requirements Analysis
+# 🔮 QA Oracle: Requirements Analysis with AI
 
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Streamlit](https://img.shields.io/badge/Streamlit-App-red.svg)
 ![Test Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)
-
 ---
 
 ## 🚀 Why QA Oracle?
 
-Tired of **vague User Stories** and endless meetings to “align expectations”?  
-**QA Oracle** uses **cutting-edge AI** to turn raw requirements into **test-ready specifications**.  
+Tired of **vague User Stories** and endless meetings to "align understandings"?  
+**QA Oracle** leverages **cutting-edge AI** to transform loose requirements into **test-ready specifications**.  
 
-In just minutes, you’ll get:  
-- ✅ Clear acceptance criteria.  
+In minutes, you will get:  
+- ✅ Objective acceptance criteria.  
 - ❓ Smart questions for the Product Owner.  
-- 📝 Structured, ready-to-use test plans.  
-- 🧪 On-demand Gherkin scenarios.  
+- 📝 Complete and organized test plans.  
+- 🧪 Gherkin scenarios on demand.  
+- 📄 Exportable reports in PDF with professional formatting.  
 
-It’s like having a **senior QA always available**, accelerating planning and catching risks before the first bug appears.  
+It’s like having a **senior QA always available**, speeding up planning and reducing failures even before the first bug appears.  
+
+---
+## 📸 Interface Preview
+
+![QA Oracle Demo](assets/qa_oraculo_cartoon_demo.gif)
 
 ---
 
 ## 🚀 Key Features
 
-- 💻 **Interactive Web Interface** built with **Streamlit**.  
-- 🔍 **Ambiguity detection** with follow-up questions for the PO.  
-- ✅ **Objective Acceptance Criteria** generation.  
-- 📝 **Interactive Test Plans** and on-demand Gherkin scenarios.  
-- ♿ **Accessibility focus (A11y)** with WCAG-based test scenarios.  
-- 📊 **Interactive Test Case Table** sortable via **Pandas**.  
-- 📥 **Export Reports** in Markdown format.  
-
----
-## 📸  Interface Preview
-
-![QA Oráculo Demo](assets/qa_oraculo_cartoon_demo.gif)
+-   💻 **Interactive Web Interface** built with **Streamlit**.  
+-   🔍 **Ambiguity detection** and suggestion of questions for the PO.  
+-   ✅ **Generation of objective and verifiable Acceptance Criteria**.  
+-   📝 **Interactive Test Plans** and Gherkin test cases on demand.  
+-   ♿ **Accessibility (A11y) focus**, with scenarios based on WCAG guidelines.  
+-   📊 **Interactive and sortable Test Case Table**, rendered with **Pandas**.  
+-   📥 **Download Reports** in **Markdown** or **professionally formatted PDF**.  
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technologies Used
 
-- 🐍 **Python 3.11+**  
-- 🌐 **Streamlit** (Web UI Framework)  
-- 🧠 **LangGraph & Google Gemini** (AI Orchestration and Model)  
-- 📊 **Pandas** (Data handling for the UI)  
-- 🧪 **Unittest & Coverage.py** (Testing and Coverage)  
+-   🐍 **Python 3.11+**  
+-   🌐 **Streamlit** (Web Interface Framework)  
+-   🧠 **LangGraph & Google Gemini** (Orchestration and AI Model)  
+-   📊 **Pandas** (Data Manipulation for UI)  
+-   🧪 **Unittest & Coverage.py** (Testing and Code Coverage)  
+-   📄 **FPDF** (PDF Report Generation)  
 
 ---
 
-## ⚙️ Running Locally
+## ⚙️ How to Run Locally
 
-### Requirements
-- Python 3.11+  
-- Google API Key ([get it here](https://aistudio.google.com/app/apikey))  
+### Prerequisites
+-   Python 3.11+  
+-   Google API Key ([get it here](https://aistudio.google.com/app/apikey))  
 
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/joprestes/qa-oracle-requirements.git
-cd qa-oracle-requirements
+git clone https://github.com/joprestes/qa-oraculo-requisitos.git
+cd qa-oraculo-requisitos
 
-# Create and activate virtual environment
+# Create and activate the virtual environment
 python3 -m venv .venv
 source .venv/bin/activate  # Mac/Linux
 # .\.venv\Scripts\activate  # Windows
@@ -75,14 +76,14 @@ source .venv/bin/activate  # Mac/Linux
 pip install -r requirements.txt
 ```
 
-### API Setup
-Create a `.env` file at the project root with the following content:  
+### API Configuration
+Create a `.env` file in the project root with the following content:  
 
 ```env
 GOOGLE_API_KEY="your_api_key_here"
 ```
 
-### Run the App
+### Run
 ```bash
 streamlit run app.py
 ```
@@ -91,11 +92,11 @@ streamlit run app.py
 
 ---
 
-## 🧪 Quality & Testing
+## 🧪 Quality and Testing
 
-The project is backed by a robust unit test suite validating backend logic.  
+Project quality is ensured by a robust unit test suite that validates backend logic.  
 
-- **Test Coverage**: business logic in `graph.py` reached **99% line coverage**, ensuring reliability.  
+- **Test Coverage**: The business logic in `graph.py` module reached **99% line coverage**, ensuring high reliability.  
 - **Run Tests**:  
   ```bash
   python -m unittest discover tests/
@@ -110,30 +111,29 @@ The project is backed by a robust unit test suite validating backend logic.
 ## 🤔 Troubleshooting
 
 ❌ **Error**: Invalid API Key  
-✔️ Make sure `.env` is at the project root and the “Generative Language” API is enabled in Google Cloud.  
+✔️ Ensure that the `.env` file is in the project root and that the “Generative Language” API is active in Google Cloud.  
 
 ❌ **Error**: `streamlit` command not found  
-✔️ Ensure your virtual environment `.venv` is activated. Reinstall dependencies if needed.  
+✔️ Make sure the `.venv` virtual environment is activated. If necessary, reinstall dependencies.  
 
 ---
 
 ## 📌 Roadmap
 
 - ✅ Interactive web interface with Streamlit  
-- ✅ Acceptance criteria and PO questions generation  
-- ✅ On-demand complete test plans  
-- 📄 PDF report export  
-- 🔗 Jira API integration for issue creation and updates  
-- 📦 Batch analysis of multiple requirements  
+- ✅ Generation of acceptance criteria and PO questions  
+- ✅ On-demand full test plan generation  
+- ✅ Export of reports in PDF format with cover page, colored tables, and elegant footer  
+- 🔗 Integration with Jira APIs to create and populate issues  
+- 📦 Automatic batch analysis of multiple requirements  
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome!  
+Your contribution is very welcome!  
 - Open an **issue** to report bugs or suggest improvements.  
-- Send a **Pull Request** with new features.  
-- ⭐ If this project helped you, leave a star on the repo!  
+- Submit a **Pull Request** with new features.  
+- ⭐ If this project helped you, give the repository a star!  
 
 ---
-
