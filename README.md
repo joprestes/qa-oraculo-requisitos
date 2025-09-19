@@ -21,6 +21,7 @@ Em minutos, você terá:
 - ❓ Perguntas inteligentes para o PO.  
 - 📝 Planos de teste completos e organizados.  
 - 🧪 Cenários em Gherkin sob demanda.  
+- 📄 Relatórios exportáveis em PDF com formatação profissional.  
 
 É como ter um **QA sênior sempre disponível**, acelerando o planejamento e reduzindo falhas antes mesmo do primeiro bug aparecer.  
 
@@ -39,7 +40,7 @@ Em minutos, você terá:
 -   📝 **Planos de Teste interativos** e casos de teste em Gherkin sob demanda.  
 -   ♿ **Foco em Acessibilidade (A11y)**, com cenários baseados nas diretrizes da WCAG.  
 -   📊 **Tabela de Casos de Teste** interativa e ordenável, renderizada com **Pandas**.  
--   📥 **Download de Relatórios** completos em formato Markdown.  
+-   📥 **Download de Relatórios** em **Markdown** ou **PDF formatado profissionalmente**.  
 
 ---
 
@@ -50,6 +51,7 @@ Em minutos, você terá:
 -   🧠 **LangGraph & Google Gemini** (Orquestração e Modelo de IA)  
 -   📊 **Pandas** (Manipulação de Dados para a UI)  
 -   🧪 **Unittest & Coverage.py** (Testes e Cobertura de Código)  
+-   📄 **FPDF** (Geração de Relatórios em PDF)  
 
 ---
 
@@ -121,7 +123,7 @@ A qualidade deste projeto é garantida por uma suíte de testes unitários robus
 - ✅ Interface web interativa com Streamlit  
 - ✅ Geração de critérios de aceite e perguntas ao PO  
 - ✅ Geração de plano de testes completo sob demanda  
-- 📄 Exportação de relatórios em formato PDF  
+- ✅ Exportação de relatórios em formato PDF com capa, tabelas coloridas e rodapé elegante  
 - 🔗 Integração com APIs do Jira para criar e popular issues  
 - 📦 Análise automática de múltiplos requisitos em lote  
 
