@@ -1,155 +1,161 @@
+<p align="center">
+  <img src="assets/logo_oraculo.png" alt="QA Oracle Logo" width="200"/>
+</p>
+
+<h1 align="center">🔮 QA Oracle</h1>
+<p align="center"><i>Requirement Analysis powered by Artificial Intelligence</i></p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.11+-blue.svg"/>
+  <img src="https://img.shields.io/badge/license-MIT-green.svg"/>
+  <img src="https://img.shields.io/badge/Streamlit-App-red.svg"/>
+  <img src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
+</p>
+
 <nav aria-label="Language switcher" style="text-align: right;">
-  <a href="README.md" aria-current="page">🇺🇸 <strong>English</strong></a> | 
-  <a href="README-pt.md">🇧🇷 Português</a>
+<a href="README.md" aria-current="page">🇺🇸 <strong>English</strong></a> |
+<a href="README-pt.md">🇧🇷 Português</a>
 </nav>
-
-# 🔮 QA Oracle: Requirements Analysis with AI
-
-![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Streamlit](https://img.shields.io/badge/Streamlit-App-red.svg)
-![Test Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)
----
 
 ## 🚀 Why QA Oracle?
 
-Tired of **vague User Stories** and endless meetings to "align understandings"?  
-**QA Oracle** leverages **cutting-edge AI** to transform loose requirements into **test-ready specifications**.  
+Tired of **vague User Stories** and **endless meetings** to align understanding?  
 
-In minutes, you will get:  
-- ✅ Objective acceptance criteria.  
-- ❓ Smart questions for the Product Owner.  
-- 📝 Complete and organized test plans.  
-- 🧪 Gherkin scenarios on demand.  
-- 📄 Exportable reports in PDF with professional formatting.  
+**QA Oracle** turns raw requirements into **test-ready specifications** using cutting-edge AI.  
 
-It’s like having a **senior QA always available**, speeding up planning and reducing failures even before the first bug appears.  
+👉 In just **minutes**, you get:  
+- ✅ Clear and objective acceptance criteria  
+- ❓ Smart questions for the PO  
+- 📝 Complete and organized test plans  
+- 🧪 On-demand Gherkin scenarios  
+- 📄 Exportable reports (.md, .pdf, .xlsx)  
+
+It’s like having a **Senior QA available 24/7**, speeding up planning and reducing issues before the first bug appears.  
 
 ---
+
 ## 📸 Interface Preview
 
-![QA Oracle Demo](assets/qa_oraculo_cartoon_demo.gif)
+![alt text](assets/qa_oraculo_cartoon_demo.gif)
 
 ---
 
-## 🚀 Key Features
+## 🚀 Main Features
 
--   💻 **Interactive Web Interface** built with **Streamlit**.  
--   🔍 **Ambiguity detection** and suggestion of questions for the PO.  
--   ✅ **Generation of objective and verifiable Acceptance Criteria**.  
--   📝 **Interactive Test Plans** and Gherkin test cases on demand.  
--   ♿ **Accessibility (A11y) focus**, with scenarios based on WCAG guidelines.  
--   📊 **Interactive and sortable Test Case Table**, rendered with **Pandas**.  
--   📥 **Download Reports** in **Markdown** or **professionally formatted PDF**.  
-- **📄 PDF Export:** Generate a professional and complete report in PDF format, featuring a cover page, header, footer, and formatted test cases.
-- **🚀 Azure DevOps Export:** Export test cases to an `.xlsx` file in the exact format required for bulk import into Azure Test Plans. The interface allows customizing the `Area Path` and `Assigned To` fields for compatibility with any project.
-- **🔄 Flexible Analysis Flow:** Control the application's workflow by choosing whether to generate the detailed test plan, and restart the entire process with the "Perform New Analysis" button for greater agility.
+| 🔧 Feature | 💡 Description |
+|------------|----------------|
+| 💻 **Web Interface** | Built with Streamlit, interactive and user-friendly |
+| 🔍 **Ambiguity Detection** | Suggests clarifying questions for the PO |
+| ✅ **Acceptance Criteria** | Clear, testable, and objective |
+| 📝 **Test Plans & Gherkin** | On-demand test cases in Gherkin format |
+| 📊 **Interactive Table** | Test cases rendered and sortable with Pandas |
+| 📥 **Multiple Export Options** | .md, .pdf, .xlsx (Azure DevOps, Jira Zephyr) |
+| 🔄 **Flexible Workflow** | Choose detailed test plan generation or quick analysis |
+| 🏗️ **Modular Architecture** | Refactored codebase for easy maintenance and scaling |
 
 ---
 
-## 🛠️ Technologies Used
+## 🛠️ Tech Stack
 
--   🐍 **Python 3.11+**  
--   🌐 **Streamlit** (Web Interface Framework)  
--   🧠 **LangGraph & Google Gemini** (Orchestration and AI Model)  
--   📊 **Pandas** (Data Manipulation for UI)  
--   🧪 **Unittest & Coverage.py** (Testing and Code Coverage)  
--   📄 **FPDF** (PDF Report Generation)  
--   📈 **Openpyxl** For creating and manipulating Excel (`.xlsx`) files, used for the Azure DevOps export.
+- 🐍 Python 3.11+  
+- 🌐 Streamlit (Web Interface Framework)  
+- 🧠 LangGraph & Google Gemini (Orchestration and AI Model)  
+- 📊 Pandas (Data Handling)  
+- 📄 FPDF2 (PDF Report Generation)  
+- 📈 Openpyxl (Excel .xlsx handling)  
 
 ---
 
 ## ⚙️ How to Run Locally
 
-### Prerequisites
--   Python 3.11+  
--   Google API Key ([get it here](https://aistudio.google.com/app/apikey))  
+<details>
+<summary><b>📌 Requirements</b></summary>
 
-### Installation
+- Python 3.11+  
+- Google API Key (get it [here](https://console.cloud.google.com))  
+
+</details>
+
+<details>
+<summary><b>🚀 Installation</b></summary>
+
 ```bash
 # Clone the repository
 git clone https://github.com/joprestes/qa-oraculo-requisitos.git
 cd qa-oraculo-requisitos
 
-# Create and activate the virtual environment
-python3 -m venv .venv
-source .venv/bin/activate  # Mac/Linux
-# .\.venv\Scripts\activate  # Windows
+# Create and activate a virtual environment
+python3 -m venv venv
+source venv/bin/activate  # Mac/Linux
+# .\venv\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 ```
+</details>
 
-### API Configuration
-Create a `.env` file in the project root with the following content:  
+<details>
+<summary><b>🔑 API Setup</b></summary>
+
+Create a `.env` file at the project root with:  
 
 ```env
 GOOGLE_API_KEY="your_api_key_here"
 ```
+</details>
 
-### Run
+<details>
+<summary><b>▶️ Run</b></summary>
+
 ```bash
 streamlit run app.py
 ```
 
-🎉 Done! QA Oracle will open in your browser.  
+🎉 QA Oracle will open automatically in your browser!
+</details>
 
 ---
-### 📋 How to Use
 
-1.  **Insert the User Story:** Paste the User Story you wish to analyze into the main text area.
-2.  **Start the Analysis:** Click the "Analyze User Story" button. The AI will perform an initial quality analysis and display the first report.
-3.  **Decide the Next Step:** The application will ask if you want to proceed.
-    - Click **"Yes, Generate Plan"** for the AI to create detailed test cases.
-    - Click **"No, End Analysis"** to finish the process with only the initial analysis.
-4.  **Export the Results:** Once the process is complete, use the available download buttons:
-    - **.md:** For a plain text version of the analysis.
-    - **.pdf:** For a complete, professional report.
-    - **.xlsx (Azure DevOps):** To export the test cases. **Important:** Fill in the `Area Path` and `Assigned To` fields that appear on screen to ensure the file is compatible with your Azure DevOps project.
-5.  **Start Over:** Click "Perform New Analysis" to clear the interface and begin a new cycle.
----
+## 📋 How to Use
 
-## 🧪 Quality and Testing
-
-Project quality is ensured by a robust unit test suite that validates backend logic.  
-
-- **Test Coverage**: The business logic in `graph.py` module reached **99% line coverage**, ensuring high reliability.  
-- **Run Tests**:  
-  ```bash
-  python -m unittest discover tests/
-  ```
-- **Check Coverage**:  
-  ```bash
-  coverage run -m unittest discover tests/ && coverage report -m
-  ```
+1. **Insert a User Story** → Paste the User Story to analyze.  
+2. **Start Analysis** → Click "Analyze User Story" to generate the initial report.  
+3. **Decide Next Step** → Choose between generating a full test plan or finishing with initial analysis.  
+4. **Export Results** → Use the download buttons. For Azure/Jira, configure the customizable fields.  
+5. **Start Over** → Click "New Analysis" to reset and begin a new cycle.  
 
 ---
 
 ## 🤔 Troubleshooting
 
-❌ **Error**: Invalid API Key  
-✔️ Ensure that the `.env` file is in the project root and that the “Generative Language” API is active in Google Cloud.  
+❌ **Error:** Invalid API Key  
+✔️ Check if the `.env` file is at the project root and ensure the “Generative Language” API is enabled on Google Cloud.  
 
-❌ **Error**: `streamlit` command not found  
-✔️ Make sure the `.venv` virtual environment is activated. If necessary, reinstall dependencies.  
+❌ **Error:** `streamlit` command not found  
+✔️ Make sure the `venv` environment is activated.  
 
 ---
 
 ## 📌 Roadmap
 
-- ✅ Interactive web interface with Streamlit  
-- ✅ Generation of acceptance criteria and PO questions  
-- ✅ On-demand full test plan generation  
-- ✅ Export of reports in PDF format with cover page and elegant footer  
-- 🔗 Integration with Jira APIs to create and populate issues  
+- [x] Interactive web interface with Streamlit  
+- [x] Acceptance criteria & PO questions generation  
+- [x] On-demand test plan generation  
+- [x] Export to .md and .pdf reports  
+- [x] Export to Azure DevOps (.xlsx)  
+- [x] Export to Jira Zephyr (.xlsx)  
+- [x] Refactored modular codebase  
+- [ ] Caching of results to optimize API calls  
+- [ ] Implement pytest test suite  
+- [ ] Externalize prompts in `config.yaml`  
+- [ ] Interactive editing of initial analysis by the user  
 
 ---
 
 ## 🤝 Contributing
 
-Your contribution is very welcome!  
-- Open an **issue** to report bugs or suggest improvements.  
-- Submit a **Pull Request** with new features.  
-- ⭐ If this project helped you, give the repository a star!  
+Contributions are always welcome!  
+- Open an **issue** to report bugs or suggest improvements  
+- Submit a **Pull Request** with new features  
 
----
+⭐ If this project helped you, don’t forget to give it a **star on GitHub**!
