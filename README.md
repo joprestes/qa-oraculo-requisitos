@@ -13,8 +13,8 @@
 </p>
 
 <nav aria-label="Language switcher" style="text-align: right;">
-<a href="README.md">🇺🇸 English</a> |
-<a href="README-pt.md" aria-current="page">🇧🇷 <strong>Português</strong></a>
+<a href="README-en.md">🇺🇸 English</a> |
+<a href="README.md" aria-current="page">🇧🇷 <strong>Português</strong></a>
 </nav>
 
 ## 🚀 Por que usar o QA Oráculo?

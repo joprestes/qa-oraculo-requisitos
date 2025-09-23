@@ -13,8 +13,8 @@
 </p>
 
 <nav aria-label="Language switcher" style="text-align: right;">
-<a href="README.md" aria-current="page">🇺🇸 <strong>English</strong></a> |
-<a href="README-pt.md">🇧🇷 Português</a>
+<a href="README-en.md" aria-current="page">🇺🇸 <strong>English</strong></a> |
+<a href="README.md">🇧🇷 Português</a>
 </nav>
 
 ## 🚀 Why QA Oracle?
