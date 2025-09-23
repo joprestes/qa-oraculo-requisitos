@@ -136,19 +136,38 @@ streamlit run app.py
 
 ---
 
+## 🧪 Qualidade e Testes
+
+A qualidade deste projeto é garantida por uma suíte de testes unitários robusta, construída com `pytest`, que valida a lógica dos módulos `graph.py` e `utils.py`.
+
+- **Cobertura de Teste**: Os módulos lógicos críticos alcançaram **100% de cobertura de linha**, garantindo alta confiabilidade e segurança para futuras alterações.  
+- **Execução dos Testes**:  
+  ```bash
+  pytest
+  ```
+
+- **Verificação de Cobertura**:  
+  ```bash
+  pytest --cov=graph --cov=utils
+  ```
+
+---
+
 ## 📌 Roadmap
 
-- [x] Interface web interativa com Streamlit  
-- [x] Geração de critérios de aceite e perguntas ao PO  
-- [x] Geração de plano de testes sob demanda  
-- [x] Exportação em .md e .pdf  
-- [x] Exportação para Azure DevOps (.xlsx)  
-- [x] Exportação para Jira Zephyr (.xlsx)  
-- [x] Refatoração para arquitetura modular  
-- [ ] Caching de resultados para otimizar chamadas de API  
-- [ ] Implementar suíte de testes com pytest  
-- [ ] Externalizar prompts em `config.yaml`  
-- [ ] Edição interativa da análise inicial pelo usuário  
+-   [x] Interface web interativa com Streamlit
+-   [x] Geração de critérios de aceite e perguntas ao PO
+-   [x] Geração de plano de testes completo sob demanda
+-   [x] Exportação de relatórios em `.md` e `.pdf`
+-   [x] Exportação para Azure DevOps (`.xlsx`)
+-   [x] Exportação para Jira Zephyr (`.xlsx`)
+-   [x] Refatoração do código para arquitetura modular
+-   [x] Implementação de Caching para otimizar chamadas de API
+-   [x] Centralização de prompts em arquivos de configuração
+-   [x] Implementação de suíte de testes com `pytest` (100% de cobertura nos módulos lógicos) 
+-   [ ] Permitir edição interativa da análise inicial pelo usuário
+-   [ ] Adicionar histórico de análises na sessão
+-   [ ] Containerizar a aplicação com Docker
 
 ---
 

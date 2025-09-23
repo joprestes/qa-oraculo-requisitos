@@ -24,3 +24,7 @@ openpyxl
 # --- Utilitários ---
 # Para carregar variáveis de ambiente (nossa chave de API) de forma segura
 python-dotenv
+
+#--- Testes unitários ---
+pytest 
+pytest-cov
