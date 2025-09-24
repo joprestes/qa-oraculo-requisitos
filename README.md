@@ -42,16 +42,13 @@ O **QA Oráculo** transforma requisitos soltos em **especificações prontas par
 
 ## 🚀 Principais Funcionalidades
 
-| 🔧 Recurso | 💡 Descrição |
-|------------|--------------|
-| 💻 **Interface Web** | Construída com Streamlit, intuitiva e interativa |
-| 🔍 **Detecção de Ambiguidades** | Sugere perguntas inteligentes para o PO |
-| ✅ **Critérios de Aceite** | Objetivos, verificáveis e claros |
-| 📝 **Planos de Teste & Gherkin** | Casos de teste sob demanda |
-| 📊 **Tabela Interativa** | Casos de teste navegáveis via Pandas |
-| 📥 **Exportações Múltiplas** | .md, .pdf, .xlsx (Azure DevOps, Jira Zephyr) |
-| 🔄 **Fluxo Flexível** | Gere planos completos ou apenas análise inicial |
-| 🏗️ **Arquitetura Modular** | Código refatorado para fácil expansão |
+- 💻 **Interface Web Interativa** construída com **Streamlit**.  
+- 📝 **Análise Editável e Interativa:** Após a IA gerar a análise inicial, a aplicação apresenta um formulário editável. O usuário pode refinar, corrigir e adicionar informações (critérios de aceite, riscos, etc.) antes de prosseguir, garantindo que o plano de testes final seja baseado em requisitos validados por um humano.  
+- 🔍 **Detecção de ambiguidades** e sugestão de perguntas para o PO.  
+- ✅ **Geração de Critérios de Aceite** objetivos e verificáveis.  
+- 📊 **Tabela de Casos de Teste** interativa e ordenável.  
+- 📥 **Múltiplas Opções de Exportação** (`.md`, `.pdf`, Azure e Jira).  
+- 🏗️ **Código Modular, Otimizado e 100% Testado.**  
 
 ---
 
@@ -116,13 +113,14 @@ streamlit run app.py
 
 ---
 
-## 📋 Como Usar
+### 📋 Como Usar
 
-1. **Insira a User Story** → Cole a User Story que deseja analisar.  
-2. **Inicie a Análise** → Clique em "Analisar User Story" para receber o relatório inicial.  
-3. **Decida o Próximo Passo** → Escolha entre gerar o plano de testes detalhado ou encerrar a análise.  
-4. **Exporte os Resultados** → Use os botões de download. Para Azure/Jira, configure os campos customizáveis.  
-5. **Comece de Novo** → Clique em "Realizar Nova Análise" para reiniciar o ciclo.  
+1. **Insira a User Story:** Cole a US que deseja analisar.  
+2. **Inicie a Análise:** Clique em "Analisar User Story" para a IA gerar a análise de qualidade inicial.  
+3. **Refine a Análise (Etapa de Colaboração):** <!-- ATUALIZADO --> A aplicação exibirá um formulário pré-preenchido com a análise da IA. Revise, edite os campos conforme necessário e clique em "Salvar Análise e Continuar".  
+4. **Decida o Próximo Passo:** Com a análise refinada e salva, escolha se deseja gerar o plano de testes detalhado ou encerrar.  
+5. **Exporte os Resultados:** Utilize os botões de download para obter os artefatos em múltiplos formatos. Para Azure e Jira, preencha os campos customizáveis.  
+6. **Comece de Novo:** Clique em "Realizar Nova Análise" para limpar a tela.  
 
 ---
 
@@ -155,19 +153,19 @@ A qualidade deste projeto é garantida por uma suíte de testes unitários robus
 
 ## 📌 Roadmap
 
--   [x] Interface web interativa com Streamlit
--   [x] Geração de critérios de aceite e perguntas ao PO
--   [x] Geração de plano de testes completo sob demanda
--   [x] Exportação de relatórios em `.md` e `.pdf`
--   [x] Exportação para Azure DevOps (`.xlsx`)
--   [x] Exportação para Jira Zephyr (`.xlsx`)
--   [x] Refatoração do código para arquitetura modular
--   [x] Implementação de Caching para otimizar chamadas de API
--   [x] Centralização de prompts em arquivos de configuração
--   [x] Implementação de suíte de testes com `pytest` (100% de cobertura nos módulos lógicos) 
--   [ ] Permitir edição interativa da análise inicial pelo usuário
--   [ ] Adicionar histórico de análises na sessão
--   [ ] Containerizar a aplicação com Docker
+- [x] Interface web interativa com Streamlit  
+- [x] Geração de critérios de aceite e perguntas ao PO  
+- [x] Geração de plano de testes completo sob demanda  
+- [x] Exportação de relatórios em `.md` e `.pdf`  
+- [x] Exportação para Azure DevOps (`.xlsx`)  
+- [x] Exportação para Jira Zephyr (`.xlsx`)  
+- [x] Refatoração do código para arquitetura modular  
+- [x] Implementação de Caching para otimizar chamadas de API  
+- [x] Centralização de prompts em arquivos de configuração  
+- [x] Implementação de suíte de testes com `pytest` (100% de cobertura)  
+- [x] Permitir edição interativa da análise inicial pelo usuário
+- [ ] Adicionar histórico de análises na sessão  
+- [ ] Containerizar a aplicação com Docker  
 
 ---
 

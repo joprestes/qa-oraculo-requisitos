@@ -42,16 +42,13 @@ It’s like having a **Senior QA available 24/7**, accelerating planning and pre
 
 ## 🚀 Main Features
 
-| 🔧 Feature | 💡 Description |
-|------------|----------------|
-| 💻 **Web Interface** | Built with Streamlit, intuitive and interactive |
-| 🔍 **Ambiguity Detection** | Suggests smart questions for the PO |
-| ✅ **Acceptance Criteria** | Clear, verifiable, and objective |
-| 📝 **Test Plans & Gherkin** | On-demand test cases |
-| 📊 **Interactive Table** | Test cases navigable via Pandas |
-| 📥 **Multiple Exports** | .md, .pdf, .xlsx (Azure DevOps, Jira Zephyr) |
-| 🔄 **Flexible Flow** | Generate complete plans or just initial analysis |
-| 🏗️ **Modular Architecture** | Refactored code for easy expansion |
+- 💻 **Interactive Web Interface** built with **Streamlit**.  
+- 📝 **Editable and Interactive Analysis:** <!-- NEW --> After the AI generates the initial analysis, the application displays an editable form. The user can refine, correct, and add information (acceptance criteria, risks, etc.) before proceeding, ensuring that the final test plan is based on requirements validated by a human.  
+- 🔍 **Ambiguity Detection** and smart questions for the PO.  
+- ✅ **Acceptance Criteria Generation** that are clear and verifiable.  
+- 📊 **Test Case Table** interactive and sortable.  
+- 📥 **Multiple Export Options** (`.md`, `.pdf`, Azure and Jira).  
+- 🏗️ **Modular, Optimized, and 100% Tested Code.**  
 
 ---
 
@@ -116,13 +113,14 @@ streamlit run app.py
 
 ---
 
-## 📋 How to Use
+### 📋 How to Use
 
-1. **Insert the User Story** → Paste the User Story you want to analyze.  
-2. **Start the Analysis** → Click “Analyze User Story” to receive the initial report.  
-3. **Choose Next Step** → Generate a detailed test plan or finish the analysis.  
-4. **Export Results** → Use the download buttons. For Azure/Jira, configure customizable fields.  
-5. **Start Again** → Click “Start New Analysis” to restart the cycle.  
+1. **Insert the User Story:** Paste the US you want to analyze.  
+2. **Start the Analysis:** Click “Analyze User Story” for the AI to generate the initial quality analysis.  
+3. **Refine the Analysis (Collaboration Step):** The application will display a pre-filled form with the AI’s analysis. Review, edit the fields as needed, and click “Save Analysis and Continue.”  
+4. **Choose Next Step:** With the refined and saved analysis, decide whether to generate a detailed test plan or finish.  
+5. **Export Results:** Use the download buttons to get artifacts in multiple formats. For Azure and Jira, fill in the customizable fields.  
+6. **Start Again:** Click “Start New Analysis” to clear the screen.  
 
 ---
 
@@ -155,19 +153,19 @@ The quality of this project is ensured by a robust unit test suite built with `p
 
 ## 📌 Roadmap
 
--   [x] Interactive web interface with Streamlit
--   [x] Generation of acceptance criteria and PO questions
--   [x] On-demand complete test plan generation
--   [x] Report export in `.md` and `.pdf`
--   [x] Export to Azure DevOps (`.xlsx`)
--   [x] Export to Jira Zephyr (`.xlsx`)
--   [x] Code refactoring to modular architecture
--   [x] Implement caching to optimize API calls
--   [x] Centralize prompts in configuration files
--   [x] Test suite implementation with `pytest` (100% coverage on logic modules) 
--   [ ] Allow interactive editing of initial analysis by user
--   [ ] Add analysis history in session
--   [ ] Containerize application with Docker
+- [x] Interactive web interface with Streamlit  
+- [x] Generation of acceptance criteria and PO questions  
+- [x] On-demand complete test plan generation  
+- [x] Report export in `.md` and `.pdf`  
+- [x] Export to Azure DevOps (`.xlsx`)  
+- [x] Export to Jira Zephyr (`.xlsx`)  
+- [x] Code refactoring to modular architecture  
+- [x] Implement caching to optimize API calls  
+- [x] Centralize prompts in configuration files  
+- [x] Test suite implementation with `pytest` (100% coverage)  
+- [x] Allow interactive editing of initial analysis by user 
+- [ ] Add analysis history in session  
+- [ ] Containerize application with Docker  
 
 ---
 
