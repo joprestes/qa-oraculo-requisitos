@@ -76,3 +76,11 @@ def preparar_df_para_zephyr_xlsx(df_original: pd.DataFrame, priority: str, label
             zephyr_rows.append({"Test Step": cenario_steps[i]})
 
     return pd.DataFrame(zephyr_rows, columns=header)
+def get_flexible(data_dict: dict, keys: list, default_value):
+    """Procura por múltiplas chaves possíveis em um dicionário."""
+    if not isinstance(data_dict, dict):
+        return default_value
+    for key in keys:
+        if key in data_dict:
+            return data_dict[key]
+    return default_value

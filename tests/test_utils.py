@@ -9,7 +9,8 @@ from utils import (
     preparar_df_para_azure_xlsx,
     preparar_df_para_zephyr_xlsx,
     normalizar_string,
-    to_excel
+    to_excel,
+    get_flexible
 )
 
 class TestUtilsFunctions(unittest.TestCase):
@@ -23,6 +24,24 @@ class TestUtilsFunctions(unittest.TestCase):
     def test_normalizar_string(self):
         print("--- Testando a normalização de strings ---")
         self.assertEqual(normalizar_string("usuário e relatório com ç e ã"), "usuario e relatorio com c e a")
+
+    def test_get_flexible(self):
+        print("--- Testando a busca flexível de chaves ---")
+        data = {"avaliacao_geral": "Bom", "riscos": ["Risco 1"]}
+
+        # Caso 1: Encontra a chave primária
+        self.assertEqual(get_flexible(data, ["avaliacao_geral", "avaliacao"], "Padrão"), "Bom")
+        
+        # Caso 2: Encontra a chave alternativa
+        self.assertEqual(get_flexible(data, ["riscos_e_dependencias", "riscos"], []), ["Risco 1"])
+
+        # Caso 3: Nenhuma chave encontrada, retorna o padrão
+        self.assertEqual(get_flexible(data, ["pontos_ambiguos", "ambiguidades"], []), [])
+
+        # Caso 4: A entrada não é um dicionário, retorna o padrão
+        self.assertEqual(get_flexible(None, ["chave"], "Padrão"), "Padrão")
+        self.assertEqual(get_flexible([], ["chave"], "Padrão"), "Padrão")
+
 
     def test_preparar_df_para_azure_xlsx(self):
         print("--- Testando a formatação para Azure DevOps ---")
