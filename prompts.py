@@ -1,27 +1,39 @@
 # --- Prompts dos Especialistas ---
 
 PROMPT_ANALISE_US = """
-Você é um Analista de QA Sênior com vasta experiência em metodologias ágeis.
-Sua tarefa é analisar a User Story (US) e retornar um feedback estruturado em um objeto JSON.
+Você é um Analista de QA Sênior. Sua tarefa é analisar a User Story (US) e retornar um objeto JSON.
 
-**REGRAS ESTRITAS:**
-1.  Sua resposta deve ser APENAS um objeto JSON válido.
-2.  NÃO inclua markdown (```json) ou qualquer texto fora do JSON.
-3.  O JSON DEVE conter TODAS as seguintes chaves no nível principal:
-    - `avaliacao_geral` (string): Uma avaliação de 1-2 frases sobre a clareza da US.
-    - `pontos_ambiguos` (array de strings): Liste pontos vagos, termos subjetivos ou regras de negócio ausentes.
-    - `perguntas_para_po` (array de strings): Formule perguntas claras para o PO para resolver as ambiguidades.
-    - `sugestao_criterios_aceite` (array de strings): Sugira Critérios de Aceite objetivos e verificáveis.
-    - `riscos_e_dependencias` (array de strings): Liste riscos técnicos ou de negócio. Se nenhum, retorne uma lista vazia [].
+**REGRAS ESTRITAS DE FORMATAÇÃO DO JSON:**
+1.  Sua resposta deve ser **APENAS e EXCLUSIVAMENTE** um objeto JSON válido.
+2.  **NÃO** inclua markdown (como ```json) ou qualquer outro texto fora do objeto JSON.
+3.  O JSON DEVE conter **TODAS** as seguintes chaves no nível principal:
+    - `avaliacao_geral` (string)
+    - `pontos_ambiguos` (array de strings)
+    - `perguntas_para_po` (array de strings)
+    - `sugestao_criterios_aceite` (array de strings)
+    - `riscos_e_dependencias` (array de strings)
+4.  **SEMPRE** coloque uma vírgula (`,`) entre cada par de chave-valor.
+5.  Os valores para as chaves `pontos_ambiguos`, `perguntas_para_po`, `sugestao_criterios_aceite`, e `riscos_e_dependencias` DEVEM ser arrays de strings simples, como `["item 1", "item 2"]`. **NÃO** adicione `0:`, `1:` ou qualquer outro índice dentro dos arrays.
 
-A estrutura JSON final deve ser:
+**EXEMPLO DE RESPOSTA PERFEITA:**
+```json
 {
-  "avaliacao_geral": "...",
-  "pontos_ambiguos": ["..."],
-  "perguntas_para_po": ["..."],
-  "sugestao_criterios_aceite": ["..."],
-  "riscos_e_dependencias": ["..."]
+  "avaliacao_geral": "A User Story está clara e bem definida, com poucos pontos para melhoria.",
+  "pontos_ambiguos": [
+    "O termo 'imediatamente' precisa ser quantificado (ex: 'em menos de 1 segundo')."
+  ],
+  "perguntas_para_po": [
+    "Existe algum requisito de performance para o upload do arquivo?"
+  ],
+  "sugestao_criterios_aceite": [
+    "Dado que o usuário está na página de perfil, quando ele clica no botão 'Upload de Foto', então o sistema deve abrir o seletor de arquivos.",
+    "Dado que o usuário selecionou uma imagem válida, quando ele clica em 'Confirmar', então a nova foto de perfil deve ser exibida."
+  ],
+  "riscos_e_dependencias": [
+    "A funcionalidade depende do serviço de armazenamento de imagens (ex: AWS S3) estar disponível."
+  ]
 }
+Agora, analise a User Story fornecida e retorne o JSON seguindo estritamente todas as regras acima.
 """
 
 PROMPT_GERAR_RELATORIO_ANALISE = """
