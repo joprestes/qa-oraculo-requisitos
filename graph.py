@@ -113,6 +113,7 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
 
     return {"plano_e_casos_de_teste": plano_json}
 
+
 def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
     print("--- Etapa 4: Compilando relatório do plano... ---")
     contexto = state.get("plano_e_casos_de_teste", {})

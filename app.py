@@ -9,7 +9,8 @@ from utils import (
     preparar_df_para_azure_xlsx,
     preparar_df_para_zephyr_xlsx,
     to_excel,
-    get_flexible
+    get_flexible,
+    clean_markdown_report
 )
 from state_manager import initialize_state, reset_session
 
@@ -27,7 +28,6 @@ def render_main_analysis_page():
     st.title("🤖 QA Oráculo")
     st.markdown("Seja bem-vindo! Como seu Assistente de QA Sênior, estou aqui para apoiar na revisão de User Stories. Cole uma abaixo e vamos começar.")
 
-    # <<< MUDANÇA CRÍTICA AQUI >>>
     # O fluxo interativo só acontece se a análise NÃO estiver finalizada.
     if not st.session_state.get("analysis_finished", False):
         
@@ -53,7 +53,7 @@ def render_main_analysis_page():
                 st.info("🔮 O Oráculo gerou a análise abaixo. Revise, edite se necessário e clique em 'Salvar' para prosseguir.")
                 analise_json = st.session_state.analysis_state.get("analise_da_us", {})
                 
-                # ... (código do formulário continua igual) ...
+                
                 avaliacao_str = get_flexible(analise_json, ["avaliacao_geral", "avaliacao"], "")
                 pontos_list = get_flexible(analise_json, ["pontos_ambiguos", "pontos_de_ambiguidade"], [])
                 perguntas_list = get_flexible(analise_json, ["perguntas_para_po", "perguntas_ao_po"], [])
@@ -92,7 +92,7 @@ def render_main_analysis_page():
                 st.info("Deseja que o Oráculo gere um Plano de Testes com base na análise refinada?")
                 col1, col2, _ = st.columns([1, 1, 2])
                 
-                if col1.button("Sim, Gerar Plano de Testes", type="primary", use_container_width=True):
+                if col1.button("Sim, Gerar Plano de Testes", type="primary", width="stretch"):
                     with st.spinner("🔮 Elaborando o Plano de Testes com base na análise refinada..."):
                         resultado_plano = run_test_plan_graph(st.session_state.analysis_state)
                         casos_de_teste = resultado_plano.get("plano_e_casos_de_teste", {}).get("casos_de_teste_gherkin", [])
@@ -109,7 +109,7 @@ def render_main_analysis_page():
                             pdf_bytes = generate_pdf_report(st.session_state.analysis_state.get("relatorio_analise_inicial", ""), df_clean)
                             st.session_state.pdf_report_bytes = pdf_bytes
                         
-                        st.session_state.analysis_finished = True # <<< MARCA COMO FINALIZADO
+                        st.session_state.analysis_finished = True
                         
                         user_story_to_save = st.session_state.get("user_story_input", "")
                         analysis_report_to_save = st.session_state.analysis_state.get("relatorio_analise_inicial", "")
@@ -118,8 +118,8 @@ def render_main_analysis_page():
                         
                         st.rerun()
 
-                if col2.button("Não, Encerrar", use_container_width=True):
-                    st.session_state.analysis_finished = True # <<< MARCA COMO FINALIZADO
+                if col2.button("Não, Encerrar", width="stretch"):
+                    st.session_state.analysis_finished = True 
                     
                     user_story_to_save = st.session_state.get("user_story_input", "")
                     analysis_report_to_save = st.session_state.analysis_state.get("relatorio_analise_inicial", "")
@@ -128,7 +128,7 @@ def render_main_analysis_page():
                     
                     st.rerun()
 
-    # <<< MUDANÇA CRÍTICA AQUI >>>
+    
     # Este bloco inteiro só aparece quando a análise ESTÁ finalizada.
     if st.session_state.get("analysis_finished"):
         st.success("Análise concluída com sucesso!")
@@ -141,20 +141,21 @@ def render_main_analysis_page():
         # Mostra o plano de testes se ele existir
         if st.session_state.get("test_plan_report"):
             with st.expander("2. Plano de Testes Detalhado", expanded=True):
-                st.markdown(st.session_state.test_plan_report)
+                cleaned_report = clean_markdown_report(st.session_state.test_plan_report)
+                st.markdown(cleaned_report)
                 if st.session_state.get("test_plan_df") is not None and not st.session_state.get("test_plan_df").empty:
-                    st.dataframe(st.session_state.get("test_plan_df"), use_container_width=True)
+                    st.dataframe(st.session_state.get("test_plan_df"), width="stretch")
 
         st.divider()
         st.subheader("Downloads Disponíveis")
 
-        # ... (código dos downloads continua igual) ...
+       
         col_md, col_pdf, col_azure, col_zephyr = st.columns(4)
         relatorio_completo_md = f"{st.session_state.get('analysis_state', {}).get('relatorio_analise_inicial', '')}\n\n---\n\n{st.session_state.get('test_plan_report', '')}"
-        col_md.download_button("📥 Análise (.md)", relatorio_completo_md.encode("utf-8"), file_name=gerar_nome_arquivo_seguro(st.session_state.get("user_story_input", ""), "md"), use_container_width=True)
+        col_md.download_button("📥 Análise (.md)", relatorio_completo_md.encode("utf-8"), file_name=gerar_nome_arquivo_seguro(st.session_state.get("user_story_input", ""), "md"), width="stretch")
         
         if st.session_state.get("pdf_report_bytes"):
-            col_pdf.download_button("📄 Relatório (.pdf)", st.session_state.pdf_report_bytes, file_name=gerar_nome_arquivo_seguro(st.session_state.get("user_story_input", ""), "pdf"), use_container_width=True)
+            col_pdf.download_button("📄 Relatório (.pdf)", st.session_state.pdf_report_bytes, file_name=gerar_nome_arquivo_seguro(st.session_state.get("user_story_input", ""), "pdf"), width="stretch")
 
         if st.session_state.get("test_plan_df") is not None and not st.session_state.get("test_plan_df").empty:
             with st.expander("Opções de Exportação para Ferramentas Externas", expanded=True):
@@ -179,7 +180,7 @@ def render_main_analysis_page():
                 "🚀 Azure (.xlsx)", excel_azure,
                 file_name=gerar_nome_arquivo_seguro(st.session_state.get("user_story_input", ""), "azure.xlsx"),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True, disabled=is_azure_disabled, help="Preencha os campos no expander acima para habilitar."
+                width="stretch", disabled=is_azure_disabled, help="Preencha os campos no expander acima para habilitar."
             )
 
             df_zephyr = preparar_df_para_zephyr_xlsx(df_para_ferramentas, st.session_state.get("jira_priority", "Medium"), st.session_state.get("jira_labels", ""), st.session_state.get("jira_description", ""))
@@ -189,21 +190,21 @@ def render_main_analysis_page():
                 "📊 Jira Zephyr (.xlsx)", excel_zephyr,
                 file_name=gerar_nome_arquivo_seguro(st.session_state.get("user_story_input", ""), "zephyr.xlsx"),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
+                width="stretch"
             )
 
         st.divider()
         st.button(
             "🔄 Realizar Nova Análise", 
             type="primary", 
-            use_container_width=True,
+            width="stretch",
             on_click=reset_session,
             key="nova_analise_button"
         )
 
 
 def render_history_page():
-    # ... (esta função não precisa de mudanças) ...
+    
     st.title("📖 Histórico de Análises")
     st.markdown("Aqui você pode rever todas as análises de User Stories já realizadas pelo Oráculo.")
     
@@ -229,7 +230,8 @@ def render_history_page():
             
             if analysis_entry['test_plan_report']:
                 with st.expander("Plano de Testes Gerado", expanded=True):
-                    st.markdown(analysis_entry['test_plan_report'])
+                    cleaned_report = clean_markdown_report(analysis_entry['test_plan_report'])
+                    st.markdown(cleaned_report)
         else:
             st.error("Análise não encontrada.")
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
@@ -241,7 +243,7 @@ def render_history_page():
                     st.markdown(f"**Análise de:** `{entry['created_at']}`")
                     st.caption(f"Início da US: *{entry['user_story'][:100]}...*")
                 with col2:
-                    if st.button("Ver Detalhes", key=f"btn_{entry['id']}", use_container_width=True):
+                    if st.button("Ver Detalhes", key=f"btn_{entry['id']}", width="stretch"):
                         st.query_params["analysis_id"] = str(entry['id'])
                         st.rerun()
 

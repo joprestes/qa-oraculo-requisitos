@@ -1,30 +1,13 @@
 # Arquivo de dependências do projeto QA Oráculo
+# requirements.txt
 
-# --- Core de IA e LangGraph ---
-# Para interagir com a API do Google Generative AI
-google-generativeai
-langchain-google-genai
-# Para criar workflows e agentes com grafos de estado
-langgraph
-
-# --- Frontend Web ---
-# Para criar a interface web interativa
-streamlit
-# Para manipulação de dados (tabelas de casos de teste)
-pandas
-
-# --- Geração de Relatórios ---
-# Para criar os relatórios em PDF
-fpdf2
-# Para encontrar fontes Unicode (DejaVu Sans) para o PDF
-matplotlib
-# Para escrever arquivos Excel (.xlsx) formatados
-openpyxl
-
-# --- Utilitários ---
-# Para carregar variáveis de ambiente (nossa chave de API) de forma segura
-python-dotenv
-
-#--- Testes unitários ---
-pytest 
-pytest-cov
+streamlit==1.35.0
+pandas==2.2.2
+google-generativeai==0.5.4
+langchain-google-genai==1.0.5
+langgraph==0.0.60
+langchain==0.2.1 
+openpyxl==3.1.2
+fpdf2==2.7.9
+pytest==8.2.2
+pytest-cov==5.0.0

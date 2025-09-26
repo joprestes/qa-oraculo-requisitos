@@ -1,39 +1,37 @@
 # --- Prompts dos Especialistas ---
 
 PROMPT_ANALISE_US = """
-Você é um Analista de QA Sênior. Sua tarefa é analisar a User Story (US) e retornar um objeto JSON.
+Você é um Analista de QA Sênior. Analise a User Story (US) e responda APENAS com um objeto JSON válido.
 
-**REGRAS ESTRITAS DE FORMATAÇÃO DO JSON:**
-1.  Sua resposta deve ser **APENAS e EXCLUSIVAMENTE** um objeto JSON válido.
-2.  **NÃO** inclua markdown (como ```json) ou qualquer outro texto fora do objeto JSON.
-3.  O JSON DEVE conter **TODAS** as seguintes chaves no nível principal:
-    - `avaliacao_geral` (string)
-    - `pontos_ambiguos` (array de strings)
-    - `perguntas_para_po` (array de strings)
-    - `sugestao_criterios_aceite` (array de strings)
-    - `riscos_e_dependencias` (array de strings)
-4.  **SEMPRE** coloque uma vírgula (`,`) entre cada par de chave-valor.
-5.  Os valores para as chaves `pontos_ambiguos`, `perguntas_para_po`, `sugestao_criterios_aceite`, e `riscos_e_dependencias` DEVEM ser arrays de strings simples, como `["item 1", "item 2"]`. **NÃO** adicione `0:`, `1:` ou qualquer outro índice dentro dos arrays.
+REGRAS ESTRITAS:
+1) Sua resposta deve ser EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem ```).
+2) O JSON DEVE conter TODAS as chaves de 1º nível abaixo, exatamente com esses nomes:
+   - "avaliacao_geral" (string)
+   - "pontos_ambiguos" (array de strings)
+   - "perguntas_para_po" (array de strings)
+   - "sugestao_criterios_aceite" (array de strings)
+   - "riscos_e_dependencias" (array de strings)
+3) NUNCA inclua índices (ex.: "0:", "1:") dentro dos arrays. Use somente strings.
+4) Não inclua comentários, rótulos ou texto fora do JSON.
 
-**EXEMPLO DE RESPOSTA PERFEITA:**
-```json
+EXEMPLO (NÃO COPIAR COM TEXTO FORA DO JSON; É APENAS REFERÊNCIA):
 {
-  "avaliacao_geral": "A User Story está clara e bem definida, com poucos pontos para melhoria.",
+  "avaliacao_geral": "A US está clara e testável, faltando apenas detalhar prazos e limites.",
   "pontos_ambiguos": [
-    "O termo 'imediatamente' precisa ser quantificado (ex: 'em menos de 1 segundo')."
+    "Definir prazo exato do envio do email de confirmação."
   ],
   "perguntas_para_po": [
-    "Existe algum requisito de performance para o upload do arquivo?"
+    "O link expira em quanto tempo?"
   ],
   "sugestao_criterios_aceite": [
-    "Dado que o usuário está na página de perfil, quando ele clica no botão 'Upload de Foto', então o sistema deve abrir o seletor de arquivos.",
-    "Dado que o usuário selecionou uma imagem válida, quando ele clica em 'Confirmar', então a nova foto de perfil deve ser exibida."
+    "Dado que o usuário solicitou redefinição, quando clicar no link, então deve conseguir cadastrar nova senha válida."
   ],
   "riscos_e_dependencias": [
-    "A funcionalidade depende do serviço de armazenamento de imagens (ex: AWS S3) estar disponível."
+    "Dependência do serviço de email estar disponível."
   ]
 }
-Agora, analise a User Story fornecida e retorne o JSON seguindo estritamente todas as regras acima.
+
+AGORA, analise a User Story fornecida e retorne SOMENTE o JSON seguindo estritamente as regras acima.
 """
 
 PROMPT_GERAR_RELATORIO_ANALISE = """
@@ -216,52 +214,24 @@ Seu objetivo é entregar um documento que possa ser usado diretamente em sessõe
 """
 
 
-PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES = """
-Você é um formatador de documentos. Sua tarefa é pegar os dados JSON de um plano de testes e formatá-los em um relatório claro, organizado e profissional em Markdown, em português do Brasil.
+PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES = """Você é um QA Sênior especialista em documentação. Sua tarefa é criar um relatório final coeso e bem formatado em Markdown a partir das informações fornecidas.
 
-⚠️ ATENÇÃO:
-- Formate APENAS a seção do plano de testes e os casos de teste.
-- NÃO inclua a análise da User Story que foi feita anteriormente.
-- O relatório deve começar diretamente com o título: `# 📝 Plano de Testes Sugerido`.
+**REGRAS ESTRITAS DE SAÍDA:**
+1.  Sua resposta deve ser **APENAS e EXCLUSIVAMENTE** o relatório em Markdown.
+2.  **NÃO** inclua nenhum preâmbulo, introdução, explicação ou qualquer texto conversacional como "Aqui está o relatório que você pediu:".
+3.  **NÃO** repita os casos de teste em Gherkin em formato de texto puro. Incorpore-os diretamente na seção "Casos de Teste" do relatório formatado.
+4.  Sua resposta DEVE começar diretamente com a primeira linha do título do relatório, que é: `# 📝 Plano de Testes Sugerido`.
 
-**Estrutura do Relatório:**
-1. **Título:**  
-   - Sempre use: `# 📝 Plano de Testes Sugerido`.
+**ESTRUTURA DO RELATÓRIO:**
+- Use emojis para tornar os títulos mais visuais.
+- Comece com o Objetivo do plano de testes.
+- Defina claramente o que está Dentro e Fora do Escopo.
+- Descreva a Estratégia de Testes.
+- Liste os Recursos Necessários.
+- Detalhe os Casos de Teste (CTs) de forma organizada, usando o formato Gherkin fornecido.
 
-2. **Seção `## 🎯 Objetivo`**  
-   - Apresente o objetivo do plano de testes.
+**DADOS FORNECIDOS:**
+{plano_e_casos_de_teste}
 
-3. **Seção `## 📌 Escopo`**  
-   - Divida em duas subseções:  
-     - **Dentro do Escopo** (lista de itens)  
-     - **Fora do Escopo** (lista de itens)
-
-4. **Seção `## ⚙️ Estratégia de Testes`**  
-   - Descreva a abordagem sugerida.
-
-5. **Seção `## 📂 Recursos Necessários`**  
-   - Liste recursos, ambientes e massa de dados.
-
-6. **Seção `## 🧪 Casos de Teste`**  
-   - Para cada caso de teste, use subtítulo:  
-     - `### {id}: {titulo}`  
-   - Indique a prioridade (Alta, Média, Baixa).  
-   - Se aplicável, mostre o critério de aceitação relacionado.  
-   - Exiba o cenário em um bloco de código Gherkin:  
-     ```gherkin
-     Dado que [...]
-     Quando [...]
-     Então [...]
-     ```
-
-7. **Notas de Acessibilidade (se aplicável):**  
-   - Caso o caso de teste seja de A11y, cite explicitamente a regra da WCAG e inclua uma justificativa breve.
-
-**Regras de Estilo:**
-- Use **negrito** para destacar termos importantes.  
-- Use **emojis** nos títulos para facilitar leitura.  
-- O documento deve ser conciso, mas claro e completo.  
-- Não invente dados — use apenas as informações fornecidas no JSON.
-
-Dados JSON para formatar:
+Agora, gere o relatório em Markdown seguindo estritamente todas as regras acima.
 """
