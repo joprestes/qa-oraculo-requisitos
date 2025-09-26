@@ -1,15 +1,18 @@
-# config.py
+NOME_MODELO = "gemini-2.0-flash-lite-001"
 
-NOME_MODELO = "gemini-1.5-flash-latest"
-
-# Configuração para geração de JSONs.
-# A adição de response_mime_type força a IA a retornar um JSON válido.
+# Configurações para tarefas que exigem criatividade e estrutura (JSONs complexos)
 CONFIG_GERACAO_ANALISE = {
-    "temperature": 0.2,
-    "response_mime_type": "application/json",
+    "temperature": 0.4,
+    "top_p": 1,
+    "top_k": 32,
+    "max_output_tokens": 8192,
+    "response_mime_type": "application/json", # Força a saída em JSON
 }
 
-# Configuração para geração de relatórios em Markdown.
+# Configurações para tarefas que exigem formatação de texto (Markdown)
 CONFIG_GERACAO_RELATORIO = {
-    "temperature": 0.3
+    "temperature": 0.2,
+    "top_p": 1,
+    "top_k": 32,
+    "max_output_tokens": 8192,
 }
