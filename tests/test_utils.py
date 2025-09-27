@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import io
 from unittest.mock import patch
+from utils import clean_markdown_report, parse_json_strict
 
 from utils import (
     gerar_nome_arquivo_seguro,
@@ -102,3 +103,28 @@ class TestUtilsFunctions(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class TestUtilsExtras(unittest.TestCase):
+    def test_clean_markdown_report_completo(self):
+        texto = "```markdown\n# Título\n```"
+        esperado = "# Título"
+        self.assertEqual(clean_markdown_report(texto), esperado)
+
+    def test_clean_markdown_report_sem_cercas(self):
+        texto = "# Apenas texto normal"
+        self.assertEqual(clean_markdown_report(texto), "# Apenas texto normal")
+
+    def test_clean_markdown_report_nao_string(self):
+        self.assertEqual(clean_markdown_report(None), "")
+
+    def test_parse_json_strict_valido(self):
+        texto = '{"key": "value"}'
+        self.assertEqual(parse_json_strict(texto), {"key": "value"})
+
+    def test_parse_json_strict_com_cercas(self):
+        texto = "```json\n{\"key\": \"value\"}\n```"
+        self.assertEqual(parse_json_strict(texto), {"key": "value"})
+
+    def test_parse_json_strict_invalido(self):
+        with self.assertRaises(Exception):
+            parse_json_strict("não é json")

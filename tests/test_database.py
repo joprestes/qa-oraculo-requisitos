@@ -3,7 +3,7 @@ import sqlite3
 import os
 from unittest.mock import patch
 
-from database import init_db, save_analysis_to_history, get_all_analysis_history, get_analysis_by_id, get_db_connection, DB_NAME
+from database import init_db, save_analysis_to_history, get_all_analysis_history, get_analysis_by_id, get_db_connection, DB_NAME, delete_analysis_by_id, clear_history
 
 class TestDatabaseInitialization(unittest.TestCase):
     DB_TEST_FILE = f"test_{DB_NAME}"
@@ -71,3 +71,31 @@ class TestDatabaseLogic(unittest.TestCase):
         mock_get_conn.return_value = self.conn
         retrieved = get_analysis_by_id(999)
         self.assertIsNone(retrieved)
+
+class TestDatabaseDelete(unittest.TestCase):
+    def setUp(self):
+        self.conn = sqlite3.connect(':memory:')
+        self.conn.row_factory = sqlite3.Row
+        cursor = self.conn.cursor()
+        cursor.execute("CREATE TABLE analysis_history (id INTEGER PRIMARY KEY, created_at TIMESTAMP, user_story TEXT, analysis_report TEXT, test_plan_report TEXT);")
+        self.conn.commit()
+
+    def tearDown(self):
+        self.conn.close()
+
+    @patch('database.get_db_connection')
+    def test_delete_analysis_by_id(self, mock_get_conn):
+        mock_get_conn.return_value = self.conn
+        save_analysis_to_history("US Teste", "A", "P")
+        delete_analysis_by_id(1)
+        result = get_analysis_by_id(1)
+        self.assertIsNone(result)
+
+    @patch('database.get_db_connection')
+    def test_clear_history(self, mock_get_conn):
+        mock_get_conn.return_value = self.conn
+        save_analysis_to_history("US 1", "A", "P")
+        save_analysis_to_history("US 2", "A", "P")
+        clear_history()
+        all_entries = get_all_analysis_history()
+        self.assertEqual(len(all_entries), 0)
