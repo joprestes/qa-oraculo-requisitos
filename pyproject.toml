@@ -1,0 +1,29 @@
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+# Conjunto saudável de regras (erros, formatação, imports, melhorias Python, complexidade)
+select = [
+  "E", "F", "I", "UP", "B", "C90", "PERF", "PIE", "PL",
+  "RUF"
+]
+ignore = [
+  "E203",  # compatibilidade Black em slicing
+  "E501"   # comprimento de linha já tratado pelo Black
+]
+# ignore padrões de diretório gerados
+exclude = [
+  ".git", ".venv", "venv", "__pycache__", "site-packages", "build", "dist"
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["app", "database", "graph", "pdf_generator", "state_manager", "utils"]
