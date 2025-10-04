@@ -9,7 +9,7 @@ CONFIG_GERACAO_ANALISE = {
     "top_p": 1,
     "top_k": 32,
     "max_output_tokens": 8192,
-    "response_mime_type": "application/json", # Força a saída em JSON
+    "response_mime_type": "application/json",  # Força a saída em JSON
 }
 
 # Configurações para tarefas que exigem formatação de texto (Markdown)

@@ -201,9 +201,7 @@ def generate_pdf_report(analysis_report: str, test_plan_df: pd.DataFrame) -> byt
                 if cell_value_str.strip() == "" or cell_value_str.lower() == "nan":
                     continue
 
-                label = friendly_names.get(
-                    col_name, col_name.replace("_", " ").title()
-                )
+                label = friendly_names.get(col_name, col_name.replace("_", " ").title())
 
                 pdf.set_font("DejaVu", "B", 11)
                 pdf.cell(50, 8, f"{label}:", border=0)

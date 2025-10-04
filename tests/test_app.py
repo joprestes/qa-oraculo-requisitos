@@ -173,10 +173,15 @@ def test_render_main_analysis_page_downloads_sem_dados():
             "test_plan_report": None,
             "test_plan_df": None,
             "pdf_report_bytes": None,
-            "user_story_input": "História teste"
+            "user_story_input": "História teste",
         }
 
-        mock_st.columns.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+        mock_st.columns.return_value = [
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+        ]
 
         app.render_main_analysis_page()
 

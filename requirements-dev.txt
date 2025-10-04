@@ -1,0 +1,9 @@
+# Dependências de Desenvolvimento
+
+# Formatter
+black
+
+# Testes
+pytest
+pytest-cov
+pytest-mock

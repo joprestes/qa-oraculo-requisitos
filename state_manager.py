@@ -1,8 +1,9 @@
-#state_manager.py
+# state_manager.py
 # Gerenciamento do estado da aplicação Streamlit
 
 
 import streamlit as st
+
 
 def initialize_state():
     """
@@ -22,11 +23,12 @@ def initialize_state():
         "assigned_to_input": "",
         "jira_priority": "Medium",
         "jira_labels": "QA-Oraculo",
-        "jira_description": "Caso de teste gerado pelo QA Oráculo."
+        "jira_description": "Caso de teste gerado pelo QA Oráculo.",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
+
 
 def reset_session():
     """
@@ -36,5 +38,5 @@ def reset_session():
     keys_to_reset = list(st.session_state.keys())
     for key in keys_to_reset:
         # Evita deletar chaves internas do Streamlit ou widgets persistentes se necessário
-        if not key.startswith('FormSubmitter:'):
+        if not key.startswith("FormSubmitter:"):
             del st.session_state[key]

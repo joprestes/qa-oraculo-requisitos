@@ -88,8 +88,12 @@ python3 -m venv venv
 source venv/bin/activate  # Mac/Linux
 # .\venv\Scripts\activate  # Windows
 
-# Install dependencies
+```markdown
+# Install main dependencies (runtime only)
 pip install -r requirements.txt
+
+# If you want to run tests or use dev tools
+pip install -r requirements-dev.txt
 ```
 </details>
 
@@ -142,6 +146,12 @@ streamlit run app.py
 The quality of this project is ensured by a robust suite of unit tests, built with `pytest`, validating the logic of `graph.py`, `utils.py`, `database.py` and `app.py`.
 
 - **Test Coverage**: Critical modules achieve **high coverage** (≥97%).  
+Besides the main dependencies, also install development ones to run the test suite:
+
+```bash
+pip install -r requirements-dev.txt
+pytest --cov
+
 - **Run Tests**:  
   ```bash
   pytest
@@ -157,6 +167,36 @@ The quality of this project is ensured by a robust suite of unit tests, built wi
   - `tests/conftest.py` ensures the database is automatically cleaned after the test suite execution.  
 
 ---
+```markdown
+---
+
+## ⚙️ Project Configuration (Dev)
+
+This project uses a `pyproject.toml` file at the root to centralize development tool settings:
+
+```toml
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.pytest.ini_options]
+addopts = "--cov --maxfail=1 --disable-warnings"
+testpaths = ["tests"]
+```
+## 📌 What this means
+
+Black uses a line length of 88 characters and formats code for Python 3.11+.
+
+Pytest runs with coverage (--cov), stops at the first error, and ignores warnings.
+
+So you only need to run:
+```bash
+black .
+pytest
+
+```
+
+
 
 ## 📌 Roadmap
 

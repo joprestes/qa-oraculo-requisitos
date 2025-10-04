@@ -3,6 +3,7 @@
 from typing import List
 from pydantic import BaseModel, Field
 
+
 class AnaliseUS(BaseModel):
     avaliacao_geral: str
     pontos_ambiguos: List[str] = Field(default_factory=list)
