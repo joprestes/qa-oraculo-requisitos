@@ -10,8 +10,10 @@ import pandas as pd
 # ----------------------------
 class SessionState(dict):
     """Simula o st.session_state com dot notation"""
+
     def __getattr__(self, key):
         return self.get(key, None)
+
     def __setattr__(self, key, value):
         self[key] = value
 
@@ -139,7 +141,9 @@ def test_sem_user_story_mostra_warning(mock_st):
     mock_st.button.return_value = True
 
     app.render_main_analysis_page()
-    mock_st.warning.assert_called_once_with("Por favor, insira uma User Story antes de analisar.")
+    mock_st.warning.assert_called_once_with(
+        "Por favor, insira uma User Story antes de analisar."
+    )
 
 
 def test_salvar_edicao_formulario(mock_st):
@@ -165,8 +169,14 @@ def test_salvar_edicao_formulario(mock_st):
 
     app.render_main_analysis_page()
 
-    assert mock_st.session_state["analysis_state"]["analise_da_us"]["avaliacao_geral"] == "Nova avaliação"
-    assert "Novo ponto" in mock_st.session_state["analysis_state"]["analise_da_us"]["pontos_ambiguos"]
+    assert (
+        mock_st.session_state["analysis_state"]["analise_da_us"]["avaliacao_geral"]
+        == "Nova avaliação"
+    )
+    assert (
+        "Novo ponto"
+        in mock_st.session_state["analysis_state"]["analise_da_us"]["pontos_ambiguos"]
+    )
 
 
 # --------------------------------------------------------------------

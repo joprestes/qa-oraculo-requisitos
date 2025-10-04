@@ -88,8 +88,11 @@ python3 -m venv venv
 source venv/bin/activate  # Mac/Linux
 # .\venv\Scripts\activate  # Windows
 
-# Instale as dependências
+# Instale as dependências principais (runtime)
 pip install -r requirements.txt
+
+# Se quiser rodar testes ou usar ferramentas de desenvolvimento
+pip install -r requirements-dev.txt
 ```
 </details>
 
@@ -142,6 +145,13 @@ streamlit run app.py
 A qualidade deste projeto é garantida por uma suíte de testes unitários robusta, construída com `pytest`, que valida a lógica dos módulos `graph.py`, `utils.py`, `database.py` e `app.py`.
 
 - **Cobertura de Teste**: Os módulos críticos alcançam **alta cobertura** (≥97%).  
+
+Além das dependências principais, instale também as de desenvolvimento para executar a suíte de testes:
+
+```bash
+pip install -r requirements-dev.txt
+pytest --cov
+
 - **Execução dos Testes**:  
   ```bash
   pytest
@@ -157,6 +167,38 @@ A qualidade deste projeto é garantida por uma suíte de testes unitários robus
   - `tests/conftest.py` garante que o banco seja limpo automaticamente após a execução da suíte de testes.  
 
 ---
+---
+
+## ⚙️ Configuração do Projeto (Dev)
+
+Este projeto utiliza um arquivo `pyproject.toml` na raiz para centralizar configurações de ferramentas de desenvolvimento:
+
+```toml
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.pytest.ini_options]
+addopts = "--cov --maxfail=1 --disable-warnings"
+testpaths = ["tests"]
+```
+
+## 📌 O que isso significa
+
+O Black usa largura de linha de 88 caracteres e formata código Python 3.11+.
+
+O Pytest roda com cobertura (--cov), para no primeiro erro e ignora warnings.
+
+Assim, basta executar:
+
+```bash
+black .
+pytest
+```
+
+e o comportamento será consistente para todos os desenvolvedores.
+
+
 
 ## 📌 Roadmap
 

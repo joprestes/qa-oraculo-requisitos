@@ -1,8 +1,9 @@
-#conftest.py
+# conftest.py
 
 import os
 import pytest
 from database import DB_NAME, clear_history
+
 
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_after_tests():
@@ -16,9 +17,13 @@ def cleanup_after_tests():
     yield  # espera os testes rodarem
     try:
         apagados = clear_history()
-        print(f"[CLEANUP] Histórico limpo após testes ({apagados} registros removidos).")
+        print(
+            f"[CLEANUP] Histórico limpo após testes ({apagados} registros removidos)."
+        )
     except Exception as e:
-        print(f"[CLEANUP] Falha ao limpar com clear_history(): {e}. Removendo arquivo físico...")
+        print(
+            f"[CLEANUP] Falha ao limpar com clear_history(): {e}. Removendo arquivo físico..."
+        )
         if os.path.exists(DB_NAME):
             os.remove(DB_NAME)
             print(f"[CLEANUP] Banco {DB_NAME} removido.")

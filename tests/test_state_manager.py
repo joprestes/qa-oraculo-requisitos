@@ -3,6 +3,7 @@ import unittest
 import streamlit as st
 from state_manager import initialize_state, reset_session
 
+
 class TestStateManager(unittest.TestCase):
 
     def setUp(self):
@@ -24,7 +25,7 @@ class TestStateManager(unittest.TestCase):
             "assigned_to_input": "",
             "jira_priority": "Medium",
             "jira_labels": "QA-Oraculo",
-            "jira_description": "Caso de teste gerado pelo QA Oráculo."
+            "jira_description": "Caso de teste gerado pelo QA Oráculo.",
         }
         for key, value in expected_keys.items():
             self.assertIn(key, st.session_state)
@@ -41,6 +42,7 @@ class TestStateManager(unittest.TestCase):
         reset_session()
         self.assertNotIn("analysis_finished", st.session_state)
         self.assertNotIn("user_story_input", st.session_state)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,11 +1,21 @@
-#test_database.py
+# test_database.py
 
 import unittest
 import sqlite3
 import os
 from unittest.mock import patch
 
-from database import init_db, save_analysis_to_history, get_all_analysis_history, get_analysis_by_id, get_db_connection, DB_NAME, delete_analysis_by_id, clear_history
+from database import (
+    init_db,
+    save_analysis_to_history,
+    get_all_analysis_history,
+    get_analysis_by_id,
+    get_db_connection,
+    DB_NAME,
+    delete_analysis_by_id,
+    clear_history,
+)
+
 
 class TestDatabaseInitialization(unittest.TestCase):
     DB_TEST_FILE = f"test_{DB_NAME}"
@@ -13,11 +23,12 @@ class TestDatabaseInitialization(unittest.TestCase):
     def setUp(self):
         if os.path.exists(self.DB_TEST_FILE):
             os.remove(self.DB_TEST_FILE)
+
     def tearDown(self):
         if os.path.exists(self.DB_TEST_FILE):
             os.remove(self.DB_TEST_FILE)
 
-    @patch('database.DB_NAME', DB_TEST_FILE)
+    @patch("database.DB_NAME", DB_TEST_FILE)
     def test_real_init_and_get_connection(self):
         self.assertFalse(os.path.exists(self.DB_TEST_FILE))
         # Testa a idempotência chamando duas vezes
@@ -27,65 +38,74 @@ class TestDatabaseInitialization(unittest.TestCase):
         conn = get_db_connection()
         self.assertIsInstance(conn, sqlite3.Connection)
         cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='analysis_history';")
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='analysis_history';"
+        )
         table = cursor.fetchone()
         self.assertIsNotNone(table)
         conn.close()
 
+
 class TestDatabaseLogic(unittest.TestCase):
     def setUp(self):
-        self.conn = sqlite3.connect(':memory:')
+        self.conn = sqlite3.connect(":memory:")
         self.conn.row_factory = sqlite3.Row
         cursor = self.conn.cursor()
-        cursor.execute("CREATE TABLE analysis_history (id INTEGER PRIMARY KEY, created_at TIMESTAMP, user_story TEXT, analysis_report TEXT, test_plan_report TEXT);")
+        cursor.execute(
+            "CREATE TABLE analysis_history (id INTEGER PRIMARY KEY, created_at TIMESTAMP, user_story TEXT, analysis_report TEXT, test_plan_report TEXT);"
+        )
         self.conn.commit()
+
     def tearDown(self):
         self.conn.close()
 
-    @patch('database.get_db_connection')
+    @patch("database.get_db_connection")
     def test_save_and_get_by_id(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         save_analysis_to_history("us", "analysis", "plan")
         retrieved = get_analysis_by_id(1)
         self.assertIsNotNone(retrieved)
-        self.assertEqual(retrieved['user_story'], "us")
+        self.assertEqual(retrieved["user_story"], "us")
 
-    @patch('database.get_db_connection')
+    @patch("database.get_db_connection")
     def test_get_all_analysis_history_order(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         save_analysis_to_history("US 1", "A 1", "P 1")
         save_analysis_to_history("US 2", "A 2", "P 2")
         all_entries = get_all_analysis_history()
         self.assertEqual(len(all_entries), 2)
-  
-        self.assertEqual(all_entries[0]['id'], 2)
 
-    @patch('database.get_db_connection')
+        self.assertEqual(all_entries[0]["id"], 2)
+
+    @patch("database.get_db_connection")
     def test_get_all_history_on_empty_db(self, mock_get_conn):
-  
+
         mock_get_conn.return_value = self.conn
         all_entries = get_all_analysis_history()
         self.assertEqual(len(all_entries), 0)
         self.assertIsInstance(all_entries, list)
 
-    @patch('database.get_db_connection')
+    @patch("database.get_db_connection")
     def test_get_nonexistent_entry(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         retrieved = get_analysis_by_id(999)
         self.assertIsNone(retrieved)
 
+
 class TestDatabaseDelete(unittest.TestCase):
     def setUp(self):
-        self.conn = sqlite3.connect(':memory:')
+        self.conn = sqlite3.connect(":memory:")
         self.conn.row_factory = sqlite3.Row
         cursor = self.conn.cursor()
-        cursor.execute("CREATE TABLE analysis_history (id INTEGER PRIMARY KEY, created_at TIMESTAMP, user_story TEXT, analysis_report TEXT, test_plan_report TEXT);")
+        cursor.execute(
+            "CREATE TABLE analysis_history (id INTEGER PRIMARY KEY, created_at TIMESTAMP, user_story TEXT, analysis_report TEXT, test_plan_report TEXT);"
+        )
         self.conn.commit()
 
     def tearDown(self):
         self.conn.close()
 
-    @patch('database.get_db_connection')
+    @patch("database.get_db_connection")
     def test_delete_analysis_by_id(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         save_analysis_to_history("US Teste", "A", "P")
@@ -93,7 +113,7 @@ class TestDatabaseDelete(unittest.TestCase):
         result = get_analysis_by_id(1)
         self.assertIsNone(result)
 
-    @patch('database.get_db_connection')
+    @patch("database.get_db_connection")
     def test_clear_history(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         save_analysis_to_history("US 1", "A", "P")
@@ -102,42 +122,52 @@ class TestDatabaseDelete(unittest.TestCase):
         all_entries = get_all_analysis_history()
         self.assertEqual(len(all_entries), 0)
 
+
 import sqlite3
 import database
 from unittest.mock import patch
+
 
 @patch("database.get_db_connection")
 def test_save_analysis_to_history_com_erro(mock_conn):
     mock_conn.side_effect = sqlite3.Error("DB fail")
     database.save_analysis_to_history("us", "report", "plan")
 
+
 @patch("database.get_db_connection")
 def test_get_all_analysis_history_com_erro(mock_conn):
     mock_conn.side_effect = sqlite3.Error("DB fail")
     assert database.get_all_analysis_history() == []
+
 
 @patch("database.get_db_connection")
 def test_get_analysis_by_id_com_erro(mock_conn):
     mock_conn.side_effect = sqlite3.Error("DB fail")
     assert database.get_analysis_by_id(1) is None
 
+
 @patch("database.get_db_connection")
 def test_delete_analysis_by_id_com_erro(mock_conn):
     mock_conn.side_effect = sqlite3.Error("DB fail")
     assert database.delete_analysis_by_id(1) is False
+
 
 @patch("database.get_db_connection")
 def test_clear_history_com_erro(mock_conn):
     mock_conn.side_effect = sqlite3.Error("DB fail")
     assert database.clear_history() == 0
 
+
 def test_get_all_analysis_history_vazio(monkeypatch):
     """Força o caso onde o banco está vazio"""
-    monkeypatch.setattr(database, "get_db_connection", lambda: sqlite3.connect(":memory:"))
+    monkeypatch.setattr(
+        database, "get_db_connection", lambda: sqlite3.connect(":memory:")
+    )
 
     # Inicializa schema mas não insere nada
     conn = database.get_db_connection()
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS analysis_history (
             id INTEGER PRIMARY KEY,
             created_at TEXT,
@@ -145,7 +175,8 @@ def test_get_all_analysis_history_vazio(monkeypatch):
             analysis_report TEXT,
             test_plan_report TEXT
         )
-    """)
+    """
+    )
     conn.commit()
     conn.close()
 
