@@ -284,10 +284,10 @@ def render_history_page():
                 st.success("Análise excluída com sucesso!")
             else:
                 st.error("Falha ao excluir análise.")
-            st.session_state.pop("confirm_delete_id")
+            st.session_state.pop("confirm_delete_id", None)
             st.rerun()
         if col2.button("❌ Cancelar", key="cancelar_delete"):
-            st.session_state.pop("confirm_delete_id")
+            st.session_state.pop("confirm_delete_id", None)
             st.rerun()
 
     # --- Confirmação de exclusão total (topo da página) ---
@@ -297,10 +297,10 @@ def render_history_page():
         if col1.button("✅ Confirmar", key="confirmar_delete_all"):
             apagados = clear_history()
             st.success(f"{apagados} análises foram removidas.")
-            st.session_state.pop("confirm_clear_all")
+            st.session_state.pop("confirm_clear_all", None)
             st.rerun()
         if col2.button("❌ Cancelar", key="cancelar_delete_all"):
-            st.session_state.pop("confirm_clear_all")
+            st.session_state.pop("confirm_clear_all", None)
             st.rerun()
 
     # --- Botão para excluir tudo ---
@@ -346,6 +346,7 @@ def render_history_page():
                         st.session_state["confirm_delete_id"] = entry['id']
                         st.rerun()
                     st.markdown(f'<div data-testid="btn-deletar-{entry["id"]}"></div>', unsafe_allow_html=True)
+
 
 # --- LÓGICA PRINCIPAL DA APLICAÇÃO ---
 def main():
