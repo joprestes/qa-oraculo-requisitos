@@ -1,84 +1,81 @@
+# 🔮 QA Oracle
+
 <p align="center">
-  <img src="assets/logo_oraculo.png" alt="QA Oráculo Logo" width="200"/>
+  <img src="assets/logo_oraculo.png" alt="QA Oracle Logo" width="200"/>
 </p>
 
-<h1 align="center">🔮 QA Oráculo</h1>
 <p align="center"><i>Requirements Analysis with Artificial Intelligence</i></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11+-blue.svg"/>
-  <img src="https://img.shields.io/badge/license-CC--BY--NC%204.0-orange.svg"/>
+  <img src="https://img.shields.io/badge/license-CC--BY--NC%204.0-green.svg"/>
   <img src="https://img.shields.io/badge/Streamlit-App-red.svg"/>
   <img src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
 </p>
 
+---
 <nav aria-label="Language switcher" style="text-align: right;">
 <a href="README-en.md" aria-current="page">🇺🇸 <strong>English</strong></a> |
 <a href="README.md">🇧🇷 Português</a>
 </nav>
 
-## 🚀 Why use QA Oráculo?
+---
+
+## 🚀 Why use QA Oracle?
 
 Tired of **vague User Stories** and **endless meetings** to align understanding?
 
-**QA Oráculo** transforms loose requirements into **ready-to-test specifications** using cutting-edge AI.
+**QA Oracle** transforms loose requirements into **ready-to-test specifications** powered by AI.
 
-👉 In just **minutes**, you will have:
+👉 In just **minutes**, you’ll get:
 - ✅ Clear acceptance criteria  
 - ❓ Smart questions for the PO  
 - 📝 Complete and organized test plans  
 - 🧪 On-demand Gherkin scenarios  
 - 📄 Exportable reports (.md, .pdf, .xlsx)  
 
-It's like having a **Senior QA available 24/7**, speeding up planning and reducing failures before the first bug appears.
+It’s like having a **Senior QA available 24/7**, accelerating planning and reducing failures before the first bug even appears.
 
 ---
 
 ## 📸 Interface Preview
 
-![alt text](assets/qa_oraculo_cartoon_demo.gif)
+![Demo](assets/qa_oraculo_cartoon_demo.gif)
 
 ---
 
-## 🚀 Main Features
+## 🚀 Key Features
 
-- 💻 **Interactive Web Interface** built with **Streamlit**.  
-- 📝 **Editable and Interactive Analysis:** After AI generates the initial analysis, the application presents an editable form. The user can refine, correct and add information (acceptance criteria, risks, etc.) before proceeding, ensuring that the final test plan is based on requirements validated by a human.  
-- 🔍 **Ambiguity detection** and suggestion of questions for the PO.  
-- ✅ **Generation of clear and verifiable Acceptance Criteria**.  
-- 📊 **Interactive, sortable Test Case Table**.  
-- 📥 **Multiple Export Options** (`.md`, `.pdf`, Azure and Jira).  
-- 📖 **Analysis History:** Browse and review previous analyses.  
-- 🗑️ **History Management:** Now you can delete a specific analysis or clear the entire history at once, always with confirmation to avoid accidental deletions.  
-- 🏗️ **Modular, Optimized and 100% Tested Code.**  
+- 💻 **Interactive Web Interface** (Streamlit).  
+- 📝 **Editable & Interactive Analysis**: refine AI output with human validation.  
+- 🔍 **Ambiguity detection** and suggested questions for the PO.  
+- ✅ **Objective and verifiable acceptance criteria** generation.  
+- 📊 **Interactive Test Case Table**.  
+- 📥 **Multiple export options** (`.md`, `.pdf`, Azure, Jira).  
+- 📖 **Analysis history** with selective deletion.  
+- 🏗️ **Modular, optimized, and fully tested code**.  
 
 ---
 
 ## 🛠️ Technologies Used
 
 - 🐍 Python 3.11+  
-- 🌐 Streamlit (Web UI Framework)  
-- 🧠 LangGraph & Google Gemini (Orchestration and AI)  
-- 📊 Pandas (Data manipulation)  
-- 📄 FPDF2 (PDF report generation)  
-- 📈 Openpyxl (Excel .xlsx file handling)  
+- 🌐 Streamlit (web framework)  
+- 🧠 LangGraph & Google Gemini (AI orchestration)  
+- 📊 Pandas  
+- 📄 FPDF2 (PDF generation)  
+- 📈 Openpyxl (Excel manipulation)  
 
 ---
 
-## ⚙️ How to Run Locally
+## ⚙️ Running Locally
 
-<details>
-<summary><b>📌 Prerequisites</b></summary>
-
+### 📌 Prerequisites
 - Python 3.11+  
-- Google API Key (get it [here](https://console.cloud.google.com))  
+- Google API Key ([get it here](https://console.cloud.google.com))  
 
-</details>
-
-<details>
-<summary><b>🚀 Installation</b></summary>
-
-```bash
+### 🚀 Installation
+\`\`\`bash
 # Clone the repository
 git clone https://github.com/joprestes/qa-oraculo-requisitos.git
 cd qa-oraculo-requisitos
@@ -88,146 +85,112 @@ python3 -m venv venv
 source venv/bin/activate  # Mac/Linux
 # .\venv\Scripts\activate  # Windows
 
-```markdown
-# Install main dependencies (runtime only)
+# Install dependencies
 pip install -r requirements.txt
+pip install -r requirements-dev.txt  # For testing and dev tools
+\`\`\`
 
-# If you want to run tests or use dev tools
-pip install -r requirements-dev.txt
-```
-</details>
-
-<details>
-<summary><b>🔑 API Configuration</b></summary>
-
+### 🔑 API Configuration
 Create a `.env` file at the project root:
-
-```env
+\`\`\`env
 GOOGLE_API_KEY="your_api_key_here"
-```
-</details>
+\`\`\`
 
-<details>
-<summary><b>▶️ Run</b></summary>
-
-```bash
+### ▶️ Run
+\`\`\`bash
 streamlit run app.py
-```
+\`\`\`
 
-🎉 QA Oráculo will automatically open in your browser!
-</details>
+🎉 QA Oracle will automatically open in your browser!
 
 ---
 
-### 📋 How to Use
+## 📋 How to Use
 
-1. **Insert the User Story:** Paste the US you want to analyze.  
-2. **Start the Analysis:** Click on "Analyze User Story" to have the AI generate the initial quality analysis.  
-3. **Refine the Analysis (Collaboration Step):** The application will display a pre-filled form with the AI analysis. Review, edit fields as needed, and click "Save Analysis and Continue".  
-4. **Decide Next Step:** With the refined analysis saved, choose whether to generate the detailed test plan or end the process.  
-5. **Export Results:** Use the download buttons to obtain artifacts in multiple formats. For Azure and Jira, fill in the customizable fields.  
-6. **Manage History:** Review past analyses and use the buttons to delete individually or clear all history (with confirmation).  
-7. **Start Over:** Click "New Analysis" to reset the screen.  
+1. **Insert the User Story** in the input field.  
+2. Click **“Analyze User Story”**.  
+3. **Review and edit** the analysis generated by the AI.  
+4. Choose whether to generate the **detailed test plan** or finish.  
+5. **Export results** to `.md`, `.pdf`, `.xlsx`, Azure or Jira.  
+6. Manage the **analysis history** (delete one or clear all).  
+7. Click **“New Analysis”** to start fresh.  
+
+### 🔎 Practical Example
+**Input:**  
+\`\`\`
+As a banking app user,
+I want to reset my password via email,
+so that I can recover access if I forget it.
+\`\`\`
+
+**Generated Output:**  
+- Acceptance Criteria:
+  - Reset link is sent within 1 minute.  
+  - The link expires in 24h.  
+  - New password must have at least 8 characters including letters and numbers.  
+
+- Questions for PO:
+  - How many hours should the reset link remain valid?  
+  - Is there a daily limit for reset attempts?  
+
+- Gherkin Scenario:
+  \`\`\`gherkin
+  Scenario: Successfully reset password
+    Given the user provided a valid email
+    When they request a password reset
+    Then they receive a valid reset link that expires in 24h
+  \`\`\`
 
 ---
 
 ## 🤔 Troubleshooting
 
-❌ **Error:** Invalid API Key  
-✔️ Make sure the `.env` file is in the root and the "Generative Language" API is active on Google Cloud.  
+❌ **Error: Invalid API Key**  
+✔️ Check your `.env` file and ensure the “Generative Language” API is enabled in Google Cloud.  
 
-❌ **Error:** `streamlit` command not found  
-✔️ Make sure the virtual environment `venv` is activated.  
-
----
-
-## 🧪 Quality and Tests
-
-The quality of this project is ensured by a robust suite of unit tests, built with `pytest`, validating the logic of `graph.py`, `utils.py`, `database.py` and `app.py`.
-
-- **Test Coverage**: Critical modules achieve **high coverage** (≥97%).  
-Besides the main dependencies, also install development ones to run the test suite:
-
-```bash
-pip install -r requirements-dev.txt
-pytest --cov
-
-- **Run Tests**:  
-  ```bash
-  pytest
-  ```
-
-- **Check Coverage**:  
-  ```bash
-  pytest --cov
-  ```
-
-- **New History Tests:**  
-  - `tests/test_app_history_delete.py` covers individual and bulk deletion of analyses.  
-  - `tests/conftest.py` ensures the database is automatically cleaned after the test suite execution.  
+❌ **Error: command \`streamlit\` not found**  
+✔️ Make sure your `venv` virtual environment is activated.  
 
 ---
-```markdown
----
 
-## ⚙️ Project Configuration (Dev)
+## 🧪 Quality and Testing
 
-This project uses a `pyproject.toml` file at the root to centralize development tool settings:
+- **Coverage ≥97%** with \`pytest\`.  
+- **New tests** ensure history cleanup works properly.  
 
-```toml
-[tool.black]
-line-length = 88
-target-version = ['py311']
-
-[tool.pytest.ini_options]
-addopts = "--cov --maxfail=1 --disable-warnings"
-testpaths = ["tests"]
-```
-## 📌 What this means
-
-Black uses a line length of 88 characters and formats code for Python 3.11+.
-
-Pytest runs with coverage (--cov), stops at the first error, and ignores warnings.
-
-So you only need to run:
-```bash
-black .
+\`\`\`bash
 pytest
+pytest --cov
+\`\`\`
 
-```
+Centralized configuration in \`pyproject.toml\`:  
+- `black` (line length: 88)  
+- `pytest` with coverage and warnings disabled  
 
-
+---
 
 ## 📌 Roadmap
 
-- [x] Interactive web interface with Streamlit  
-- [x] Generation of acceptance criteria and questions for the PO  
-- [x] Generation of full test plan on demand  
-- [x] Export of reports in `.md` and `.pdf`  
-- [x] Export to Azure DevOps (`.xlsx`)  
-- [x] Export to Jira Zephyr (`.xlsx`)  
-- [x] Refactor code into modular architecture  
-- [x] Implement caching to optimize API calls  
-- [x] Centralize prompts in configuration files  
-- [x] Implement test suite with `pytest` (100% coverage on critical modules)  
-- [x] Allow interactive editing of the initial analysis by the user  
-- [x] Analysis history with individual and bulk deletion (with confirmation)  
-- [ ] Containerize the application with Docker  
+- [x] Web interface with Streamlit  
+- [x] Export to `.md`, `.pdf`, Azure, Jira  
+- [x] Analysis history with selective deletion  
+- [ ] **Containerize with Docker**  
 
 ---
 
-## 🤝 Contribution
+## 🤝 Contributing
 
-Contributions are very welcome!  
-- Open an **issue** to report bugs or suggest improvements  
-- Send a **Pull Request** with new features  
+Contributions are welcome!  
+- Open an **issue** for bugs or feature requests.  
+- Submit a **Pull Request** with new functionality.  
 
-⭐ If this project helped you, don’t forget to leave a **star on the repository**!  
+⭐ If this project helped you, don’t forget to leave a **star**!
 
 ---
 
 ## 📜 License
 
 This project is licensed under **CC BY-NC 4.0**.  
-Only **personal use** is allowed. Commercial use is **strictly prohibited**.  
+**Personal and academic use allowed**, **commercial use strictly prohibited**.  
+
 Read more at [Creative Commons](https://creativecommons.org/licenses/by-nc/4.0/).
