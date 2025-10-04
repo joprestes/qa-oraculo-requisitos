@@ -208,3 +208,5 @@ __marimo__/
 
 # Pasta para relatórios gerados
 output/
+# Banco de dados local
+*.db

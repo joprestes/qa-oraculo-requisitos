@@ -1,6 +1,6 @@
-# test_app_history_delete.py
+# tests/test_app_history_delete.py
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -31,8 +31,16 @@ def mock_st():
     """Mock do streamlit usado em app.py"""
     with patch("app.st") as mock_st:
         mock_st.session_state = {}
-        mock_st.query_params = {}
-        mock_st.columns.return_value = (MagicMock(), MagicMock())
+
+        # ✅ Compatível com .get()
+        class DummyParams(dict):
+            def get(self, key, default=None):
+                return super().get(key, default)
+
+        mock_st.query_params = DummyParams()
+
+        # ✅ As colunas usam o mesmo mock (assim os botões funcionam)
+        mock_st.columns.return_value = (mock_st, mock_st)
         yield mock_st
 
 

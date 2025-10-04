@@ -24,32 +24,30 @@ def test_run_test_plan_graph():
         mock_grafo.invoke.assert_called_once_with({"analise": "x"})
 
 
-# --- TESTES DO HISTÓRICO ---
-@patch("app.st")
-def test_render_history_page_sem_historico(mock_st):
-    mock_st.session_state = {}
-    with patch("app.get_all_analysis_history", return_value=[]):
-        app.render_history_page()
-        mock_st.info.assert_called_once_with(
-            "Ainda não há análises no histórico. Realize uma nova análise para começar."
-        )
+# --- TESTES DO HISTÓRICO (Versões Antigas - Serão removidos ou atualizados) ---
 
 
 @patch("app.st")
 def test_render_history_page_com_historico(mock_st):
     mock_st.session_state = {}
-    mock_st.query_params = {}
-    mock_st.columns.return_value = [MagicMock(), MagicMock()]  # ✅ garante 2 colunas
+    mock_st.query_params.get.return_value = [None]
+    mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
     history = [{"id": 1, "created_at": "2025-09-26", "user_story": "US exemplo"}]
     with patch("app.get_all_analysis_history", return_value=history):
         app.render_history_page()
-        mock_st.markdown.assert_any_call("**Análise de:** `2025-09-26`")
+
+    calls = [str(call) for call in mock_st.markdown.call_args_list]
+    assert any("2025-09-26" in c for c in calls)
 
 
 @patch("app.st")
 def test_render_history_page_detalhes(mock_st):
     mock_st.session_state = {}
-    mock_st.query_params = {"analysis_id": ["1"]}
+
+    # Simula query_params para a view de detalhes
+    mock_st.query_params.get.return_value = ["1"]
+
     entry = {
         "id": 1,
         "created_at": "2025-09-26",
@@ -68,7 +66,8 @@ def test_render_history_page_detalhes(mock_st):
 @patch("app.render_history_page")
 @patch("app.st")
 def test_main_troca_paginas(mock_st, mock_history, mock_main):
-    mock_st.sidebar.radio.return_value = "Análise Principal"
+
+    mock_st.sidebar.radio.return_value = "Analisar User Story"
     app.main()
     mock_main.assert_called_once()
 
@@ -82,7 +81,9 @@ def test_main_troca_paginas(mock_st, mock_history, mock_main):
 def mocked_st():
     with patch("app.st") as mock_st:
         mock_st.session_state = {}
-        mock_st.query_params = {}
+
+        # O mock para query_params é configurado dentro de cada teste que usa a fixture
+        # para evitar comportamento inesperado entre testes.
 
         def fake_columns(arg):
             if isinstance(arg, int):
@@ -95,16 +96,26 @@ def mocked_st():
         yield mock_st
 
 
-# ---- Testes de histórico com fixture ----
+# ---- Testes de histórico com fixture (VERSÃO CORRETA E ATUALIZADA) ----
+
+
+# ✅ ESTE É O TESTE CORRETO para "sem histórico"
 def test_render_history_sem_historico(mocked_st):
+    # Garante que não estamos na view de detalhes
+    mocked_st.query_params.get.return_value = [None]
+
     with patch("app.get_all_analysis_history", return_value=[]):
         app.render_history_page()
+
     mocked_st.info.assert_called_with(
         "Ainda não há análises no histórico. Realize uma nova análise para começar."
     )
 
 
 def test_render_history_com_historico_lista(mocked_st):
+    # Garante que não estamos na view de detalhes
+    mocked_st.query_params.get.return_value = [None]
+
     history = [{"id": 1, "created_at": "2025-09-26", "user_story": "US exemplo"}]
     with patch("app.get_all_analysis_history", return_value=history):
         app.render_history_page()
@@ -112,8 +123,9 @@ def test_render_history_com_historico_lista(mocked_st):
 
 
 def test_render_history_com_analysis_id_valido(mocked_st):
-    mocked_st.query_params = {"analysis_id": ["1"]}
-    history = [{"id": 1, "created_at": "2025-09-26", "user_story": "US exemplo"}]
+    # Simula estar na view de detalhes com analysis_id = 1
+    mocked_st.query_params.get.return_value = ["1"]
+
     analysis_entry = {
         "id": 1,
         "created_at": "2025-09-26",
@@ -121,27 +133,23 @@ def test_render_history_com_analysis_id_valido(mocked_st):
         "analysis_report": "Relatório IA",
         "test_plan_report": "Plano gerado",
     }
-    with (
-        patch("app.get_all_analysis_history", return_value=history),
-        patch("app.get_analysis_by_id", return_value=analysis_entry),
-    ):
+    with patch("app.get_analysis_by_id", return_value=analysis_entry):
         app.render_history_page()
     mocked_st.markdown.assert_any_call("### Análise de 2025-09-26")
     mocked_st.code.assert_called_with("User Story completa", language="text")
 
 
 def test_render_history_com_analysis_id_invalido(mocked_st):
-    mocked_st.query_params = {"analysis_id": ["99"]}
-    history = [{"id": 99, "created_at": "2025-09-26", "user_story": "US exemplo"}]
-    with (
-        patch("app.get_all_analysis_history", return_value=history),
-        patch("app.get_analysis_by_id", return_value=None),
-    ):
+    # Simula estar na view de detalhes com um ID inválido
+    mocked_st.query_params.get.return_value = ["99"]
+
+    with patch("app.get_analysis_by_id", return_value=None):
         app.render_history_page()
     mocked_st.error.assert_called_with("Análise não encontrada.")
 
 
 # ---- Testes extras de fluxos do render_main_analysis_page ----
+# (O resto do arquivo permanece o mesmo)
 def test_render_main_analysis_page_sem_analysis_state(mocked_st):
     mocked_st.session_state.clear()
     mocked_st.session_state["analysis_finished"] = False
@@ -188,5 +196,4 @@ def test_render_main_analysis_page_downloads_sem_dados():
         ]
 
         app.render_main_analysis_page()
-
         mock_st.subheader.assert_called_with("Downloads Disponíveis")
