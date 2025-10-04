@@ -32,3 +32,16 @@ def test_criacao_completa():
 def test_validacao_tipos_invalidos():
     with pytest.raises(ValidationError):
         schemas.AnaliseUS(avaliacao_geral="Teste", pontos_ambiguos="não é lista")
+
+import pytest
+import schemas
+
+def test_analiseus_minimal():
+    us = schemas.AnaliseUS(avaliacao_geral="Teste")
+    assert us.avaliacao_geral == "Teste"
+    assert isinstance(us.pontos_ambiguos, list)
+
+def test_analiseus_invalid_type():
+    with pytest.raises(Exception):
+        schemas.AnaliseUS(avaliacao_geral="Teste", pontos_ambiguos="não é lista")
+

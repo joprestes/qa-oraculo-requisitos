@@ -1,9 +1,13 @@
+#test/test_utils.py
+
 import unittest
 import pandas as pd
 import datetime
 import io
 from unittest.mock import patch
-from utils import clean_markdown_report, parse_json_strict
+from utils import clean_markdown_report, parse_json_strict, gerar_nome_arquivo_seguro, to_excel
+import pytest
+import utils
 
 from utils import (
     gerar_nome_arquivo_seguro,
@@ -128,3 +132,27 @@ class TestUtilsExtras(unittest.TestCase):
     def test_parse_json_strict_invalido(self):
         with self.assertRaises(Exception):
             parse_json_strict("não é json")
+
+
+
+def test_parse_json_strict_com_cercas_incompletas():
+    texto = "```json\n{\"key\": \"value\"}"
+    assert utils.parse_json_strict(texto) == {"key": "value"}
+
+def test_parse_json_strict_invalido_levanta():
+    with pytest.raises(Exception):
+        utils.parse_json_strict("não é json válido")
+
+
+
+
+def test_gerar_nome_arquivo_seguro_caracteres_invalidos():
+    nome = gerar_nome_arquivo_seguro("História/Inválida:*?", "txt")
+    assert nome.endswith(".txt")
+    assert "/" not in nome and ":" not in nome
+
+
+def test_to_excel_dataframe_vazio():
+    df = pd.DataFrame()
+    buf = to_excel(df, sheet_name="Vazio")
+    assert isinstance(buf, (bytes, bytearray))

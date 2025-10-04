@@ -1,3 +1,6 @@
+# database.py
+
+
 import sqlite3
 import datetime
 # Adaptador: Python datetime -> str

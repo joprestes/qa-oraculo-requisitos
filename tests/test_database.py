@@ -1,3 +1,5 @@
+#test_database.py
+
 import unittest
 import sqlite3
 import os
@@ -99,3 +101,53 @@ class TestDatabaseDelete(unittest.TestCase):
         clear_history()
         all_entries = get_all_analysis_history()
         self.assertEqual(len(all_entries), 0)
+
+import sqlite3
+import database
+from unittest.mock import patch
+
+@patch("database.get_db_connection")
+def test_save_analysis_to_history_com_erro(mock_conn):
+    mock_conn.side_effect = sqlite3.Error("DB fail")
+    database.save_analysis_to_history("us", "report", "plan")
+
+@patch("database.get_db_connection")
+def test_get_all_analysis_history_com_erro(mock_conn):
+    mock_conn.side_effect = sqlite3.Error("DB fail")
+    assert database.get_all_analysis_history() == []
+
+@patch("database.get_db_connection")
+def test_get_analysis_by_id_com_erro(mock_conn):
+    mock_conn.side_effect = sqlite3.Error("DB fail")
+    assert database.get_analysis_by_id(1) is None
+
+@patch("database.get_db_connection")
+def test_delete_analysis_by_id_com_erro(mock_conn):
+    mock_conn.side_effect = sqlite3.Error("DB fail")
+    assert database.delete_analysis_by_id(1) is False
+
+@patch("database.get_db_connection")
+def test_clear_history_com_erro(mock_conn):
+    mock_conn.side_effect = sqlite3.Error("DB fail")
+    assert database.clear_history() == 0
+
+def test_get_all_analysis_history_vazio(monkeypatch):
+    """Força o caso onde o banco está vazio"""
+    monkeypatch.setattr(database, "get_db_connection", lambda: sqlite3.connect(":memory:"))
+
+    # Inicializa schema mas não insere nada
+    conn = database.get_db_connection()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS analysis_history (
+            id INTEGER PRIMARY KEY,
+            created_at TEXT,
+            user_story TEXT,
+            analysis_report TEXT,
+            test_plan_report TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+    history = database.get_all_analysis_history()
+    assert history == []
