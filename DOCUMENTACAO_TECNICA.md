@@ -1,6 +1,22 @@
 # 🧠 Documentação Técnica – QA Oráculo
 
-Este documento descreve a arquitetura, automações e padrões de qualidade do projeto **QA Oráculo**.
+[![CI](https://github.com/joprestes/qa-oraculo-requisitos/actions/workflows/ci.yml/badge.svg)](https://github.com/joprestes/qa-oraculo-requisitos/actions/workflows/ci.yml)  
+[![Coverage](https://img.shields.io/badge/Coverage-97%25-brightgreen)](https://github.com/joprestes/qa-oraculo-requisitos)
+
+## 📚 Sumário
+
+- [⚙️ Integração Contínua (CI)](#-integração-contínua-ci)
+- [🧰 Scripts de Setup](#-scripts-de-setup)
+- [🧩 Estrutura de Código](#-estrutura-de-código)
+- [🏗 Arquitetura Interna](#-arquitetura-interna)
+- [🧪 Testes e Qualidade](#-testes-e-qualidade)
+- [🧱 Convenções de Código](#-convenções-de-código)
+- [🧩 Boas Práticas](#-boas-práticas)
+- [🧱 Planejamento de Evolução](#-planejamento-de-evolução)
+- [⚙️ Ambiente de Execução](#-ambiente-de-execução)
+- [🔒 Segurança e Privacidade](#-segurança-e-privacidade)
+- [💡 Créditos Técnicos](#-créditos-técnicos)
+- [📆 Histórico de Versões](#-histórico-de-versões)
 
 ---
 
@@ -8,54 +24,69 @@ Este documento descreve a arquitetura, automações e padrões de qualidade do p
 
 Arquivo: `.github/workflows/ci.yml`
 
-### Etapas principais
-1. **Checkout** do repositório  
-2. **Setup Python** (3.11 – 3.13)  
-3. **Cache do pip**  
-4. **Instala dependências e ferramentas de qualidade**  
-5. **Lint (Black)** – verificação de formatação  
-6. **Lint (Ruff)** – boas práticas e imports  
-7. **Testes + cobertura** (`pytest --cov`)  
-8. **Gate de cobertura** ≥ 90 %  
-9. **Validação do pyproject.toml**
+### Etapas
+1. Checkout do repositório  
+2. Setup Python (3.11–3.13)  
+3. Cache do pip  
+4. Instala dependências e ferramentas de qualidade  
+5. Lint (Black) e Ruff  
+6. Testes e cobertura (`pytest --cov`)  
+7. Gate de cobertura ≥ 90 %  
+8. Validação do `pyproject.toml`
 
 ---
 
 ## 🧰 Scripts de Setup
 
 ### setup.sh (Linux/Mac)
-Executa:
-1. Criação do ambiente `.venv`
-2. Instalação de dependências e ferramentas (Black, Ruff, Pytest)
-3. Validação do `pyproject.toml`
-4. Execução de lint e testes com cobertura
+- Criação de `.venv`
+- Instalação de dependências
+- Lint, formatação e testes automáticos
+- Validação de `pyproject.toml`
 
 ### setup.bat (Windows)
-Fluxo equivalente adaptado para o shell do Windows.
+Fluxo equivalente para o shell do Windows.
 
 ---
 
 ## 🧩 Estrutura de Código
 
-```
+```text
 qa-oraculo/
 ├── app.py              # Interface Streamlit
 ├── graph.py            # Fluxos de IA (LangGraph + Gemini)
-├── utils.py            # Funções utilitárias
-├── pdf_generator.py    # Relatórios PDF
-├── database.py         # Persistência local (SQLite)
-├── state_manager.py    # Estado de sessão
+├── utils.py            # Funções auxiliares
+├── pdf_generator.py    # Geração de relatórios PDF
+├── database.py         # Persistência (SQLite)
+├── state_manager.py    # Estado da sessão
 └── tests/              # Testes unitários
 ```
 
 ---
 
+## 🏗 Arquitetura Interna
+
+```mermaid
+graph LR
+  UI[app.py] --> AI[graph.py (LangGraph + Gemini)]
+  AI --> DB[database.py (SQLite)]
+  AI --> PDF[pdf_generator.py]
+  UI --> STATE[state_manager.py]
+```
+
+- `graph.py`: centraliza o fluxo de raciocínio da IA.  
+- `app.py`: camada de interface e entrada de dados.  
+- `database.py`: persistência local e caching leve.  
+- `pdf_generator.py`: exportação de relatórios.  
+
+---
+
 ## 🧪 Testes e Qualidade
 
-- Framework: **Pytest**
-- Banco de testes: **SQLite em memória**
-- Cobertura mínima exigida: **90 %**
-- Execução local:
+- Framework: **Pytest**  
+- Banco de testes: **SQLite in-memory**  
+- Cobertura mínima: **90 % (meta: 97 %)**  
+- Execução:
   ```bash
   pytest --cov --cov-report=term-missing
   ```
@@ -64,53 +95,65 @@ qa-oraculo/
 
 ## 🧱 Convenções de Código
 
-| Área | Ferramenta | Configuração |
-|------|-------------|--------------|
-| Formatação | `black` | Linha 88 |
-| Lint | `ruff` | Regras definidas em `[tool.ruff.lint]` no `pyproject.toml` |
-| Testes | `pytest` | Diretório `tests/` |
-| Documentação | Google-style docstrings | Todos os módulos públicos |
+| Área | Ferramenta | Observação |
+|------|-------------|------------|
+| Formatação | Black | Configuração no `pyproject.toml` |
+| Lint | Ruff | Regras de estilo e imports |
+| Testes | Pytest | Diretório `tests/` |
+| Docstrings | Google Style | Padrão uniforme para APIs públicas |
 
 ---
 
 ## 🧩 Boas Práticas
 
-1. Rodar `./setup.sh` (ou `setup.bat`) antes de commitar.  
-2. Garantir que `ruff check .` e `black --check .` estejam limpos.  
-3. Confirmar cobertura ≥ 90 %.  
-4. Usar commits semânticos (`feat:`, `fix:`, `ci:`, `docs:` etc.).  
+1. Rodar `setup.sh` (ou `.bat`) antes do commit.  
+2. Garantir lint limpo (`ruff check .`, `black --check .`).  
+3. Cobertura mínima ≥ 90 %.  
+4. Commits semânticos (`feat:`, `fix:`, `docs:`, `ci:`).  
 
 ---
 
 ## 🧱 Planejamento de Evolução
 
-| Fase | Objetivo |
-|------|-----------|
-| **Fase 1 (Atual)** | CI completo + validações automáticas (Black, Ruff, Pytest, TOML) |
-| **Fase 2** | Acessibilidade automática (Pa11y + WCAG 2.1) |
-| **Fase 3** | Documentação viva (MkDocs + GitHub Pages) |
-| **Fase 4** | Testes E2E com Playwright |
-| **Fase 5 (opcional)** | Integração com pipelines externos (sem containerização) |
+| Fase | Objetivo | Critério de Conclusão |
+|------|-----------|--------------------------|
+| Fase 1 | CI completo + validações automáticas | Build verde |
+| Fase 2 | Acessibilidade (Pa11y + WCAG 2.1) | ≥ 95 % conformidade |
+| Fase 3 | Documentação viva (MkDocs + Pages) | Publicação automática |
+| Fase 4 | Testes E2E (Playwright) | Execução via CI |
+| Fase 5 | Integração externa (sem container) | Compatibilidade validada |
 
 ---
 
 ## ⚙️ Ambiente de Execução
 
-O QA Oráculo **não utiliza containerização**.  
-Todo o ambiente é gerenciado via **Python Virtual Environment (.venv)**,  
-garantindo isolamento e compatibilidade com o CI.
-
-### Vantagens do modelo venv
-- 🧩 Compatível com Windows, Linux e macOS  
-- ⚙️ Simples de reproduzir localmente (`setup.sh` / `setup.bat`)  
-- 🔄 Idêntico ao ambiente usado no GitHub Actions  
-- 💡 Menos sobrecarga e dependências externas  
-
-> 💬 Caso a equipe precise integrar com sistemas externos no futuro, o projeto já está modularizado para suportar isso sem containerização.
+- Base em **Python Virtual Environment (.venv)**  
+- Compatível com Windows, Linux, macOS  
+- CI usa o mesmo ambiente (`setup.sh` idêntico ao pipeline)
 
 ---
 
-## 📜 Licença
+## 🔒 Segurança e Privacidade
 
-Uso pessoal e acadêmico permitido sob **CC BY-NC 4.0**.  
-Proibido uso comercial.
+- As **User Stories** não são armazenadas fora do ambiente local.  
+- As chamadas à API Gemini utilizam chave segura via `.env`.  
+- Nenhum dado sensível é persistido permanentemente.  
+
+---
+
+## 💡 Créditos Técnicos
+
+- 🧠 **IA:** [LangGraph](https://github.com/langchain-ai/langgraph) + [Google Gemini](https://deepmind.google/technologies/gemini/)  
+- 🖥 **Interface:** [Streamlit](https://streamlit.io)  
+- 🧩 **Infraestrutura:** GitHub Actions, Ruff, Black, Pytest  
+- ✨ **Autor e Mantenedor:** [Jo Prestes](https://github.com/joprestes)
+
+---
+
+## 📆 Histórico de Versões
+
+| Versão | Data | Alterações |
+|--------|------|-------------|
+| **1.3.0** | Outubro/2025 | Novo diagrama, seção de segurança e créditos técnicos |
+| **1.2.0** | Jul/2025 | Melhorias de setup e estrutura |
+| **1.0.0** | Abr/2025 | Primeira versão técnica documentada |

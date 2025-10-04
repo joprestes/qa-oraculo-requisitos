@@ -4,10 +4,6 @@
   <img src="assets/logo_oraculo.png" alt="Logotipo do QA Oráculo" width="200"/>
 </p>
 
-<p align="center">
-  <a href="README-en.md" aria-label="Switch to English version of README">🇺🇸 English</a> | 
-  <a href="README.md" aria-current="page" aria-label="Versão em Português do README"><strong>🇧🇷 Português</strong></a>
-</p>
 
 <p align="center"><i>Análise de Requisitos com Inteligência Artificial</i></p>
 
@@ -161,21 +157,21 @@ Configurações centralizadas em `pyproject.toml`:
 
 ---
 
-## 🧰 Setup Automático e Qualidade de Código
+## 🧰 Setup Automático e Revisão de Qualidade
 
-O QA Oráculo possui scripts prontos para configurar e validar todo o ambiente de desenvolvimento em poucos minutos.  
-Eles garantem que o código local siga os **mesmos padrões de qualidade do CI (GitHub Actions)**.
+O QA Oráculo possui scripts prontos para **configurar o ambiente e validar a qualidade do código automaticamente**.  
+Eles garantem que tudo esteja 100% conforme os padrões do CI **antes do commit e push**.
 
 ### ⚙️ Scripts disponíveis
 
 | Sistema | Arquivo | Descrição |
 |----------|----------|-----------|
-| 🪟 Windows | `setup.bat` | Cria `.venv`, instala dependências e executa Black, Ruff, Pytest e validação TOML. |
-| 🐧 Linux / 🍎 macOS | `setup.sh` | Versão equivalente, compatível com shells POSIX. |
+| 🪟 Windows | `setup.bat` | Cria `.venv`, instala dependências e executa validações de qualidade (Black, Ruff, Pytest e TOML). |
+| 🐧 Linux / 🍎 macOS | `setup.sh` | Versão equivalente em shell POSIX, com a mesma revisão automática antes do push. |
 
 ---
 
-### ▶️ Execução Rápida
+### ▶️ Execução rápida
 
 **Windows**
 ```bash
@@ -190,23 +186,43 @@ chmod +x setup.sh
 
 Esses scripts executam automaticamente:
 1. 🧱 Criação do ambiente virtual `.venv`
-2. 📦 Instalação das dependências (`requirements.txt`)
-3. 🎯 Verificação de formatação com **Black**
-4. 🧹 Lint completo com **Ruff**
-5. 🧩 Validação da sintaxe do `pyproject.toml`
-6. 🧪 Execução dos testes unitários e relatório de cobertura
+2. 📦 Instalação de dependências (`requirements.txt` e `requirements-dev.txt`)
+3. 🧩 Validação de sintaxe do `pyproject.toml`
+4. 🎯 Lint com **Ruff**
+5. 🎨 Formatação com **Black**
+6. 🧪 Testes com cobertura mínima de 90%
+7. 🔍 Revisão completa de pré-push (TOML → Ruff → Black → Pytest)
 
-> 💡 Ao final, o terminal mostrará “✅ Setup concluído com sucesso!” se tudo estiver conforme os padrões do CI.
+> 💡 Ao final, o terminal exibirá:  
+> `✅ Tudo validado! Pronto para commit e push 🚀`
 
 ---
 
-### 🧠 Comandos Individuais (caso prefira rodar manualmente)
-| Tarefa | Comando |
-|--------|----------|
-| Formatar código | `black .` |
-| Verificar lint | `ruff check .` |
-| Rodar testes com cobertura | `pytest --cov --cov-report=term-missing` |
-| Validar TOML | `python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"` |
+### 🧠 Revisão manual (opcional)
+Caso queira rodar os comandos individualmente:
+
+```bash
+# Validação do pyproject.toml
+python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"
+
+# Lint
+ruff check .
+
+# Formatação
+black --check .
+
+# Testes
+pytest --cov --cov-report=term-missing
+```
+
+Esses comandos são executados automaticamente pelos scripts,  
+mas podem ser usados manualmente antes de um commit para revisões rápidas.
+
+---
+
+> 🔎 **Boas práticas QA Oráculo:**  
+> Sempre rode `setup.sh` (Linux/Mac) ou `setup.bat` (Windows) antes de fazer `git push`.  
+> Isso garante que o código local esteja no mesmo padrão exigido pelo CI.
 
 ---
 
