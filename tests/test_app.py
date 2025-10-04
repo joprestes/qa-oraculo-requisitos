@@ -119,8 +119,9 @@ def test_render_history_com_analysis_id_valido(mocked_st):
         "analysis_report": "Relatório IA",
         "test_plan_report": "Plano gerado",
     }
-    with patch("app.get_all_analysis_history", return_value=history), patch(
-        "app.get_analysis_by_id", return_value=analysis_entry
+    with (
+        patch("app.get_all_analysis_history", return_value=history),
+        patch("app.get_analysis_by_id", return_value=analysis_entry),
     ):
         app.render_history_page()
     mocked_st.markdown.assert_any_call("### Análise de 2025-09-26")
@@ -130,8 +131,9 @@ def test_render_history_com_analysis_id_valido(mocked_st):
 def test_render_history_com_analysis_id_invalido(mocked_st):
     mocked_st.query_params = {"analysis_id": ["99"]}
     history = [{"id": 99, "created_at": "2025-09-26", "user_story": "US exemplo"}]
-    with patch("app.get_all_analysis_history", return_value=history), patch(
-        "app.get_analysis_by_id", return_value=None
+    with (
+        patch("app.get_all_analysis_history", return_value=history),
+        patch("app.get_analysis_by_id", return_value=None),
     ):
         app.render_history_page()
     mocked_st.error.assert_called_with("Análise não encontrada.")
