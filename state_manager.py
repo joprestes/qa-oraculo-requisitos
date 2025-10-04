@@ -1,3 +1,7 @@
+#state_manager.py
+# Gerenciamento do estado da aplicação Streamlit
+
+
 import streamlit as st
 
 def initialize_state():

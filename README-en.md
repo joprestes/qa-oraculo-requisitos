@@ -1,13 +1,13 @@
 <p align="center">
-  <img src="assets/logo_oraculo.png" alt="QA Oracle Logo" width="200"/>
+  <img src="assets/logo_oraculo.png" alt="QA Oráculo Logo" width="200"/>
 </p>
 
-<h1 align="center">🔮 QA Oracle</h1>
+<h1 align="center">🔮 QA Oráculo</h1>
 <p align="center"><i>Requirements Analysis with Artificial Intelligence</i></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.11+-blue.svg"/>
-  <img src="https://img.shields.io/badge/license-MIT-green.svg"/>
+  <img src="https://img.shields.io/badge/license-CC--BY--NC%204.0-orange.svg"/>
   <img src="https://img.shields.io/badge/Streamlit-App-red.svg"/>
   <img src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
 </p>
@@ -17,20 +17,20 @@
 <a href="README.md">🇧🇷 Português</a>
 </nav>
 
-## 🚀 Why use QA Oracle?
+## 🚀 Why use QA Oráculo?
 
 Tired of **vague User Stories** and **endless meetings** to align understanding?
 
-**QA Oracle** transforms scattered requirements into **ready-to-test specifications** using cutting-edge AI.
+**QA Oráculo** transforms loose requirements into **ready-to-test specifications** using cutting-edge AI.
 
-👉 In just **minutes**, you’ll have:
+👉 In just **minutes**, you will have:
 - ✅ Clear acceptance criteria  
 - ❓ Smart questions for the PO  
-- 📝 Complete and well-structured test plans  
+- 📝 Complete and organized test plans  
 - 🧪 On-demand Gherkin scenarios  
 - 📄 Exportable reports (.md, .pdf, .xlsx)  
 
-It’s like having a **Senior QA available 24/7**, accelerating planning and preventing failures even before the first bug appears.
+It's like having a **Senior QA available 24/7**, speeding up planning and reducing failures before the first bug appears.
 
 ---
 
@@ -43,12 +43,14 @@ It’s like having a **Senior QA available 24/7**, accelerating planning and pre
 ## 🚀 Main Features
 
 - 💻 **Interactive Web Interface** built with **Streamlit**.  
-- 📝 **Editable and Interactive Analysis:** <!-- NEW --> After the AI generates the initial analysis, the application displays an editable form. The user can refine, correct, and add information (acceptance criteria, risks, etc.) before proceeding, ensuring that the final test plan is based on requirements validated by a human.  
-- 🔍 **Ambiguity Detection** and smart questions for the PO.  
-- ✅ **Acceptance Criteria Generation** that are clear and verifiable.  
-- 📊 **Test Case Table** interactive and sortable.  
+- 📝 **Editable and Interactive Analysis:** After AI generates the initial analysis, the application presents an editable form. The user can refine, correct and add information (acceptance criteria, risks, etc.) before proceeding, ensuring that the final test plan is based on requirements validated by a human.  
+- 🔍 **Ambiguity detection** and suggestion of questions for the PO.  
+- ✅ **Generation of clear and verifiable Acceptance Criteria**.  
+- 📊 **Interactive, sortable Test Case Table**.  
 - 📥 **Multiple Export Options** (`.md`, `.pdf`, Azure and Jira).  
-- 🏗️ **Modular, Optimized, and 100% Tested Code.**  
+- 📖 **Analysis History:** Browse and review previous analyses.  
+- 🗑️ **History Management:** Now you can delete a specific analysis or clear the entire history at once, always with confirmation to avoid accidental deletions.  
+- 🏗️ **Modular, Optimized and 100% Tested Code.**  
 
 ---
 
@@ -56,8 +58,8 @@ It’s like having a **Senior QA available 24/7**, accelerating planning and pre
 
 - 🐍 Python 3.11+  
 - 🌐 Streamlit (Web UI Framework)  
-- 🧠 LangGraph & Google Gemini (AI orchestration)  
-- 📊 Pandas (Data handling)  
+- 🧠 LangGraph & Google Gemini (Orchestration and AI)  
+- 📊 Pandas (Data manipulation)  
 - 📄 FPDF2 (PDF report generation)  
 - 📈 Openpyxl (Excel .xlsx file handling)  
 
@@ -81,7 +83,7 @@ It’s like having a **Senior QA available 24/7**, accelerating planning and pre
 git clone https://github.com/joprestes/qa-oraculo-requisitos.git
 cd qa-oraculo-requisitos
 
-# Create and activate the virtual environment
+# Create and activate virtual environment
 python3 -m venv venv
 source venv/bin/activate  # Mac/Linux
 # .\venv\Scripts\activate  # Windows
@@ -94,7 +96,7 @@ pip install -r requirements.txt
 <details>
 <summary><b>🔑 API Configuration</b></summary>
 
-Create a `.env` file in the project root:
+Create a `.env` file at the project root:
 
 ```env
 GOOGLE_API_KEY="your_api_key_here"
@@ -108,7 +110,7 @@ GOOGLE_API_KEY="your_api_key_here"
 streamlit run app.py
 ```
 
-🎉 QA Oracle will automatically open in your browser!
+🎉 QA Oráculo will automatically open in your browser!
 </details>
 
 ---
@@ -116,56 +118,61 @@ streamlit run app.py
 ### 📋 How to Use
 
 1. **Insert the User Story:** Paste the US you want to analyze.  
-2. **Start the Analysis:** Click “Analyze User Story” for the AI to generate the initial quality analysis.  
-3. **Refine the Analysis (Collaboration Step):** The application will display a pre-filled form with the AI’s analysis. Review, edit the fields as needed, and click “Save Analysis and Continue.”  
-4. **Choose Next Step:** With the refined and saved analysis, decide whether to generate a detailed test plan or finish.  
-5. **Export Results:** Use the download buttons to get artifacts in multiple formats. For Azure and Jira, fill in the customizable fields.  
-6. **Start Again:** Click “Start New Analysis” to clear the screen.  
+2. **Start the Analysis:** Click on "Analyze User Story" to have the AI generate the initial quality analysis.  
+3. **Refine the Analysis (Collaboration Step):** The application will display a pre-filled form with the AI analysis. Review, edit fields as needed, and click "Save Analysis and Continue".  
+4. **Decide Next Step:** With the refined analysis saved, choose whether to generate the detailed test plan or end the process.  
+5. **Export Results:** Use the download buttons to obtain artifacts in multiple formats. For Azure and Jira, fill in the customizable fields.  
+6. **Manage History:** Review past analyses and use the buttons to delete individually or clear all history (with confirmation).  
+7. **Start Over:** Click "New Analysis" to reset the screen.  
 
 ---
 
 ## 🤔 Troubleshooting
 
 ❌ **Error:** Invalid API Key  
-✔️ Make sure the `.env` file is in the root folder and the “Generative Language” API is enabled in Google Cloud.  
+✔️ Make sure the `.env` file is in the root and the "Generative Language" API is active on Google Cloud.  
 
 ❌ **Error:** `streamlit` command not found  
 ✔️ Make sure the virtual environment `venv` is activated.  
 
 ---
 
-## 🧪 Quality and Testing
+## 🧪 Quality and Tests
 
-The quality of this project is ensured by a robust unit test suite built with `pytest`, validating the logic of the `graph.py` and `utils.py` modules.
+The quality of this project is ensured by a robust suite of unit tests, built with `pytest`, validating the logic of `graph.py`, `utils.py`, `database.py` and `app.py`.
 
-- **Test Coverage**: Critical logic modules reached **100% line coverage**, ensuring high reliability and safety for future changes.  
+- **Test Coverage**: Critical modules achieve **high coverage** (≥97%).  
 - **Run Tests**:  
   ```bash
   pytest
   ```
 
-- **Coverage Verification**:  
+- **Check Coverage**:  
   ```bash
-  pytest --cov=graph --cov=utils
+  pytest --cov
   ```
+
+- **New History Tests:**  
+  - `tests/test_app_history_delete.py` covers individual and bulk deletion of analyses.  
+  - `tests/conftest.py` ensures the database is automatically cleaned after the test suite execution.  
 
 ---
 
 ## 📌 Roadmap
 
 - [x] Interactive web interface with Streamlit  
-- [x] Generation of acceptance criteria and PO questions  
-- [x] On-demand complete test plan generation  
-- [x] Report export in `.md` and `.pdf`  
+- [x] Generation of acceptance criteria and questions for the PO  
+- [x] Generation of full test plan on demand  
+- [x] Export of reports in `.md` and `.pdf`  
 - [x] Export to Azure DevOps (`.xlsx`)  
 - [x] Export to Jira Zephyr (`.xlsx`)  
-- [x] Code refactoring to modular architecture  
+- [x] Refactor code into modular architecture  
 - [x] Implement caching to optimize API calls  
 - [x] Centralize prompts in configuration files  
-- [x] Test suite implementation with `pytest` (100% coverage)  
-- [x] Allow interactive editing of initial analysis by user 
-- [ ] Add analysis history in session  
-- [ ] Containerize application with Docker  
+- [x] Implement test suite with `pytest` (100% coverage on critical modules)  
+- [x] Allow interactive editing of the initial analysis by the user  
+- [x] Analysis history with individual and bulk deletion (with confirmation)  
+- [ ] Containerize the application with Docker  
 
 ---
 
@@ -175,4 +182,12 @@ Contributions are very welcome!
 - Open an **issue** to report bugs or suggest improvements  
 - Send a **Pull Request** with new features  
 
-⭐ If this project helped you, don’t forget to leave a **star on the repository**!
+⭐ If this project helped you, don’t forget to leave a **star on the repository**!  
+
+---
+
+## 📜 License
+
+This project is licensed under **CC BY-NC 4.0**.  
+Only **personal use** is allowed. Commercial use is **strictly prohibited**.  
+Read more at [Creative Commons](https://creativecommons.org/licenses/by-nc/4.0/).

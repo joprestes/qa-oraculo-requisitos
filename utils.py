@@ -1,4 +1,5 @@
 # utils.py 
+
 import unicodedata
 import re
 import datetime
@@ -7,10 +8,12 @@ import pandas as pd
 import json
 
 def normalizar_string(texto: str) -> str:
+    """Remove acentos e caracteres especiais de uma string."""
     nfkd_form = unicodedata.normalize('NFD', texto)
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
 def gerar_nome_arquivo_seguro(user_story: str, extension: str) -> str:
+    """Gera nome de arquivo seguro e único, baseado na user story e timestamp."""
     if not user_story:
         return f"relatorio_qa_oraculo.{extension}"
     primeira_linha_us = user_story.split('\n')[0].lower()
@@ -21,6 +24,7 @@ def gerar_nome_arquivo_seguro(user_story: str, extension: str) -> str:
     return f"{nome_base}_{timestamp}.{extension}"
 
 def to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
+    """Converte um DataFrame em um arquivo Excel em memória (bytes)."""
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl', mode="w") as writer:
         df.to_excel(writer, index=False, sheet_name=sheet_name)
@@ -30,8 +34,10 @@ def preparar_df_para_azure_xlsx(df_original: pd.DataFrame, area_path: str, assig
     """
     Converte cenários Gherkin para o formato esperado pelo Azure Test Plans.
     - Linha 1: abertura do Test Case (step em branco obrigatório).
-    - Demais linhas: só Test Step, Step Action, Step Expected.
-    - Regras de mapeamento Dado/Quando/Então/E aplicadas.
+    - Demais linhas seguem as regras de mapeamento Gherkin:
+      Dado → Step Action
+      Quando + Então → mesma linha (Action/Expected)
+      E → depende do contexto (Action se entre Quando/Então, Expected se após Então/Dado).
     """
     azure_rows = []
     header = ["Work Item Type", "Title", "Test Step", "Step Action", "Step Expected",
@@ -165,10 +171,18 @@ def preparar_df_para_azure_xlsx(df_original: pd.DataFrame, area_path: str, assig
                 "Assigned To": "",
                 "State": ""
             })
+            step_counter += 1
+            pending_quando = None
 
     return pd.DataFrame(azure_rows, columns=header)
 
 def preparar_df_para_zephyr_xlsx(df_original: pd.DataFrame, priority: str, labels: str, description: str) -> pd.DataFrame:
+    """
+    Converte cenários de teste em DataFrame no formato Zephyr (Jira).
+    - Issue Type sempre = Test
+    - Summary = título ou padrão
+    - Test Step = cada linha do cenário
+    """
     zephyr_rows = []
     header = ["Issue Type", "Summary", "Priority", "Labels", "Description", "Test Step", "Expected Result"]
 
@@ -180,11 +194,7 @@ def preparar_df_para_zephyr_xlsx(df_original: pd.DataFrame, priority: str, label
             cenario_steps = [step.strip() for step in cenario_steps.split('\n') if step.strip()]
 
         if not cenario_steps:
-            zephyr_rows.append({
-                "Issue Type": "Test", "Summary": summary, "Priority": priority,
-                "Labels": labels, "Description": description,
-                "Test Step": "", "Expected Result": ""
-            })
+           continue
         else:
             for i, step in enumerate(cenario_steps):
                 zephyr_rows.append({
@@ -223,6 +233,7 @@ def clean_markdown_report(report_text: str) -> str:
 def parse_json_strict(s: str):
     """
     Faz parsing seguro de JSONs retornados pela IA, removendo cercas de código se existirem.
+    Lança ValueError se não for um JSON válido.
     """
     s = s.strip()
     if s.startswith("```"):
@@ -231,4 +242,8 @@ def parse_json_strict(s: str):
     if s.endswith("```"):
         s = s.rstrip("`")
         s = s[:s.rfind("}")+1]
-    return json.loads(s)
+
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Falha ao decodificar JSON: {e}")
