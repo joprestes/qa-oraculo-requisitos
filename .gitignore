@@ -208,5 +208,15 @@ __marimo__/
 
 # Pasta para relatórios gerados
 output/
-# Banco de dados local
+# Banco de dados local e arquivos temporários de histórico
+qa_oraculo_history.db
+*.sqlite
 *.db
+*.sqlite3
+
+# Relatórios de cobertura e HTMLs gerados por pytest
+htmlcov/
+coverage.xml
+coverage.html
+*.htmlcov
+*.html
