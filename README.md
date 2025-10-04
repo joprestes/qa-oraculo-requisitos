@@ -184,6 +184,8 @@ Contribuições são muito bem-vindas!
 
 ⭐ Se este projeto te ajudou, não esqueça de deixar uma **estrela no repositório**!
 
+📖 Veja também o [CHANGELOG](CHANGELOG.md) para acompanhar a evolução do projeto.
+
 ## 📜 Licença
 Este projeto é disponibilizado sob a licença **CC BY-NC 4.0**.  
 Uso **somente pessoal** é permitido. Uso comercial é **estritamente proibido**.  
