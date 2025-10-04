@@ -48,6 +48,8 @@ O **QA Oráculo** transforma requisitos soltos em **especificações prontas par
 - ✅ **Geração de Critérios de Aceite** objetivos e verificáveis.  
 - 📊 **Tabela de Casos de Teste** interativa e ordenável.  
 - 📥 **Múltiplas Opções de Exportação** (`.md`, `.pdf`, Azure e Jira).  
+- 📖 **Histórico de Análises:** Visualize e consulte análises anteriores.  
+- 🗑️ **Gerenciamento de Histórico:** Agora é possível excluir uma análise específica ou limpar todo o histórico de uma vez, sempre com confirmação para evitar exclusões acidentais.  
 - 🏗️ **Código Modular, Otimizado e 100% Testado.**  
 
 ---
@@ -117,10 +119,11 @@ streamlit run app.py
 
 1. **Insira a User Story:** Cole a US que deseja analisar.  
 2. **Inicie a Análise:** Clique em "Analisar User Story" para a IA gerar a análise de qualidade inicial.  
-3. **Refine a Análise (Etapa de Colaboração):** <!-- ATUALIZADO --> A aplicação exibirá um formulário pré-preenchido com a análise da IA. Revise, edite os campos conforme necessário e clique em "Salvar Análise e Continuar".  
+3. **Refine a Análise (Etapa de Colaboração):** A aplicação exibirá um formulário pré-preenchido com a análise da IA. Revise, edite os campos conforme necessário e clique em "Salvar Análise e Continuar".  
 4. **Decida o Próximo Passo:** Com a análise refinada e salva, escolha se deseja gerar o plano de testes detalhado ou encerrar.  
 5. **Exporte os Resultados:** Utilize os botões de download para obter os artefatos em múltiplos formatos. Para Azure e Jira, preencha os campos customizáveis.  
-6. **Comece de Novo:** Clique em "Realizar Nova Análise" para limpar a tela.  
+6. **Gerencie o Histórico:** Consulte análises anteriores e use os botões para excluir individualmente ou limpar todo o histórico (com confirmação).  
+7. **Comece de Novo:** Clique em "Realizar Nova Análise" para limpar a tela.  
 
 ---
 
@@ -136,9 +139,9 @@ streamlit run app.py
 
 ## 🧪 Qualidade e Testes
 
-A qualidade deste projeto é garantida por uma suíte de testes unitários robusta, construída com `pytest`, que valida a lógica dos módulos `graph.py` e `utils.py`.
+A qualidade deste projeto é garantida por uma suíte de testes unitários robusta, construída com `pytest`, que valida a lógica dos módulos `graph.py`, `utils.py`, `database.py` e `app.py`.
 
-- **Cobertura de Teste**: Os módulos lógicos críticos alcançaram **100% de cobertura de linha**, garantindo alta confiabilidade e segurança para futuras alterações.  
+- **Cobertura de Teste**: Os módulos críticos alcançam **alta cobertura** (≥97%).  
 - **Execução dos Testes**:  
   ```bash
   pytest
@@ -146,8 +149,12 @@ A qualidade deste projeto é garantida por uma suíte de testes unitários robus
 
 - **Verificação de Cobertura**:  
   ```bash
-  pytest --cov=graph --cov=utils
+  pytest --cov
   ```
+
+- **Novos testes do histórico:**  
+  - `tests/test_app_history_delete.py` cobre exclusão individual e total de análises.  
+  - `tests/conftest.py` garante que o banco seja limpo automaticamente após a execução da suíte de testes.  
 
 ---
 
@@ -162,9 +169,9 @@ A qualidade deste projeto é garantida por uma suíte de testes unitários robus
 - [x] Refatoração do código para arquitetura modular  
 - [x] Implementação de Caching para otimizar chamadas de API  
 - [x] Centralização de prompts em arquivos de configuração  
-- [x] Implementação de suíte de testes com `pytest` (100% de cobertura)  
-- [x] Permitir edição interativa da análise inicial pelo usuário
-- [ ] Adicionar histórico de análises na sessão  
+- [x] Implementação de suíte de testes com `pytest` (100% de cobertura nos módulos críticos)  
+- [x] Permitir edição interativa da análise inicial pelo usuário  
+- [x] Histórico de análises com exclusão individual e total (com confirmação)  
 - [ ] Containerizar a aplicação com Docker  
 
 ---
@@ -176,3 +183,9 @@ Contribuições são muito bem-vindas!
 - Envie um **Pull Request** com novas funcionalidades  
 
 ⭐ Se este projeto te ajudou, não esqueça de deixar uma **estrela no repositório**!
+
+## 📜 Licença
+Este projeto é disponibilizado sob a licença **CC BY-NC 4.0**.  
+Uso **somente pessoal** é permitido. Uso comercial é **estritamente proibido**.  
+Leia mais em [Creative Commons](https://creativecommons.org/licenses/by-nc/4.0/).
+
