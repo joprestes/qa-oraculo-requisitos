@@ -1,8 +1,8 @@
 # database.py
 
 
-import sqlite3
 import datetime
+import sqlite3
 
 # Adaptador: Python datetime -> str
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat())

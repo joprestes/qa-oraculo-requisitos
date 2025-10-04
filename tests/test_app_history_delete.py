@@ -1,7 +1,9 @@
 # test_app_history_delete.py
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 import app
 
 

@@ -1,11 +1,12 @@
 # pdf_generator.py
 
 
+from datetime import datetime
+
+import matplotlib.font_manager as fm
+import pandas as pd
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
-import pandas as pd
-from datetime import datetime
-import matplotlib.font_manager as fm
 
 
 class PDF(FPDF):
@@ -148,8 +149,8 @@ def generate_pdf_report(analysis_report: str, test_plan_df: pd.DataFrame) -> byt
         pdf.add_font("DejaVu", "", font_path)
         pdf.add_font("DejaVu", "B", font_path)
         pdf.add_font("DejaVu", "I", font_path)
-    except Exception:
-        raise RuntimeError("Fonte 'DejaVu Sans' não encontrada.")
+    except Exception as e:
+        raise RuntimeError("Fonte 'DejaVu Sans' não encontrada.") from e
 
     # 1. Adiciona a capa
     add_cover(pdf)

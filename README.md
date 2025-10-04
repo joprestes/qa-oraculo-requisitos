@@ -161,12 +161,86 @@ Configurações centralizadas em `pyproject.toml`:
 
 ---
 
+## 🧰 Setup Automático e Qualidade de Código
+
+O QA Oráculo possui scripts prontos para configurar e validar todo o ambiente de desenvolvimento em poucos minutos.  
+Eles garantem que o código local siga os **mesmos padrões de qualidade do CI (GitHub Actions)**.
+
+### ⚙️ Scripts disponíveis
+
+| Sistema | Arquivo | Descrição |
+|----------|----------|-----------|
+| 🪟 Windows | `setup.bat` | Cria `.venv`, instala dependências e executa Black, Ruff, Pytest e validação TOML. |
+| 🐧 Linux / 🍎 macOS | `setup.sh` | Versão equivalente, compatível com shells POSIX. |
+
+---
+
+### ▶️ Execução Rápida
+
+**Windows**
+```bash
+setup.bat
+```
+
+**Linux / Mac**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+Esses scripts executam automaticamente:
+1. 🧱 Criação do ambiente virtual `.venv`
+2. 📦 Instalação das dependências (`requirements.txt`)
+3. 🎯 Verificação de formatação com **Black**
+4. 🧹 Lint completo com **Ruff**
+5. 🧩 Validação da sintaxe do `pyproject.toml`
+6. 🧪 Execução dos testes unitários e relatório de cobertura
+
+> 💡 Ao final, o terminal mostrará “✅ Setup concluído com sucesso!” se tudo estiver conforme os padrões do CI.
+
+---
+
+### 🧠 Comandos Individuais (caso prefira rodar manualmente)
+| Tarefa | Comando |
+|--------|----------|
+| Formatar código | `black .` |
+| Verificar lint | `ruff check .` |
+| Rodar testes com cobertura | `pytest --cov --cov-report=term-missing` |
+| Validar TOML | `python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"` |
+
+---
+
+### 🔄 Integração Contínua (CI)
+
+Cada *push* ou *pull request* na branch `main` executa o workflow de CI:
+
+- ✅ **Black**: garante conformidade com PEP8  
+- 🔎 **Ruff**: lint de boas práticas e imports  
+- 🧪 **Pytest**: roda todos os testes unitários  
+- 📊 **Cobertura mínima exigida**: **90%**
+
+Arquivo: [`/.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+> 💬 Falhas de lint ou cobertura abaixo do mínimo bloqueiam o merge automático, garantindo a integridade do código.
+
+---
+
+## 📘 Documentação Técnica
+
+Para detalhes técnicos e de contribuição, consulte:  
+👉 [`DOCUMENTACAO_TECNICA.md`](DOCUMENTACAO_TECNICA.md)
+
+---
+
 ## 📌 Roadmap
 
 - [x] Interface web com Streamlit  
 - [x] Exportação para `.md`, `.pdf`, Azure, Jira  
 - [x] Histórico com exclusão seletiva  
-- [ ] **Containerizar aplicação com Docker**  
+- [x] Integração contínua (CI) com cobertura mínima 90%  
+- [ ] Acessibilidade automática (Pa11y + WCAG 2.1)  
+- [ ] Documentação viva (MkDocs + GitHub Pages)  
+- [ ] Testes E2E com Playwright  
 
 ---
 

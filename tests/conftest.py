@@ -1,7 +1,9 @@
 # conftest.py
 
 import os
+
 import pytest
+
 from database import DB_NAME, clear_history
 
 

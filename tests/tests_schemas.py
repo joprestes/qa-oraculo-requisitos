@@ -1,8 +1,10 @@
 # tests/test_schemas.py
 import importlib
+
 import pytest
-import schemas
 from pydantic import ValidationError
+
+import schemas
 
 
 def test_import_module_executes():
@@ -38,10 +40,6 @@ def test_validacao_tipos_invalidos():
         schemas.AnaliseUS(avaliacao_geral="Teste", pontos_ambiguos="não é lista")
 
 
-import pytest
-import schemas
-
-
 def test_analiseus_minimal():
     us = schemas.AnaliseUS(avaliacao_geral="Teste")
     assert us.avaliacao_geral == "Teste"
@@ -49,5 +47,5 @@ def test_analiseus_minimal():
 
 
 def test_analiseus_invalid_type():
-    with pytest.raises(Exception):
+    with pytest.raises(TypeError):
         schemas.AnaliseUS(avaliacao_geral="Teste", pontos_ambiguos="não é lista")

@@ -1,19 +1,20 @@
 # test_database.py
 
-import unittest
-import sqlite3
 import os
+import sqlite3
+import unittest
 from unittest.mock import patch
 
+import database
 from database import (
-    init_db,
-    save_analysis_to_history,
+    DB_NAME,
+    clear_history,
+    delete_analysis_by_id,
     get_all_analysis_history,
     get_analysis_by_id,
     get_db_connection,
-    DB_NAME,
-    delete_analysis_by_id,
-    clear_history,
+    init_db,
+    save_analysis_to_history,
 )
 
 
@@ -121,11 +122,6 @@ class TestDatabaseDelete(unittest.TestCase):
         clear_history()
         all_entries = get_all_analysis_history()
         self.assertEqual(len(all_entries), 0)
-
-
-import sqlite3
-import database
-from unittest.mock import patch
 
 
 @patch("database.get_db_connection")

@@ -1,8 +1,9 @@
 # tests/test_app_main.py
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 import app
-import pandas as pd
 
 
 # ----------------------------
@@ -27,9 +28,9 @@ def mock_st():
         def fake_columns(arg):
             if arg == [1, 1, 2]:
                 return [MagicMock(), MagicMock(), MagicMock()]
-            if arg == 4:
+            if arg == 4:  # noqa: PLR2004
                 return [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
-            if arg == 2:
+            if arg == 2:  # noqa: PLR2004
                 return [MagicMock(), MagicMock()]
             return [MagicMock(), MagicMock(), MagicMock()]
 

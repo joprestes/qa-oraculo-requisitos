@@ -5,14 +5,15 @@ import json
 import os
 import re
 import time
-from typing import TypedDict, Any
+from typing import Any, TypedDict
 
-import streamlit as st
 import google.generativeai as genai
-from google.api_core.exceptions import ResourceExhausted
+import streamlit as st
 from dotenv import load_dotenv
-from langgraph.graph import StateGraph, END
-from config import NOME_MODELO, CONFIG_GERACAO_ANALISE, CONFIG_GERACAO_RELATORIO
+from google.api_core.exceptions import ResourceExhausted
+from langgraph.graph import END, StateGraph
+
+from config import CONFIG_GERACAO_ANALISE, CONFIG_GERACAO_RELATORIO, NOME_MODELO
 from prompts import (
     PROMPT_ANALISE_US,
     PROMPT_CRIAR_PLANO_DE_TESTES,
