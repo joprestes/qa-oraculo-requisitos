@@ -5,6 +5,8 @@ target-version = ["py311"]
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+
+[tool.ruff.lint]
 # Conjunto saudável de regras (erros, formatação, imports, melhorias Python, complexidade)
 select = [
   "E", "F", "I", "UP", "B", "C90", "PERF", "PIE", "PL",
@@ -14,7 +16,8 @@ ignore = [
   "E203",  # compatibilidade Black em slicing
   "E501"   # comprimento de linha já tratado pelo Black
 ]
-# ignore padrões de diretório gerados
+
+# Ignora padrões de diretório gerados automaticamente
 exclude = [
   ".git", ".venv", "venv", "__pycache__", "site-packages", "build", "dist"
 ]

@@ -1,29 +1,27 @@
 # app.py
 
-import io
-import streamlit as st
 import pandas as pd
-from pdf_generator import generate_pdf_report
-from graph import grafo_analise, grafo_plano_testes
+import streamlit as st
+
 from database import (
-    init_db,
-    save_analysis_to_history,
+    clear_history,
+    delete_analysis_by_id,
     get_all_analysis_history,
     get_analysis_by_id,
-    delete_analysis_by_id,
-    clear_history,
+    init_db,
+    save_analysis_to_history,
 )
-from utils import clean_markdown_report
-
+from graph import grafo_analise, grafo_plano_testes
+from pdf_generator import generate_pdf_report
+from state_manager import initialize_state, reset_session
 from utils import (
+    clean_markdown_report,
     gerar_nome_arquivo_seguro,
+    get_flexible,
     preparar_df_para_azure_xlsx,
     preparar_df_para_zephyr_xlsx,
     to_excel,
-    get_flexible,
-    clean_markdown_report,
 )
-from state_manager import initialize_state, reset_session
 
 
 def _ensure_bytes(data):
@@ -57,7 +55,7 @@ def run_test_plan_graph(analysis_state: dict):
 
 
 # --- FUNÇÕES PARA AS PÁGINAS ---
-def render_main_analysis_page():
+def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     st.title("🤖 QA Oráculo")
     st.markdown(
         "Seja bem-vindo! Como seu Assistente de QA Sênior, estou aqui para apoiar na revisão de User Stories. Cole uma abaixo e vamos começar."
@@ -164,24 +162,28 @@ def render_main_analysis_page():
                         "edit_avaliacao", ""
                     )
                     bloco["pontos_ambiguos"] = [
-                        l.strip()
-                        for l in st.session_state.get("edit_pontos", "").split("\n")
-                        if l.strip()
+                        linha.strip()
+                        for linha in st.session_state.get("edit_pontos", "").split("\n")
+                        if linha.strip()
                     ]
                     bloco["perguntas_para_po"] = [
-                        l.strip()
-                        for l in st.session_state.get("edit_perguntas", "").split("\n")
-                        if l.strip()
+                        linha.strip()
+                        for linha in st.session_state.get("edit_perguntas", "").split(
+                            "\n"
+                        )
+                        if linha.strip()
                     ]
                     bloco["sugestao_criterios_aceite"] = [
-                        l.strip()
-                        for l in st.session_state.get("edit_criterios", "").split("\n")
-                        if l.strip()
+                        linha.strip()
+                        for linha in st.session_state.get("edit_criterios", "").split(
+                            "\n"
+                        )
+                        if linha.strip()
                     ]
                     bloco["riscos_e_dependencias"] = [
-                        l.strip()
-                        for l in st.session_state.get("edit_riscos", "").split("\n")
-                        if l.strip()
+                        linha.strip()
+                        for linha in st.session_state.get("edit_riscos", "").split("\n")
+                        if linha.strip()
                     ]
 
                     st.session_state["show_generate_plan_button"] = True
@@ -318,7 +320,7 @@ def render_main_analysis_page():
                     # 🔥 Exibir cenários Gherkin
                     st.subheader("📜 Cenários em Gherkin")
                     for _, row in st.session_state["test_plan_df"].iterrows():
-                        if "cenario" in row and row["cenario"]:
+                        if row.get("cenario"):
                             st.code(row["cenario"], language="gherkin")
 
         st.divider()
@@ -427,7 +429,7 @@ def render_main_analysis_page():
         )
 
 
-def render_history_page():
+def render_history_page():  # noqa: C901, PLR0912, PLR0915
     st.title("📖 Histórico de Análises")
     st.markdown(
         "Aqui você pode rever todas as análises de User Stories já realizadas pelo Oráculo."

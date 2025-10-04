@@ -1,35 +1,56 @@
-#!/bin/bash
-# Este script automatiza a criação do ambiente virtual e a instalação das dependências.
+#!/usr/bin/env bash
+# ===================================================================
+# 🧰 QA Oráculo - Setup Automático do Ambiente (Linux/Mac)
+# -------------------------------------------------------------------
+# Este script prepara o ambiente de desenvolvimento:
+# 1. Cria o ambiente virtual (.venv)
+# 2. Instala dependências e ferramentas de qualidade
+# 3. Valida a sintaxe do pyproject.toml
+# 4. Roda Black, Ruff e Pytest com cobertura
+# 5. Exibe o status final
+# ===================================================================
 
-# Para o script se houver algum erro
-set -e
+set -e  # Interrompe o script em caso de erro
 
-echo "----------------------------------------------------"
-echo "Iniciando o setup do ambiente para QA Oráculo..."
-echo "----------------------------------------------------"
+echo "=================================================================="
+echo "🚀 Iniciando o setup do ambiente QA Oráculo..."
+echo "=================================================================="
 
-# Verifica se o ambiente virtual já existe para não recriá-lo
+# 1️⃣ Criação do ambiente virtual
 if [ ! -d ".venv" ]; then
-    echo "1. Criando ambiente virtual (.venv)..."
-    python3 -m venv .venv
+  echo "📦 Criando ambiente virtual (.venv)..."
+  python3 -m venv .venv
 else
-    echo "1. Ambiente virtual (.venv) já existe. Pulando a criação."
+  echo "📦 Ambiente virtual (.venv) já existe. Pulando criação."
 fi
 
-echo "2. Ativando o ambiente virtual e instalando dependências..."
-
-# Ativa o ambiente, instala as dependências do requirements.txt e desativa
-# No Mac/Linux, podemos ativar e executar comandos em sequência
+# 2️⃣ Ativação do ambiente e instalação de dependências
+echo "🔧 Ativando ambiente virtual..."
 source .venv/bin/activate
 
-# Aqui vamos instalar as bibliotecas. 
- pip install -r requirements.txt
+echo "📚 Instalando dependências e ferramentas de qualidade..."
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install black ruff pytest pytest-cov
 
+# 3️⃣ Validação do pyproject.toml
+echo "🧩 Validando pyproject.toml..."
+python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"
+
+# 4️⃣ Lint e formatação
+echo "🎯 Rodando verificações de qualidade (Black + Ruff)..."
+black --check .
+ruff check .
+
+# 5️⃣ Testes com cobertura
+echo "🧪 Executando testes unitários com cobertura..."
+pytest --cov=app --cov=database --cov=graph --cov=pdf_generator --cov=state_manager --cov=utils --cov-report=term-missing
+
+# 6️⃣ Finalização
 deactivate
-
-echo "----------------------------------------------------"
+echo "=================================================================="
 echo "✅ Setup concluído com sucesso!"
 echo ""
 echo "👉 Para começar a trabalhar, ative o ambiente virtual com o comando:"
 echo "source .venv/bin/activate"
-echo "----------------------------------------------------"
+echo "=================================================================="

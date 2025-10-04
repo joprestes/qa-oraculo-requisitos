@@ -1,11 +1,12 @@
 # utils.py
 
-import unicodedata
-import re
 import datetime
 import io
-import pandas as pd
 import json
+import re
+import unicodedata
+
+import pandas as pd
 
 
 def normalizar_string(texto: str) -> str:
@@ -34,7 +35,7 @@ def to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
     return output.getvalue()
 
 
-def preparar_df_para_azure_xlsx(
+def preparar_df_para_azure_xlsx(  # noqa: C901, PLR0912
     df_original: pd.DataFrame, area_path: str, assigned_to: str
 ) -> pd.DataFrame:
     """
@@ -297,4 +298,4 @@ def parse_json_strict(s: str):
     try:
         return json.loads(s)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Falha ao decodificar JSON: {e}")
+        raise ValueError(f"Falha ao decodificar JSON: {e}") from e
