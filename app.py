@@ -435,13 +435,20 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
         "Aqui você pode rever todas as análises de User Stories já realizadas pelo Oráculo."
     )
 
-    history_entries = get_all_analysis_history()
+    query_params_obj = getattr(st, "query_params", {})
+    if isinstance(query_params_obj, dict):
+        query_params = query_params_obj
+    else:
+        try:
+            query_params = dict(query_params_obj)
+        except Exception:  # pragma: no cover - fallback defensivo
+            query_params = {}
 
-    if not history_entries:
-        st.info(
-            "Ainda não há análises no histórico. Realize uma nova análise para começar."
-        )
-        return
+    raw_selected_id = query_params.get("analysis_id", [None])
+    if isinstance(raw_selected_id, (list, tuple)):
+        selected_id = raw_selected_id[0]
+    else:
+        selected_id = raw_selected_id
 
     # --- Confirmação de exclusão individual (topo da página) ---
     if st.session_state.get("confirm_delete_id"):
@@ -476,16 +483,26 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
             st.session_state.pop("confirm_clear_all", None)
             st.rerun()
 
-    # --- Botão para excluir tudo ---
-    if st.button("🗑️ Excluir TODO o Histórico", key="btn-deletar-tudo"):
-        st.session_state["confirm_clear_all"] = True
-        st.rerun()
-    st.markdown('<div data-testid="btn-deletar-tudo"></div>', unsafe_allow_html=True)
+    history_entries = get_all_analysis_history()
 
-    selected_id = st.query_params.get("analysis_id", [None])[0]
+    if not history_entries and not selected_id:
+        st.info(
+            "Ainda não há análises no histórico. Realize uma nova análise para começar."
+        )
+        return
+
+    # --- Botão para excluir tudo ---
+    if history_entries:
+        if st.button("🗑️ Excluir TODO o Histórico", key="btn-deletar-tudo"):
+            st.session_state["confirm_clear_all"] = True
+            st.rerun()
+        st.markdown('<div data-testid="btn-deletar-tudo"></div>', unsafe_allow_html=True)
 
     if selected_id:
-        analysis_entry = get_analysis_by_id(int(selected_id))
+        try:
+            analysis_entry = get_analysis_by_id(int(selected_id))
+        except (TypeError, ValueError):
+            analysis_entry = None
         if analysis_entry:
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
             st.markdown(f"### Análise de {analysis_entry['created_at']}")
@@ -505,6 +522,7 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
         else:
             st.error("Análise não encontrada.")
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
+        return
     else:
         for entry in history_entries:
             with st.container(border=True):
