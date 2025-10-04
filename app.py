@@ -1,5 +1,4 @@
 # app.py
-
 import pandas as pd
 import streamlit as st
 
@@ -25,12 +24,7 @@ from utils import (
 
 
 def _ensure_bytes(data):
-    """
-    Garante bytes para o download_button:
-    - str -> UTF-8
-    - objeto com .getvalue() -> getvalue()
-    - bytes/bytearray -> ok
-    """
+    """Garante bytes para o download_button."""
     if isinstance(data, str):
         return data.encode("utf-8")
     if hasattr(data, "getvalue"):
@@ -40,7 +34,6 @@ def _ensure_bytes(data):
             pass
     if isinstance(data, (bytes, bytearray)):
         return data
-    # fallback conservador
     return bytes(str(data), "utf-8")
 
 
@@ -61,10 +54,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
         "Seja bem-vindo! Como seu Assistente de QA Sênior, estou aqui para apoiar na revisão de User Stories. Cole uma abaixo e vamos começar."
     )
 
-    # O fluxo interativo só acontece se a análise NÃO estiver finalizada.
     if not st.session_state.get("analysis_finished", False):
-
-        # Bloco para inserir a User Story (só aparece se não houver análise em andamento)
         if not st.session_state.get("analysis_state"):
             st.text_area(
                 "Insira a User Story aqui:", height=250, key="user_story_input"
@@ -82,11 +72,8 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 else:
                     st.warning("Por favor, insira uma User Story antes de analisar.")
 
-        # Bloco interativo principal (edição e decisão)
         if st.session_state.get("analysis_state"):
             st.divider()
-
-            # Mostra o formulário de edição
             if not st.session_state.get("show_generate_plan_button"):
                 st.info(
                     "🔮 O Oráculo gerou a análise abaixo. Revise, edite se necessário e clique em 'Salvar' para prosseguir."
@@ -153,7 +140,6 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     submitted = st.form_submit_button("Salvar Análise e Continuar")
 
                 if submitted:
-                    # Garante estrutura antes de escrever
                     st.session_state.setdefault("analysis_state", {})
                     st.session_state["analysis_state"].setdefault("analise_da_us", {})
                     bloco = st.session_state["analysis_state"]["analise_da_us"]
@@ -190,7 +176,6 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     st.success("Análise refinada salva com sucesso!")
                     st.rerun()
 
-            # Mostra os botões de decisão (Sim/Não)
             if st.session_state.get("show_generate_plan_button"):
                 with st.expander("1. Análise Refinada da User Story", expanded=True):
                     st.markdown(
@@ -290,11 +275,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
                     st.rerun()
 
-    # Este bloco inteiro só aparece quando a análise ESTÁ finalizada.
     if st.session_state.get("analysis_finished"):
         st.success("Análise concluída com sucesso!")
 
-        # Mostra o relatório de análise final
         if st.session_state.get("analysis_state"):
             with st.expander("1. Análise Refinada da User Story", expanded=True):
                 st.markdown(
@@ -303,7 +286,6 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     )
                 )
 
-        # Mostra o plano de testes se ele existir
         if st.session_state.get("test_plan_report"):
             with st.expander("2. Plano de Testes Detalhado", expanded=True):
                 cleaned_report = clean_markdown_report(
@@ -317,7 +299,6 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     st.dataframe(
                         st.session_state.get("test_plan_df"), use_container_width=True
                     )
-                    # 🔥 Exibir cenários Gherkin
                     st.subheader("📜 Cenários em Gherkin")
                     for _, row in st.session_state["test_plan_df"].iterrows():
                         if row.get("cenario"):
@@ -435,15 +416,9 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
         "Aqui você pode rever todas as análises de User Stories já realizadas pelo Oráculo."
     )
 
-    history_entries = get_all_analysis_history()
+    # --- 1. LIDAR COM AÇÕES DE CONFIRMAÇÃO PRIMEIRO ---
 
-    if not history_entries:
-        st.info(
-            "Ainda não há análises no histórico. Realize uma nova análise para começar."
-        )
-        return
-
-    # --- Confirmação de exclusão individual (topo da página) ---
+    # Confirmação de exclusão individual
     if st.session_state.get("confirm_delete_id"):
         delete_id = st.session_state["confirm_delete_id"]
         st.warning(
@@ -460,8 +435,9 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
         if col2.button("❌ Cancelar", key="cancelar_delete"):
             st.session_state.pop("confirm_delete_id", None)
             st.rerun()
+        return
 
-    # --- Confirmação de exclusão total (topo da página) ---
+    # Confirmação de exclusão total
     if st.session_state.get("confirm_clear_all"):
         st.warning(
             "⚠️ Tem certeza que deseja excluir **todo o histórico de análises**? Esta ação não pode ser desfeita."
@@ -475,27 +451,28 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
         if col2.button("❌ Cancelar", key="cancelar_delete_all"):
             st.session_state.pop("confirm_clear_all", None)
             st.rerun()
+        return
 
-    # --- Botão para excluir tudo ---
-    if st.button("🗑️ Excluir TODO o Histórico", key="btn-deletar-tudo"):
-        st.session_state["confirm_clear_all"] = True
-        st.rerun()
-    st.markdown('<div data-testid="btn-deletar-tudo"></div>', unsafe_allow_html=True)
+    # --- 2. DECIDIR QUAL VIEW MOSTRAR (LISTA OU DETALHES) ---
 
+    history_entries = get_all_analysis_history()
     selected_id = st.query_params.get("analysis_id", [None])[0]
 
+    # VIEW: DETALHES
     if selected_id:
-        analysis_entry = get_analysis_by_id(int(selected_id))
+        try:
+            analysis_entry = get_analysis_by_id(int(selected_id))
+        except (TypeError, ValueError):
+            analysis_entry = None
+
         if analysis_entry:
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
             st.markdown(f"### Análise de {analysis_entry['created_at']}")
-
+            # ... (resto do código de detalhes que já está correto)
             with st.expander("User Story Analisada", expanded=True):
                 st.code(analysis_entry["user_story"], language="text")
-
             with st.expander("Relatório de Análise da IA", expanded=True):
                 st.markdown(analysis_entry["analysis_report"])
-
             if analysis_entry["test_plan_report"]:
                 with st.expander("Plano de Testes Gerado", expanded=True):
                     cleaned_report = clean_markdown_report(
@@ -505,54 +482,60 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
         else:
             st.error("Análise não encontrada.")
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
+
+    # VIEW: LISTA
     else:
+        if not history_entries:
+            st.info(
+                "Ainda não há análises no histórico. Realize uma nova análise para começar."
+            )
+            return
+
+        if st.button("🗑️ Excluir TODO o Histórico"):
+            st.session_state["confirm_clear_all"] = True
+            st.rerun()
+
+        st.divider()
+
         for entry in history_entries:
             with st.container(border=True):
-                col1, col2 = st.columns([4, 1])
+                col1, col2 = st.columns([6, 1])
                 with col1:
-                    st.markdown(f"**Análise de:** `{entry['created_at']}`")
-                    st.caption(f"Início da US: *{entry['user_story'][:100]}...*")
+                    st.markdown(
+                        f"**Data:** {entry['created_at']}  \n"
+                        f"**User Story:** {entry['user_story'][:120]}..."
+                    )
                 with col2:
                     if st.button(
-                        "Ver Detalhes",
-                        key=f"btn-ver-detalhes-{entry['id']}",
-                        use_container_width=True,
-                    ):
-                        st.query_params["analysis_id"] = str(entry["id"])
-                        st.rerun()
-
-                    if st.button(
-                        "🗑️ Excluir",
-                        key=f"btn-deletar-{entry['id']}",
-                        use_container_width=True,
+                        "🗑️", key=f"del_{entry['id']}", help="Excluir esta análise"
                     ):
                         st.session_state["confirm_delete_id"] = entry["id"]
                         st.rerun()
-                    st.markdown(
-                        f'<div data-testid="btn-deletar-{entry["id"]}"></div>',
-                        unsafe_allow_html=True,
-                    )
+
+                if st.button(
+                    "🔍 Ver detalhes",
+                    key=f"detalhes_{entry['id']}",
+                    type="primary",
+                    use_container_width=True,
+                ):
+                    st.query_params["analysis_id"] = str(entry["id"])
+                    st.rerun()
 
 
-# --- LÓGICA PRINCIPAL DA APLICAÇÃO ---
+# --- MAIN ---
 def main():
-    st.sidebar.title("Navegação")
-    page = st.sidebar.radio(
-        "Escolha uma página:", ["Análise Principal", "Histórico de Análises"]
-    )
+    st.set_page_config(page_title="QA Oráculo", layout="wide")
+    init_db()
+    initialize_state()
 
-    if page == "Análise Principal":
-        render_main_analysis_page()
-    elif page == "Histórico de Análises":
-        render_history_page()
+    pages = {
+        "Analisar User Story": render_main_analysis_page,
+        "Histórico de Análises": render_history_page,
+    }
+
+    selected_page = st.sidebar.radio("Navegação", list(pages.keys()))
+    pages[selected_page]()
 
 
 if __name__ == "__main__":
-    st.set_page_config(
-        page_title="QA Oráculo | Análise e Geração de Testes com IA",
-        page_icon="🤖",
-        layout="wide",
-    )
-    init_db()
-    initialize_state()
     main()
