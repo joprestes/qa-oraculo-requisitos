@@ -1,23 +1,15 @@
 # 🔮 QA Oráculo
 
 <p align="center">
-  <img src="assets/logo_oraculo.png" alt="QA Oráculo Logo" width="200"/>
+  <img src="assets/logo_oraculo.png" alt="Logotipo do QA Oráculo" width="200"/>
+</p>
+
+<p align="center">
+  <a href="README-en.md" aria-label="Switch to English version of README">🇺🇸 English</a> | 
+  <a href="README.md" aria-current="page" aria-label="Versão em Português do README"><strong>🇧🇷 Português</strong></a>
 </p>
 
 <p align="center"><i>Análise de Requisitos com Inteligência Artificial</i></p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.11+-blue.svg"/>
-  <img src="https://img.shields.io/badge/license-CC--BY--NC%204.0-green.svg"/>
-  <img src="https://img.shields.io/badge/Streamlit-App-red.svg"/>
-  <img src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
-</p>
-
----
-<nav aria-label="Language switcher" style="text-align: right;">
-<a href="README-en.md">🇺🇸 English</a> |
-<a href="README.md" aria-current="page">🇧🇷 <strong>Português</strong></a>
-</nav>
 
 ---
 
@@ -40,7 +32,7 @@ O **QA Oráculo** transforma requisitos soltos em **especificações prontas par
 
 ## 📸 Preview da Interface
 
-![Demonstração](assets/qa_oraculo_cartoon_demo.gif)
+![Demonstração animada do QA Oráculo mostrando a análise interativa](assets/qa_oraculo_cartoon_demo.gif)
 
 ---
 
@@ -75,7 +67,7 @@ O **QA Oráculo** transforma requisitos soltos em **especificações prontas par
 - Chave de API do Google ([obter aqui](https://console.cloud.google.com))  
 
 ### 🚀 Instalação
-\`\`\`bash
+```bash
 # Clone o repositório
 git clone https://github.com/joprestes/qa-oraculo-requisitos.git
 cd qa-oraculo-requisitos
@@ -88,18 +80,18 @@ source venv/bin/activate  # Mac/Linux
 # Instale as dependências
 pip install -r requirements.txt
 pip install -r requirements-dev.txt  # Para testes e dev
-\`\`\`
+```
 
 ### 🔑 Configuração da API
 Crie um arquivo `.env` na raiz:
-\`\`\`env
+```env
 GOOGLE_API_KEY="sua_chave_de_api_aqui"
-\`\`\`
+```
 
 ### ▶️ Executar
-\`\`\`bash
+```bash
 streamlit run app.py
-\`\`\`
+```
 
 🎉 O QA Oráculo abrirá automaticamente no navegador!
 
@@ -117,11 +109,11 @@ streamlit run app.py
 
 ### 🔎 Exemplo prático
 **Input:**  
-\`\`\`
+```
 Como usuário do app de banco,
 quero redefinir minha senha via e-mail,
 para recuperar o acesso em caso de esquecimento.
-\`\`\`
+```
 
 **Saída gerada:**  
 - Critérios de Aceite:
@@ -134,12 +126,12 @@ para recuperar o acesso em caso de esquecimento.
   - Há limite de tentativas de redefinição por dia?  
 
 - Cenário Gherkin:
-  \`\`\`gherkin
+  ```gherkin
   Scenario: Redefinir senha com sucesso
     Given que o usuário informou um e-mail válido
     When solicita redefinição de senha
     Then recebe um link de redefinição válido por 24h
-  \`\`\`
+  ```
 
 ---
 
@@ -148,24 +140,24 @@ para recuperar o acesso em caso de esquecimento.
 ❌ **Erro: API Key inválida**  
 ✔️ Verifique `.env` e se a API “Generative Language” está ativa.  
 
-❌ **Erro: comando \`streamlit\` não encontrado**  
-✔️ Ative o ambiente virtual \`venv\`.  
+❌ **Erro: comando `streamlit` não encontrado**  
+✔️ Ative o ambiente virtual `venv`.  
 
 ---
 
 ## 🧪 Testes e Qualidade
 
-- **Cobertura ≥97%** com \`pytest\`.  
+- **Cobertura ≥97%** com `pytest`.  
 - **Novos testes** garantem histórico limpo e consistente.  
 
-\`\`\`bash
+```bash
 pytest
 pytest --cov
-\`\`\`
+```
 
-Configurações centralizadas em \`pyproject.toml\`:  
-- \`black\` (linha: 88)  
-- \`pytest\` com cobertura e warnings desabilitados  
+Configurações centralizadas em `pyproject.toml`:  
+- `black` (linha: 88)  
+- `pytest` com cobertura e warnings desabilitados  
 
 ---
 

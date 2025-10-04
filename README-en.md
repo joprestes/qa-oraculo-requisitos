@@ -1,23 +1,15 @@
 # 🔮 QA Oracle
 
 <p align="center">
-  <img src="assets/logo_oraculo.png" alt="QA Oracle Logo" width="200"/>
+  <img src="assets/logo_oraculo.png" alt="QA Oracle logo" width="200"/>
+</p>
+
+<p align="center">
+  <a href="README-en.md" aria-current="page" aria-label="English version of README"><strong>🇺🇸 English</strong></a> | 
+  <a href="README.md" aria-label="Switch to Portuguese version of README">🇧🇷 Português</a>
 </p>
 
 <p align="center"><i>Requirements Analysis with Artificial Intelligence</i></p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.11+-blue.svg"/>
-  <img src="https://img.shields.io/badge/license-CC--BY--NC%204.0-green.svg"/>
-  <img src="https://img.shields.io/badge/Streamlit-App-red.svg"/>
-  <img src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
-</p>
-
----
-<nav aria-label="Language switcher" style="text-align: right;">
-<a href="README-en.md" aria-current="page">🇺🇸 <strong>English</strong></a> |
-<a href="README.md">🇧🇷 Português</a>
-</nav>
 
 ---
 
@@ -40,7 +32,7 @@ It’s like having a **Senior QA available 24/7**, accelerating planning and red
 
 ## 📸 Interface Preview
 
-![Demo](assets/qa_oraculo_cartoon_demo.gif)
+![Animated demonstration of QA Oracle showing the interactive analysis](assets/qa_oraculo_cartoon_demo.gif)
 
 ---
 
@@ -75,7 +67,7 @@ It’s like having a **Senior QA available 24/7**, accelerating planning and red
 - Google API Key ([get it here](https://console.cloud.google.com))  
 
 ### 🚀 Installation
-\`\`\`bash
+```bash
 # Clone the repository
 git clone https://github.com/joprestes/qa-oraculo-requisitos.git
 cd qa-oraculo-requisitos
@@ -88,18 +80,18 @@ source venv/bin/activate  # Mac/Linux
 # Install dependencies
 pip install -r requirements.txt
 pip install -r requirements-dev.txt  # For testing and dev tools
-\`\`\`
+```
 
 ### 🔑 API Configuration
 Create a `.env` file at the project root:
-\`\`\`env
+```env
 GOOGLE_API_KEY="your_api_key_here"
-\`\`\`
+```
 
 ### ▶️ Run
-\`\`\`bash
+```bash
 streamlit run app.py
-\`\`\`
+```
 
 🎉 QA Oracle will automatically open in your browser!
 
@@ -117,11 +109,11 @@ streamlit run app.py
 
 ### 🔎 Practical Example
 **Input:**  
-\`\`\`
+```
 As a banking app user,
 I want to reset my password via email,
 so that I can recover access if I forget it.
-\`\`\`
+```
 
 **Generated Output:**  
 - Acceptance Criteria:
@@ -134,12 +126,12 @@ so that I can recover access if I forget it.
   - Is there a daily limit for reset attempts?  
 
 - Gherkin Scenario:
-  \`\`\`gherkin
+  ```gherkin
   Scenario: Successfully reset password
     Given the user provided a valid email
     When they request a password reset
     Then they receive a valid reset link that expires in 24h
-  \`\`\`
+  ```
 
 ---
 
@@ -148,22 +140,22 @@ so that I can recover access if I forget it.
 ❌ **Error: Invalid API Key**  
 ✔️ Check your `.env` file and ensure the “Generative Language” API is enabled in Google Cloud.  
 
-❌ **Error: command \`streamlit\` not found**  
+❌ **Error: command `streamlit` not found**  
 ✔️ Make sure your `venv` virtual environment is activated.  
 
 ---
 
 ## 🧪 Quality and Testing
 
-- **Coverage ≥97%** with \`pytest\`.  
+- **Coverage ≥97%** with `pytest`.  
 - **New tests** ensure history cleanup works properly.  
 
-\`\`\`bash
+```bash
 pytest
 pytest --cov
-\`\`\`
+```
 
-Centralized configuration in \`pyproject.toml\`:  
+Centralized configuration in `pyproject.toml`:  
 - `black` (line length: 88)  
 - `pytest` with coverage and warnings disabled  
 
