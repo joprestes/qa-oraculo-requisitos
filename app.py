@@ -5,7 +5,8 @@ import streamlit as st
 import pandas as pd
 from pdf_generator import generate_pdf_report
 from graph import grafo_analise, grafo_plano_testes
-from database import init_db, save_analysis_to_history, get_all_analysis_history, get_analysis_by_id
+from database import init_db, save_analysis_to_history, get_all_analysis_history, get_analysis_by_id, delete_analysis_by_id, clear_history
+from utils import clean_markdown_report
 
 from utils import (
     gerar_nome_arquivo_seguro,
@@ -263,9 +264,7 @@ def render_main_analysis_page():
             key="nova_analise_button",
         )
 
-
 def render_history_page():
-
     st.title("📖 Histórico de Análises")
     st.markdown("Aqui você pode rever todas as análises de User Stories já realizadas pelo Oráculo.")
 
@@ -274,6 +273,41 @@ def render_history_page():
     if not history_entries:
         st.info("Ainda não há análises no histórico. Realize uma nova análise para começar.")
         return
+
+    # --- Confirmação de exclusão individual (topo da página) ---
+    if st.session_state.get("confirm_delete_id"):
+        delete_id = st.session_state["confirm_delete_id"]
+        st.warning(f"⚠️ Tem certeza que deseja excluir a análise {delete_id}? Esta ação não pode ser desfeita.")
+        col1, col2 = st.columns(2)
+        if col1.button("✅ Confirmar", key="confirmar_delete"):
+            if delete_analysis_by_id(delete_id):
+                st.success("Análise excluída com sucesso!")
+            else:
+                st.error("Falha ao excluir análise.")
+            st.session_state.pop("confirm_delete_id")
+            st.rerun()
+        if col2.button("❌ Cancelar", key="cancelar_delete"):
+            st.session_state.pop("confirm_delete_id")
+            st.rerun()
+
+    # --- Confirmação de exclusão total (topo da página) ---
+    if st.session_state.get("confirm_clear_all"):
+        st.warning("⚠️ Tem certeza que deseja excluir **todo o histórico de análises**? Esta ação não pode ser desfeita.")
+        col1, col2 = st.columns(2)
+        if col1.button("✅ Confirmar", key="confirmar_delete_all"):
+            apagados = clear_history()
+            st.success(f"{apagados} análises foram removidas.")
+            st.session_state.pop("confirm_clear_all")
+            st.rerun()
+        if col2.button("❌ Cancelar", key="cancelar_delete_all"):
+            st.session_state.pop("confirm_clear_all")
+            st.rerun()
+
+    # --- Botão para excluir tudo ---
+    if st.button("🗑️ Excluir TODO o Histórico", key="btn-deletar-tudo"):
+        st.session_state["confirm_clear_all"] = True
+        st.rerun()
+    st.markdown('<div data-testid="btn-deletar-tudo"></div>', unsafe_allow_html=True)
 
     selected_id = st.query_params.get("analysis_id", [None])[0]
 
@@ -284,14 +318,14 @@ def render_history_page():
             st.markdown(f"### Análise de {analysis_entry['created_at']}")
 
             with st.expander("User Story Analisada", expanded=True):
-                st.code(analysis_entry["user_story"], language="text")
+                st.code(analysis_entry['user_story'], language='text')
 
             with st.expander("Relatório de Análise da IA", expanded=True):
-                st.markdown(analysis_entry["analysis_report"])
+                st.markdown(analysis_entry['analysis_report'])
 
-            if analysis_entry["test_plan_report"]:
+            if analysis_entry['test_plan_report']:
                 with st.expander("Plano de Testes Gerado", expanded=True):
-                    cleaned_report = clean_markdown_report(analysis_entry["test_plan_report"])
+                    cleaned_report = clean_markdown_report(analysis_entry['test_plan_report'])
                     st.markdown(cleaned_report)
         else:
             st.error("Análise não encontrada.")
@@ -304,10 +338,14 @@ def render_history_page():
                     st.markdown(f"**Análise de:** `{entry['created_at']}`")
                     st.caption(f"Início da US: *{entry['user_story'][:100]}...*")
                 with col2:
-                    if st.button("Ver Detalhes", key=f"btn_{entry['id']}", use_container_width=True):
-                        st.query_params["analysis_id"] = str(entry["id"])
+                    if st.button("Ver Detalhes", key=f"btn-ver-detalhes-{entry['id']}", use_container_width=True):
+                        st.query_params["analysis_id"] = str(entry['id'])
                         st.rerun()
 
+                    if st.button("🗑️ Excluir", key=f"btn-deletar-{entry['id']}", use_container_width=True):
+                        st.session_state["confirm_delete_id"] = entry['id']
+                        st.rerun()
+                    st.markdown(f'<div data-testid="btn-deletar-{entry["id"]}"></div>', unsafe_allow_html=True)
 
 # --- LÓGICA PRINCIPAL DA APLICAÇÃO ---
 def main():
