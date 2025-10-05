@@ -1,15 +1,15 @@
 # test/test_utils.py
-# tests/test_utils.py
-
 import datetime
 import io
 import unittest
+from io import BytesIO
 from unittest.mock import patch
 
 import pandas as pd
 import pytest
 
 import utils
+from app import _ensure_bytes
 from utils import (
     clean_markdown_report,
     gerar_nome_arquivo_seguro,
@@ -178,3 +178,97 @@ def test_to_excel_dataframe_vazio():
     df = pd.DataFrame()
     buf = to_excel(df, sheet_name="Vazio")
     assert isinstance(buf, (bytes, bytearray))
+
+
+def test_ensure_bytes_com_getvalue():
+    """Testa se _ensure_bytes funciona com objetos tipo BytesIO."""
+    obj = BytesIO(b"dados em bytes")
+    assert _ensure_bytes(obj) == b"dados em bytes"
+
+
+def test_ensure_bytes_com_bytes_diretos():
+    """Testa se _ensure_bytes lida corretamente com bytes e bytearray."""
+    assert _ensure_bytes(b"ja sou bytes") == b"ja sou bytes"
+    assert _ensure_bytes(bytearray(b"sou bytearray")) == b"sou bytearray"
+
+
+# ============================================================
+# 🔥 Cobertura 100% dos ramos de preparar_df_para_azure_xlsx
+# ============================================================
+
+EXPECTED_AZURE_ROWS_WHEN_ONLY_QUANDO = 2  # 1 abertura + 1 step "Quando"
+EXPECTED_ZEPHYR_STEPS_LIST = 2  # Dois passos na lista de cenário
+
+
+def test_azure_quando_sem_entao():
+    """Cobre o caso em que há 'Quando' sem 'Então'."""
+    df = pd.DataFrame(
+        [{"titulo": "CT Sem Então", "cenario": ["Quando clico no botão"]}]
+    )
+    result = preparar_df_para_azure_xlsx(df, "Area", "Dev")
+    assert len(result) == EXPECTED_AZURE_ROWS_WHEN_ONLY_QUANDO
+    assert any("Quando clico" in str(x) for x in result["Step Action"])
+
+
+def test_azure_com_e_entre_quando_e_entao():
+    """Cobre o caso com 'E' entre 'Quando' e 'Então'."""
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "CT E Entre",
+                "cenario": [
+                    "Quando faço login",
+                    "E preencho dados",
+                    "Então vejo mensagem",
+                ],
+            }
+        ]
+    )
+    result = preparar_df_para_azure_xlsx(df, "Area", "Dev")
+    assert any("E preencho" in str(x) for x in result["Step Action"])
+
+
+def test_azure_com_e_apos_entao():
+    """Cobre o caso com 'E' após 'Então'."""
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "CT E Depois",
+                "cenario": [
+                    "Dado que estou logado",
+                    "Então vejo a tela",
+                    "E a cor está correta",
+                ],
+            }
+        ]
+    )
+    result = preparar_df_para_azure_xlsx(df, "Area", "Dev")
+    assert any("E a cor está correta" in str(x) for x in result["Step Expected"])
+
+
+def test_azure_entao_sem_quando():
+    """Cobre o caso em que há 'Então' sem 'Quando' anterior."""
+    df = pd.DataFrame([{"titulo": "CT Entao", "cenario": ["Então algo acontece"]}])
+    result = preparar_df_para_azure_xlsx(df, "Area", "Dev")
+    assert any("Então algo acontece" in str(x) for x in result["Step Expected"])
+
+
+def test_azure_fallback_step():
+    """Cobre o caso de fallback (nenhum Dado/Quando/Então/E)."""
+    df = pd.DataFrame([{"titulo": "CT Outro", "cenario": ["Verifico o sistema"]}])
+    result = preparar_df_para_azure_xlsx(df, "Area", "Dev")
+    assert any("Verifico o sistema" in str(x) for x in result["Step Action"])
+
+
+def test_zephyr_cenario_lista():
+    """Garante cobertura de cenario em lista no Zephyr."""
+    df = pd.DataFrame([{"titulo": "CT Lista", "cenario": ["Passo 1", "Passo 2"]}])
+    result = preparar_df_para_zephyr_xlsx(df, "High", "QA", "Descrição")
+    assert len(result) == EXPECTED_ZEPHYR_STEPS_LIST
+
+
+def test_zephyr_cenario_none():
+    """Cobre o caso de cenário None em Zephyr (retorna vazio)."""
+    df = pd.DataFrame([{"titulo": "CT None", "cenario": None}])
+    result = preparar_df_para_zephyr_xlsx(df, "High", "QA", "Desc")
+    assert result.empty

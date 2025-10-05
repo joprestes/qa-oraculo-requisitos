@@ -254,6 +254,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                         )
 
                         st.rerun()
+                        return
 
                 if col2.button("Não, Encerrar", use_container_width=True):
                     st.session_state["analysis_finished"] = True

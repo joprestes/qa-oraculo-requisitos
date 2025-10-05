@@ -48,3 +48,13 @@ class TestStateManager(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_reset_session_ignora_chaves_internas(monkeypatch):
+    """Garante que reset_session não deleta chaves internas do Streamlit."""
+    st.session_state.clear()
+    st.session_state["FormSubmitter:123"] = "valor"
+    st.session_state["normal_key"] = "apagar"
+    reset_session()
+    assert "FormSubmitter:123" in st.session_state
+    assert "normal_key" not in st.session_state
