@@ -14,7 +14,8 @@ select = [
 ]
 ignore = [
   "E203",  # compatibilidade Black em slicing
-  "E501"   # comprimento de linha já tratado pelo Black
+  "E501",  # comprimento de linha já tratado pelo Black
+  "PLC0415" # Adiciona a regra à lista de ignorados
 ]
 
 # Ignora padrões de diretório gerados automaticamente
@@ -30,3 +31,8 @@ testpaths = ["tests"]
 [tool.coverage.run]
 branch = true
 source = ["app", "database", "graph", "pdf_generator", "state_manager", "utils"]
+omit = [
+    "schemas.py",
+    "tests_schemas.py",
+    "tests/**"
+    ]

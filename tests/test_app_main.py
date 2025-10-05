@@ -1,6 +1,7 @@
 # tests/test_app_main.py
 from unittest.mock import MagicMock, patch
 
+import pandas as pd
 import pytest
 
 import app
@@ -10,7 +11,7 @@ import app
 # Fixture para mock do st
 # ----------------------------
 class SessionState(dict):
-    """Simula o st.session_state com dot notation"""
+    """Simula o st.session_state com dot notation."""
 
     def __getattr__(self, key):
         return self.get(key, None)
@@ -21,6 +22,7 @@ class SessionState(dict):
 
 @pytest.fixture
 def mock_st():
+    """Mocka o módulo Streamlit para isolar comportamento durante os testes."""
     with patch("app.st") as mock_st:
         mock_st.session_state = SessionState()
 
@@ -178,6 +180,53 @@ def test_salvar_edicao_formulario(mock_st):
         "Novo ponto"
         in mock_st.session_state["analysis_state"]["analise_da_us"]["pontos_ambiguos"]
     )
+
+
+def test_render_main_analysis_page_exportadores(mock_st):
+    """Força exibição dos exportadores e verifica se os botões de download são chamados."""
+    # --- 1. Configura sessão com dados válidos ---
+    df = pd.DataFrame([{"titulo": "CT", "cenario": ["Dado", "Quando", "Então"]}])
+    mock_st.session_state.update(
+        {
+            "analysis_finished": True,
+            "analysis_state": {"relatorio_analise_inicial": "Relatório"},
+            "test_plan_report": "Plano",
+            "test_plan_df": df,
+            "pdf_report_bytes": b"pdf",
+            "user_story_input": "US Exemplo",
+            "area_path_input": "Área QA",
+            "assigned_to_input": "Joelma",
+        }
+    )
+
+    # --- 2. Cria um side_effect inteligente para st.columns ---
+    # Cria mocks distintos para cada chamada, para podermos rastreá-los
+    cols_downloads = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+    cols_azure = [MagicMock(), MagicMock()]
+
+    def columns_side_effect(arg):
+        if arg == 4:  # noqa: PLR2004
+            return cols_downloads
+        if arg == 2:  # noqa: PLR2004
+            return cols_azure
+        # Fallback para outros casos, como [1, 1, 2]
+        return [MagicMock(), MagicMock(), MagicMock()]
+
+    mock_st.columns.side_effect = columns_side_effect
+
+    # --- 3. Executa a função com patches de exportação ---
+    with (
+        patch("app.to_excel", return_value=b"excel"),
+        patch("app.gerar_nome_arquivo_seguro", return_value="fake.xlsx"),
+    ):
+        app.render_main_analysis_page()
+
+    # --- 4. Verifica se os botões de download foram chamados em seus respectivos mocks ---
+    # Usamos any() para verificar se PELO MENOS um dos botões de download foi chamado,
+    # o que é suficiente para este teste de cobertura.
+    assert any(
+        col.download_button.called for col in cols_downloads
+    ), "Nenhum botão de download principal foi acionado."
 
 
 # --------------------------------------------------------------------
