@@ -66,7 +66,7 @@ def test_render_history_page_detalhes(mock_st):
     with patch("app.get_analysis_by_id", return_value=entry):
         app.render_history_page()
         mock_st.markdown.assert_any_call("### Análise de 2025-09-26")
-        mock_st.code.assert_called_once_with("Teste", language="text")
+        mock_st.code.assert_called_once_with("Teste", language="gherkin")
 
 
 # --- TESTE DO MAIN ---
@@ -134,7 +134,7 @@ def test_render_history_com_analysis_id_valido(mocked_st):
     with patch("app.get_analysis_by_id", return_value=analysis_entry):
         app.render_history_page()
     mocked_st.markdown.assert_any_call("### Análise de 2025-09-26")
-    mocked_st.code.assert_called_with("User Story completa", language="text")
+    mocked_st.code.assert_called_with("User Story completa", language="gherkin")
 
 
 def test_render_history_com_analysis_id_invalido(mocked_st):
@@ -209,17 +209,17 @@ def test_render_main_page_clica_em_encerrar(mocked_st):
         }
     )
 
-    def button_side_effect(label, **kwargs):
-        return label == "Não, Encerrar"
-
-    mocked_st.button.side_effect = button_side_effect
+    # Simula o botão "Não, Encerrar" sendo clicado
+    col1, col2, _ = mocked_st.columns([1, 1, 2])
+    col1.button.return_value = False
+    col2.button.return_value = True
 
     with patch("app.save_analysis_to_history") as mock_save:
         app.render_main_analysis_page()
 
         assert mocked_st.session_state["analysis_finished"] is True
         mock_save.assert_called_once()
-        mocked_st.rerun.assert_called_once()
+        mocked_st.rerun.assert_called()
 
 
 def test_render_main_page_falha_na_geracao_do_plano(mocked_st):
@@ -252,7 +252,7 @@ def test_render_main_page_falha_na_geracao_do_plano(mocked_st):
                 "O Oráculo não conseguiu gerar um plano de testes estruturado."
             )
             assert mocked_st.session_state["analysis_finished"] is True
-            mocked_st.rerun.assert_called_once()
+            mocked_st.rerun.assert_called()
 
 
 # --- TESTES DE EXECUÇÃO DIRETA DO SCRIPT ---

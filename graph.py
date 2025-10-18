@@ -161,9 +161,33 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
 
 
 def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
+    """Gera o relatório final do plano de testes (Markdown)."""
     print("--- Etapa 4: Compilando relatório do plano... ---")
-    contexto = state.get("plano_e_casos_de_teste", {})
-    contexto_str = json.dumps(contexto, indent=2, ensure_ascii=False)
+
+    # Reduz o contexto para evitar overload (mantém só resumo textual)
+    contexto_completo = state.get("plano_e_casos_de_teste", {})
+    plano_resumido = contexto_completo.get("plano_de_testes", {})
+    casos = contexto_completo.get("casos_de_teste_gherkin", [])
+
+    # Mantém apenas títulos e IDs no prompt, não todo o conteúdo Gherkin
+    resumo_casos = [
+        {
+            "id": c.get("id", ""),
+            "titulo": c.get("titulo", ""),
+            "prioridade": c.get("prioridade", ""),
+        }
+        for c in casos[:10]  # envia no máximo 10 para evitar erro 500
+    ]
+
+    contexto_reduzido = {
+        "plano_de_testes": plano_resumido,
+        "resumo_casos": resumo_casos,
+    }
+    contexto_str = json.dumps(contexto_reduzido, indent=2, ensure_ascii=False)
+
+    print(f"Tamanho do contexto enviado: {len(contexto_str)} caracteres")
+
+    # Chamada ao modelo
     model = genai.GenerativeModel(
         NOME_MODELO, generation_config=CONFIG_GERACAO_RELATORIO
     )
@@ -171,6 +195,18 @@ def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
         f"{PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES}\n\nDados:\n---\n{contexto_str}"
     )
     response = chamar_modelo_com_retry(model, prompt_completo)
+
+    # Fallback local em caso de falha
+    if not response or not getattr(response, "text", None):
+        print("⚠️ Gemini falhou — gerando relatório simplificado localmente.")
+        resumo_fallback = (
+            "# 🧪 Plano de Testes Gerado\n\n"
+            "⚠️ Erro: não foi possível gerar o relatório detalhado via IA neste momento.\n\n"
+            "Os casos de teste foram criados e estão disponíveis abaixo."
+        )
+        return {"relatorio_plano_de_testes": resumo_fallback}
+
+    # Retorno normal (sucesso)
     return {
         "relatorio_plano_de_testes": (
             response.text
