@@ -457,7 +457,10 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                         st.session_state["pdf_report_bytes"] = pdf_bytes
 
                         # --- NOVO: Salva e encerra o fluxo imediatamente ---
-                        _save_current_analysis_to_history()
+                        if not st.session_state.get("history_saved"):
+                            _save_current_analysis_to_history()
+                            st.session_state["history_saved"] = True  # evita duplicação
+
                         st.session_state["analysis_finished"] = True
                         st.success("Plano de Testes gerado com sucesso!")
                         st.rerun()
@@ -477,8 +480,10 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
             # Botão para encerrar sem gerar plano (mas salvando análise)
             if col2.button("Não, Encerrar", use_container_width=True):
+                if not st.session_state.get("history_saved"):
+                    _save_current_analysis_to_history()
+                    st.session_state["history_saved"] = True  # evita duplicação
                 st.session_state["analysis_finished"] = True
-                _save_current_analysis_to_history()
                 st.rerun()
 
     # ------------------------------------------------------
@@ -574,7 +579,24 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                                     st.session_state["test_plan_df"].at[
                                         index, "cenario"
                                     ] = cenario_editado
-                                    st.success("✅ Cenário atualizado!")
+
+                                    # 🔁 Regera o relatório de plano de testes (Markdown consolidado)
+                                    from utils import gerar_relatorio_md_dos_cenarios
+
+                                    novo_relatorio = gerar_relatorio_md_dos_cenarios(
+                                        st.session_state["test_plan_df"]
+                                    )
+                                    st.session_state["test_plan_report"] = (
+                                        novo_relatorio
+                                    )
+
+                                    # 💾 Atualiza histórico com a versão revisada
+                                    _save_current_analysis_to_history()
+
+                                    st.toast(
+                                        "✅ Cenário atualizado e salvo no histórico."
+                                    )
+
                             else:
                                 st.info(
                                     "⚠️ Este caso de teste ainda não possui cenário em formato Gherkin."

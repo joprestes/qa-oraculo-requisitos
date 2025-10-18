@@ -29,6 +29,7 @@ from app import _ensure_bytes
 from utils import (
     clean_markdown_report,
     gerar_nome_arquivo_seguro,
+    gerar_relatorio_md_dos_cenarios,
     get_flexible,
     normalizar_string,
     parse_json_strict,
@@ -229,6 +230,44 @@ class TestUtilsExtras(unittest.TestCase):
         """
         with self.assertRaises(ValueError):
             parse_json_strict("não é json")
+
+
+def test_gerar_relatorio_md_dos_cenarios_completo():
+    """
+    💡 Valida a função `gerar_relatorio_md_dos_cenarios`, garantindo que:
+       - Gere texto Markdown com blocos Gherkin
+       - Inclua os campos principais de cada caso de teste
+       - Trate corretamente DataFrames vazios
+    """
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "Login válido",
+                "prioridade": "Alta",
+                "criterio_de_aceitacao_relacionado": "Usuário faz login com sucesso",
+                "cenario": "Cenário: Login válido\nDado que o usuário acessa\nQuando insere credenciais\nEntão o login é bem-sucedido",
+            },
+            {
+                "titulo": "Login inválido",
+                "prioridade": "Baixa",
+                "criterio_de_aceitacao_relacionado": "Usuário insere senha incorreta",
+                "cenario": "Cenário: Login inválido\nDado que o usuário acessa\nQuando insere senha errada\nEntão deve ver mensagem de erro",
+            },
+        ]
+    )
+
+    md = gerar_relatorio_md_dos_cenarios(df)
+
+    # Deve conter seções Markdown formatadas corretamente
+    assert "### 🧩 Login válido" in md
+    assert "### 🧩 Login inválido" in md
+    assert "```gherkin" in md
+    assert "Dado que o usuário acessa" in md
+
+    # Mesmo DF vazio deve retornar texto padrão, não erro
+    vazio = pd.DataFrame()
+    vazio_md = gerar_relatorio_md_dos_cenarios(vazio)
+    assert "Nenhum cenário disponível" in vazio_md
 
 
 # ============================================================
