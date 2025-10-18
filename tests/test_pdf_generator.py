@@ -135,6 +135,9 @@ def test_generate_pdf_report_sem_fonte(monkeypatch):
 
 
 def test_pdf_falha_fonte(monkeypatch):
-    monkeypatch.setattr("matplotlib.font_manager.findfont", lambda name: (_ for _ in ()).throw(Exception("Fonte não encontrada")))
+    monkeypatch.setattr(
+        "matplotlib.font_manager.findfont",
+        lambda name: (_ for _ in ()).throw(Exception("Fonte não encontrada")),
+    )
     with pytest.raises(RuntimeError):
         generate_pdf_report("texto", pd.DataFrame())

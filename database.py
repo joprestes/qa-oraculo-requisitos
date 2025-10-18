@@ -128,7 +128,11 @@ def get_analysis_by_id(analysis_id: int):
             cursor.execute(
                 "SELECT * FROM analysis_history WHERE id = ?;", (int(analysis_id),)
             )
-            return cursor.fetchone()
+            row = cursor.fetchone()
+            if row is not None:
+                return dict(row)
+            return None
+
     except sqlite3.Error as e:
         print(f"[DB ERROR] Falha ao buscar análise {analysis_id}: {e}")
         return None
