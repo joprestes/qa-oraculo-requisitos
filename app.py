@@ -557,7 +557,28 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                                 f"**Justificativa de Acessibilidade:** {row.get('justificativa_acessibilidade','-')}"
                             )
                             if row.get("cenario"):
-                                st.code(row["cenario"], language="gherkin")
+                                st.markdown("**Cenário Gherkin (editável):**")
+
+                                cenario_editado = st.text_area(
+                                    label=f"Editar cenário {test_id}",
+                                    value=row["cenario"],
+                                    height=220,
+                                    key=f"edit_cenario_{test_id}",
+                                )
+
+                                # Atualiza o DataFrame se houve edição
+                                if (
+                                    cenario_editado.strip()
+                                    != str(row["cenario"]).strip()
+                                ):
+                                    st.session_state["test_plan_df"].at[
+                                        index, "cenario"
+                                    ] = cenario_editado
+                                    st.success("✅ Cenário atualizado!")
+                            else:
+                                st.info(
+                                    "⚠️ Este caso de teste ainda não possui cenário em formato Gherkin."
+                                )
 
         # ==================================================
         # 📥 SEÇÃO DE DOWNLOADS
