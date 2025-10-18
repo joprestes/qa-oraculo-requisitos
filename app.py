@@ -15,6 +15,7 @@
 # ==========================================================
 
 import datetime
+import sqlite3
 
 import pandas as pd
 import streamlit as st
@@ -101,22 +102,22 @@ def _ensure_bytes(data):
 
 
 # ==========================================================
-# 헬 Auxiliar: Salva a análise atual no histórico
+# 헬 Auxiliar: Salva a análise atual no histórico (CORRIGIDO)
 # ==========================================================
 def _save_current_analysis_to_history():
     """
     Extrai os dados da sessão atual e os salva no banco de dados.
     Esta função centraliza a lógica de salvamento para evitar duplicação.
+
+    CORREÇÃO APLICADA:
+    - Remove verificação prematura de 'history_saved'
+    - Valida dados ANTES de tentar salvar
+    - Marca como salva SOMENTE após sucesso do banco
     """
-    # 🧩 Proteção para evitar salvamento duplicado na mesma sessão
-    if st.session_state.get("history_saved"):
-        print("⚙️ Análise já havia sido salva. Evitando duplicação.")
-        return
 
     try:
-        # --- LÓGICA DE EXTRAÇÃO DE DADOS MAIS SEGURA ---
-
-        # Pega a User Story. O 'or ""' garante que teremos uma string.
+        # --- 1. EXTRAÇÃO SEGURA DE DADOS ---
+        # Pega a User Story de múltiplas fontes possíveis
         user_story_from_input = st.session_state.get("user_story_input") or ""
         user_story_from_state = (
             st.session_state.get("analysis_state", {}).get("user_story") or ""
@@ -128,41 +129,59 @@ def _save_current_analysis_to_history():
             or "⚠️ User Story não disponível."
         )
 
-        # Pega o relatório de análise. O 'or ""' previne o erro se o valor for None.
+        # Pega o relatório de análise
         analysis_report = st.session_state.get("analysis_state", {}).get(
             "relatorio_analise_inicial"
         )
         analysis_report_to_save = (analysis_report or "").strip()
 
-        # Pega o plano de testes. O 'or ""' previne o erro se o valor for None.
+        # Pega o plano de testes
         test_plan_report = st.session_state.get("test_plan_report")
         test_plan_report_to_save = (test_plan_report or "").strip()
 
-        # --- FIM DA LÓGICA SEGURA ---
-
-        # 🔒 Persistência segura com proteção contra dados vazios
-        if any(
+        # --- 2. VALIDAÇÃO DE DADOS ---
+        # Só tenta salvar se houver pelo menos UM campo válido
+        has_valid_data = any(
             [
-                user_story_to_save.strip(),
-                analysis_report_to_save.strip(),
-                test_plan_report_to_save.strip(),
-            ]
-        ):
-            save_analysis_to_history(
-                user_story_to_save,
+                user_story_to_save
+                and user_story_to_save != "⚠️ User Story não disponível.",
                 analysis_report_to_save,
                 test_plan_report_to_save,
-            )
-            st.session_state["history_saved"] = True
-            print(f"💾 Análise salva no histórico em {datetime.datetime.now()}")
-        else:
+            ]
+        )
+
+        if not has_valid_data:
             print("⚠️ Nenhum dado válido para salvar no histórico.")
+            return
+
+        # --- 3. VERIFICA SE JÁ FOI SALVO (PROTEÇÃO CONTRA DUPLICAÇÃO) ---
+        # MOVIDO PARA DEPOIS DA VALIDAÇÃO!
+        if st.session_state.get("history_saved"):
+            print("⚙️ Análise já havia sido salva. Evitando duplicação.")
+            return
+
+        # --- 4. PERSISTÊNCIA NO BANCO ---
+        save_analysis_to_history(
+            user_story_to_save,
+            analysis_report_to_save,
+            test_plan_report_to_save,
+        )
+
+        # ✅ CORREÇÃO CRÍTICA: Marca como salva SOMENTE após sucesso
+        st.session_state["history_saved"] = True
+        print(f"💾 Análise salva no histórico em {datetime.datetime.now()}")
+
+    except sqlite3.Error as db_error:
+        # Erro específico de banco de dados
+        print(f"❌ Erro de banco de dados ao salvar: {db_error}")
+        st.error("Erro ao salvar no banco de dados. Verifique o arquivo de log.")
 
     except Exception as e:
-        # Exibe o erro no console para depuração, mas não quebra a aplicação
-        print(f"❌ Erro crítico ao salvar no histórico: {e}")
+        # Outros erros inesperados
+        print(f"❌ Erro inesperado ao salvar no histórico: {e}")
         st.warning(
-            "Ocorreu um erro ao tentar salvar a análise no histórico, mas o fluxo principal não foi interrompido."
+            "Ocorreu um erro ao salvar a análise no histórico, "
+            "mas o fluxo principal não foi interrompido."
         )
 
 
@@ -669,6 +688,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
         def resetar_fluxo():
             """Reseta o estado completo da sessão, incluindo a flag de histórico."""
+            # Remove explicitamente a flag antes de chamar reset_session
             st.session_state.pop("history_saved", None)
             reset_session()  # já limpa user_story_input, analysis_state, etc.
 
@@ -684,6 +704,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 # ==========================================================
 # 🗂️ Página de Histórico — Visualização e Exclusão
 # ==========================================================
+# ==========================================================
+# 🗂️ Página de Histórico — VERSÃO CORRIGIDA COMPLETA
+# ==========================================================
 def render_history_page():  # noqa: C901, PLR0912, PLR0915
     """
     Exibe o histórico de análises realizadas e permite:
@@ -691,11 +714,11 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
       • Excluir análises individuais
       • Excluir todo o histórico
 
-    🧠 Dica QA Oráculo:
-    -------------------
-    O Streamlit desenha os elementos na ordem em que aparecem no código.
-    Portanto, se quisermos que os avisos de confirmação apareçam no TOPO,
-    precisamos renderizá-los antes da listagem dos históricos.
+    CORREÇÕES APLICADAS:
+    - Conversão robusta de query_params para int
+    - Tratamento de None/string vazia
+    - Logs de debug para rastreamento
+    - Fallback para dict() em sqlite3.Row
     """
 
     st.title("📖 Histórico de Análises")
@@ -706,17 +729,6 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
     # ==========================================================
     # 🔥 BLOCO DE EXCLUSÃO (individual e total)
     # ==========================================================
-    # Este bloco aparece no topo da página para que as confirmações
-    # sejam renderizadas logo abaixo do título. Ele também executa
-    # as ações de exclusão esperadas pelos testes unitários.
-    # ----------------------------------------------------------
-    # Contexto dos testes (test_app_history_delete.py):
-    # - delete_analysis_by_id() é mockado para retornar True ou False.
-    # - clear_history() é mockado para retornar um número (int).
-    # Os testes verificam:
-    #   ✅ sucesso → st.success("... removidas.")
-    #   ❌ falha   → st.error("Falha ao excluir ...")
-    # ----------------------------------------------------------
 
     # 🗑️ EXCLUSÃO INDIVIDUAL (um único registro)
     if st.session_state.get("confirm_delete_id"):
@@ -726,14 +738,8 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 f"{st.session_state['confirm_delete_id']}?"
             )
 
-            # Usamos duas colunas para posicionar os botões lado a lado.
             col_del_1, col_del_2 = st.columns(2)
 
-            # ----------------------------------------------------------
-            # ✅ CONFIRMAR EXCLUSÃO INDIVIDUAL
-            # ----------------------------------------------------------
-            # Ao clicar, chamamos delete_analysis_by_id()
-            # (que nos testes pode retornar True ou False).
             if col_del_1.button(
                 "✅ Confirmar Exclusão",
                 key="confirmar_delete",
@@ -742,20 +748,13 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 result = delete_analysis_by_id(st.session_state["confirm_delete_id"])
                 st.session_state.pop("confirm_delete_id", None)
 
-                # Se a exclusão for bem-sucedida (mock=True)
                 if result:
                     st.success("Análise excluída com sucesso!")
                 else:
-                    # Se mock=False → exibe erro (compatível com teste_excluir_individual_falha)
                     st.error("Falha ao excluir a análise.")
 
-                # Atualiza a tela após a ação
                 st.rerun()
 
-            # ----------------------------------------------------------
-            # ❌ CANCELAR EXCLUSÃO INDIVIDUAL
-            # ----------------------------------------------------------
-            # Limpa o estado e informa cancelamento
             if col_del_2.button(
                 "❌ Cancelar", key="cancelar_delete", use_container_width=True
             ):
@@ -763,14 +762,7 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 st.info("A exclusão foi cancelada.")
                 st.rerun()
 
-    # ----------------------------------------------------------
     # 🧹 EXCLUSÃO TOTAL DO HISTÓRICO
-    # ----------------------------------------------------------
-    # A lógica é semelhante, mas aqui o clear_history()
-    # retorna um número de registros excluídos.
-    # Os testes esperam que este número apareça na mensagem
-    # st.success(f"{count} análises foram removidas.")
-    # ----------------------------------------------------------
     if st.session_state.get("confirm_clear_all"):
         with st.container(border=True):
             st.warning(
@@ -778,22 +770,16 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
             )
             col_all_1, col_all_2 = st.columns(2)
 
-            # ✅ CONFIRMAR EXCLUSÃO TOTAL
             if col_all_1.button(
                 "🗑️ Confirmar exclusão total",
                 key="confirmar_delete_all",
                 use_container_width=True,
             ):
-                # clear_history() retorna o número de linhas deletadas (mockado nos testes)
                 removed_count = clear_history()
-
-                # Remove o flag de confirmação do estado global
                 st.session_state.pop("confirm_clear_all", None)
                 st.success(f"{removed_count} análises foram removidas.")
-
                 st.rerun()
 
-            # ❌ CANCELAR EXCLUSÃO TOTAL
             if col_all_2.button(
                 "❌ Cancelar", key="cancelar_delete_all", use_container_width=True
             ):
@@ -802,50 +788,85 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 st.rerun()
 
     # ==========================================================
-    # 🔍 LISTAGEM E VISUALIZAÇÃO DE HISTÓRICO
+    # 🔍 BUSCA E CONVERSÃO DO ID SELECIONADO (CORRIGIDO)
     # ==========================================================
+
+    # ✅ CORREÇÃO 1: Tratamento robusto de query_params
     history_entries = get_all_analysis_history()
-    selected_id = st.query_params.get("analysis_id", [None])[0]
+
+    # Debug logs
+    print(f"🔍 [DEBUG] Total de registros no histórico: {len(history_entries)}")
+
+    # Pega o ID da URL de forma segura
+    raw_id = st.query_params.get("analysis_id")
+    print(f"🔍 [DEBUG] raw_id do query_params: {raw_id} (tipo: {type(raw_id)})")
+
+    selected_id = None
+
+    # ✅ CORREÇÃO 2: Conversão mais robusta
+    if raw_id:
+        # query_params pode retornar lista, string ou None
+        if isinstance(raw_id, list):
+            raw_id = raw_id[0] if raw_id else None
+
+        if raw_id:
+            try:
+                selected_id = int(raw_id)
+                print(f"🔍 [DEBUG] selected_id convertido: {selected_id}")
+            except (ValueError, TypeError) as e:
+                print(f"🔍 [DEBUG] Erro ao converter ID: {e}")
+                selected_id = None
 
     # Cria container vazio no topo para manter compatibilidade com testes
     with st.container():
         pass
 
-    if selected_id:
-        try:
-            selected_id = int(selected_id)
-        except ValueError:
-            selected_id = None
-
     # ----------------------------------------------------------
     # 🔎 Modo de visualização detalhada
     # ----------------------------------------------------------
     if selected_id:
+        print(f"🔍 [DEBUG] Buscando análise com ID: {selected_id}")
+
         try:
-            analysis_entry = get_analysis_by_id(int(selected_id))
-        except (TypeError, ValueError):
+            analysis_entry = get_analysis_by_id(selected_id)
+            print(f"🔍 [DEBUG] Resultado da busca: {analysis_entry is not None}")
+
+            # ✅ CORREÇÃO 3: Garante conversão para dict
+            if analysis_entry and not isinstance(analysis_entry, dict):
+                analysis_entry = dict(analysis_entry)
+                print("🔍 [DEBUG] Convertido sqlite3.Row para dict")
+
+        except (TypeError, ValueError) as e:
+            print(f"🔍 [DEBUG] Erro ao buscar análise: {e}")
             analysis_entry = None
 
         if analysis_entry:
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
+
             created = analysis_entry.get("created_at")
-            # Usa a string bruta se já estiver no formato "YYYY-MM-DD" (como nos testes)
-            titulo_data = (
-                created if isinstance(created, str) else created.strftime("%Y-%m-%d")
-            )
+            print(f"🔍 [DEBUG] created_at: {created} (tipo: {type(created)})")
+
+            # ✅ CORREÇÃO 4: Formatação segura de datas
+            if isinstance(created, str):
+                titulo_data = created.split()[0]  # Pega só a data (YYYY-MM-DD)
+            elif hasattr(created, "strftime"):
+                titulo_data = created.strftime("%Y-%m-%d")
+            else:
+                titulo_data = str(created)
+
             st.markdown(f"### Análise de {titulo_data}")
 
             # 🧩 User Story
             with st.expander("📄 User Story Analisada", expanded=True):
                 user_story = (
-                    analysis_entry["user_story"] or "⚠️ User Story não disponível."
+                    analysis_entry.get("user_story") or "⚠️ User Story não disponível."
                 )
                 st.code(user_story, language="gherkin")
 
             # 🧠 Relatório de Análise
             with st.expander("📘 Relatório de Análise da IA", expanded=False):
                 relatorio_analise = (
-                    analysis_entry["analysis_report"]
+                    analysis_entry.get("analysis_report")
                     or "⚠️ Relatório de análise não disponível."
                 )
                 st.markdown(
@@ -864,7 +885,6 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 else:
                     st.info("⚠️ Nenhum plano de testes foi gerado para esta análise.")
 
-            # Linha divisória visual
             st.divider()
 
             st.markdown(
@@ -874,11 +894,14 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
 
         else:
             st.error("Análise não encontrada.")
+            print(
+                f"🔍 [DEBUG] Análise com ID {selected_id} não foi encontrada no banco"
+            )
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
 
     # ----------------------------------------------------------
     # 📚 Modo de listagem geral (todas as análises)
-    # ------------------------------------------
+    # ----------------------------------------------------------
     else:
         if not history_entries:
             st.info(
@@ -896,12 +919,24 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
 
         # Cria um card/expander para cada item
         for entry in history_entries:
+            entry_dict = dict(entry) if not isinstance(entry, dict) else entry
+            created_at = entry_dict.get("created_at")
+            user_story_preview = entry_dict.get("user_story", "")[:80]
+
+            # Formata data de forma segura
+            if isinstance(created_at, str):
+                data_formatada = created_at.split()[0]
+            elif hasattr(created_at, "strftime"):
+                data_formatada = created_at.strftime("%d/%m/%Y %H:%M")
+            else:
+                data_formatada = str(created_at)
+
             with st.expander(
-                f"🧩 {format_datetime(entry['created_at'])} — {entry['user_story'][:80]}...",
+                f"🧩 {data_formatada} — {user_story_preview}...",
                 expanded=False,
             ):
-                st.markdown(f"**🕒 Data:** {entry['created_at']}")
-                st.markdown(f"**📘 User Story:**\n\n> {entry['user_story'][:300]}...")
+                st.markdown(f"**🕒 Data:** {data_formatada}")
+                st.markdown(f"**📘 User Story:**\n\n> {user_story_preview}...")
                 st.markdown(
                     '<div data-testid="card-historico"></div>', unsafe_allow_html=True
                 )
@@ -916,6 +951,7 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                         use_container_width=True,
                     ):
                         st.query_params["analysis_id"] = str(entry["id"])
+                        print(f"🔍 [DEBUG] Clicou em Ver detalhes, ID: {entry['id']}")
                         st.rerun()
 
                 with col2:
@@ -928,7 +964,6 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                         st.session_state["confirm_delete_id"] = entry["id"]
                         st.rerun()
 
-        # Instrução de acessibilidade no final da lista
         st.markdown(
             "<p style='color:gray;font-size:13px;'>Pressione TAB para navegar pelos registros ou ENTER para expandir.</p>",
             unsafe_allow_html=True,
