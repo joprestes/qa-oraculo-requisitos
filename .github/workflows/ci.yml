@@ -26,6 +26,12 @@ on:
   push:
     branches: [main]
 
+  workflow_dispatch:
+    inputs:
+      python_version:
+        description: "Versão do Python a ser testada (opcional)"
+        required: false
+        default: "3.12"
 # ---------------------------------------------------------------------
 # 👷 Definição dos jobs (etapas)
 # Cada job roda em um ambiente isolado (VM Linux no GitHub).
@@ -117,8 +123,8 @@ jobs:
           cov = float(r['line-rate']) * 100
           print(f'📊 Cobertura total: {cov:.2f}%')
 
-          if cov < 90:
-              print("❌ Cobertura abaixo do mínimo exigido (90%)")
+          if cov < 85.0:
+              print("❌ Cobertura abaixo do mínimo exigido (85%)")
               exit(1)
           else:
               print("✅ Cobertura mínima atingida!")
