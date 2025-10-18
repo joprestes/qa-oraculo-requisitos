@@ -1,5 +1,13 @@
-# pdf_generator.py
-
+# ==========================================================
+# pdf_generator.py — Gerador de Relatórios PDF Acessíveis
+# ==========================================================
+# 📘 Responsável por criar relatórios em PDF a partir das análises
+#    e planos de teste gerados pela IA.
+# ----------------------------------------------------------
+#  • Compatível com Unicode (fonte DejaVu)
+#  • Inclui capa, seções e tabela única de casos de teste
+#  • Padrão QA Oráculo: acessível, limpo e automatizável
+# ==========================================================
 
 from datetime import datetime
 
@@ -9,6 +17,9 @@ from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
 
+# ==========================================================
+# Classe base do PDF
+# ==========================================================
 class PDF(FPDF):
     def header(self):
         if self.page_no() > 1:
@@ -54,18 +65,14 @@ class PDF(FPDF):
         """Desenha uma linha divisória suave."""
         self.ln(3)
         self.set_draw_color(220, 220, 220)
-        self.cell(
-            0,
-            1,
-            "",
-            border="T",
-            new_x=XPos.LMARGIN,
-            new_y=YPos.NEXT,
-        )
+        self.cell(0, 1, "", border="T", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         self.ln(5)
         self.set_draw_color(0, 0, 0)
 
 
+# ==========================================================
+# Funções auxiliares
+# ==========================================================
 def clean_text_for_pdf(text: str) -> str:
     """Limpa emojis e garante que o texto seja uma string."""
     text = str(text)
@@ -83,32 +90,16 @@ def clean_text_for_pdf(text: str) -> str:
     return text
 
 
-def add_cover(pdf: PDF):
+def add_cover(pdf: FPDF):
     """Cria a página de capa do relatório."""
     pdf.add_page()
     pdf.set_font("DejaVu", "B", 24)
     pdf.cell(0, 80, "", border=0, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-    pdf.cell(
-        0,
-        20,
-        "Relatório de Análise de QA",
-        border=0,
-        align="C",
-        new_x=XPos.LMARGIN,
-        new_y=YPos.NEXT,
-    )
+    pdf.cell(0, 20, "Relatório de Análise de QA", border=0, align="C")
     pdf.ln(10)
     pdf.set_font("DejaVu", "B", 18)
     pdf.set_text_color(80, 80, 80)
-    pdf.cell(
-        0,
-        10,
-        "QA Oráculo",
-        border=0,
-        align="C",
-        new_x=XPos.LMARGIN,
-        new_y=YPos.NEXT,
-    )
+    pdf.cell(0, 10, "QA Oráculo", border=0, align="C")
     pdf.ln(20)
     pdf.set_font("DejaVu", "I", 12)
     pdf.set_text_color(120, 120, 120)
@@ -118,30 +109,83 @@ def add_cover(pdf: PDF):
         f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}",
         border=0,
         align="C",
-        new_x=XPos.LMARGIN,
-        new_y=YPos.NEXT,
     )
     pdf.set_text_color(0, 0, 0)
 
 
-def add_section_title(pdf: PDF, text: str):
+def add_section_title(pdf: FPDF, text: str):
     """Adiciona um título de seção formatado."""
     pdf.set_font("DejaVu", "B", 16)
     pdf.set_text_color(0, 51, 102)
-    pdf.cell(
-        0,
-        12,
-        text,
-        border=0,
-        align="L",
-        new_x=XPos.LMARGIN,
-        new_y=YPos.NEXT,
-    )
+    pdf.cell(0, 12, text, border=0, align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
 
 
+# ==========================================================
+# Nova função — Tabela única e completa de casos de teste
+# ==========================================================
+def add_test_case_table(pdf: FPDF, df: pd.DataFrame):
+    """Adiciona uma tabela única com todas as informações dos casos de teste (ordem corrigida)."""
+    if df.empty:
+        return
+
+    # 🔹 Remove possíveis duplicatas ou cabeçalhos residuais vindos do Markdown da IA
+    df = df.loc[:, ~df.columns.duplicated()].copy()
+
+    add_section_title(pdf, "2. Casos de Teste (Resumo Completo)")
+    pdf.set_font("DejaVu", "B", 10)
+    pdf.set_fill_color(230, 230, 230)
+
+    headers = [
+        "ID",
+        "Título",
+        "Prioridade",
+        "Critério de Aceitação Relacionado",
+        "Cenário (Gherkin)",
+        "Justificativa de Acessibilidade",
+    ]
+    col_widths = [18, 45, 22, 55, 70, 55]
+
+    # Cabeçalho
+    for header, width in zip(headers, col_widths, strict=False):
+        pdf.cell(width, 8, header, border=1, align="C", fill=True)
+    pdf.ln()
+
+    pdf.set_font("DejaVu", "", 9)
+
+    for _, row in df.iterrows():
+        pdf.cell(col_widths[0], 8, str(row.get("id", "")), border=1)
+        pdf.cell(col_widths[1], 8, str(row.get("titulo", ""))[:40], border=1)
+        pdf.cell(col_widths[2], 8, str(row.get("prioridade", "")), border=1)
+
+        pdf.cell(
+            col_widths[3],
+            8,
+            str(row.get("criterio_de_aceitacao_relacionado", ""))[:40],
+            border=1,
+        )
+
+        # Cenário (multi-linha)
+        cenario = row.get("cenario", "")
+        if isinstance(cenario, list):
+            cenario = "\n".join(cenario)
+        pdf.multi_cell(col_widths[4], 6, clean_text_for_pdf(str(cenario)), border=1)
+
+        pdf.cell(
+            col_widths[5],
+            8,
+            str(row.get("justificativa_acessibilidade", ""))[:40],
+            border=1,
+        )
+        pdf.ln()
+
+
+# ==========================================================
+# Função principal de geração do PDF
+# ==========================================================
 def generate_pdf_report(analysis_report: str, test_plan_df: pd.DataFrame) -> bytes:
+    """Gera o relatório PDF completo (Análise + Casos de Teste)."""
     pdf = PDF()
 
     try:
@@ -152,65 +196,21 @@ def generate_pdf_report(analysis_report: str, test_plan_df: pd.DataFrame) -> byt
     except Exception as e:
         raise RuntimeError("Fonte 'DejaVu Sans' não encontrada.") from e
 
-    # 1. Adiciona a capa
+    # 1. Capa
     add_cover(pdf)
 
-    # 2. Adiciona a primeira página de conteúdo
+    # 2. Conteúdo principal
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    # --- Seção 1: Análise ---
+    # --- Seção 1: Análise da User Story ---
     add_section_title(pdf, "1. Análise de Qualidade da User Story")
     pdf.set_font("DejaVu", "", 12)
     pdf.multi_cell(0, 8, clean_text_for_pdf(analysis_report))
     pdf.ln(10)
 
-    # --- Seção 2: Plano de Testes Detalhado ---
-    add_section_title(pdf, "2. Plano de Testes Detalhado")
-
+    # --- Seção 2: Casos de Teste ---
     if not test_plan_df.empty:
-        friendly_names = {
-            "criterio_de_aceitacao_relacionado": "Critérios Relacionados",
-            "justificativa_acessibilidade": "Justificativa de Acessibilidade",
-            "titulo": "Título",
-            "prioridade": "Prioridade",
-            "cenario": "Cenário",
-        }
-
-        for index, row in test_plan_df.iterrows():
-            test_id = row.get("id", f"CT-{index+1:03d}")
-            test_id = clean_text_for_pdf(test_id)
-
-            pdf.set_font("DejaVu", "B", 12)
-            pdf.set_fill_color(240, 240, 240)
-            pdf.cell(
-                0,
-                10,
-                f"Caso de Teste: {test_id}",
-                border=1,
-                fill=True,
-                new_x=XPos.LMARGIN,
-                new_y=YPos.NEXT,
-            )
-
-            for col_name in test_plan_df.columns:
-                if col_name.lower() == "id":
-                    continue
-
-                cell_value = row.get(col_name, "")
-                cell_value_str = str(cell_value)
-                if cell_value_str.strip() == "" or cell_value_str.lower() == "nan":
-                    continue
-
-                label = friendly_names.get(col_name, col_name.replace("_", " ").title())
-
-                pdf.set_font("DejaVu", "B", 11)
-                pdf.cell(50, 8, f"{label}:", border=0)
-
-                pdf.set_font("DejaVu", "", 11)
-                pdf.multi_cell(0, 8, clean_text_for_pdf(cell_value_str), border=0)
-                pdf.ln(2)
-
-            pdf.divider()
+        add_test_case_table(pdf, test_plan_df)
 
     return bytes(pdf.output())

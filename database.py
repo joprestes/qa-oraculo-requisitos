@@ -1,6 +1,22 @@
-# database.py
-
-
+# ==========================================================
+# database.py — Módulo de Persistência de Dados (QA Oráculo)
+# ==========================================================
+# 📘 Responsável por toda a comunicação com o banco SQLite:
+#    - Criação e inicialização do banco
+#    - Salvamento e leitura de análises realizadas
+#    - Exclusão individual e total de registros
+#
+# 🎯 Princípios QA Oráculo:
+#    • Banco testável em memória (usando SQLite :memory:)
+#    • Transações seguras e idempotentes (commit sob with)
+#    • Acesso simplificado via RowFactory (dict-like)
+#    • Compatível com pytest e automações de histórico
+#
+# 🧩 Boas Práticas:
+#    - Nenhum dado sensível é persistido.
+#    - Campos None são substituídos por mensagens de fallback.
+#    - Todas as funções lidam com exceções de forma segura.
+# ==========================================================
 import datetime
 import sqlite3
 
@@ -55,8 +71,20 @@ def save_analysis_to_history(
 ):
     """
     Salva uma nova análise no histórico.
+    🔒 Correção QA Oráculo:
+        - Evita NoneType nos campos.
+        - Garante fallback textual caso o Gemini falhe.
+        - Mantém compatibilidade total com a estrutura original.
     """
     try:
+        # Sanitiza os campos para evitar valores nulos
+        user_story = user_story or "⚠️ User Story não disponível."
+        analysis_report = analysis_report or "⚠️ Relatório de análise não disponível."
+        test_plan_report = (
+            test_plan_report
+            or "⚠️ Plano de Testes não disponível ou não pôde ser gerado."
+        )
+
         with get_db_connection() as conn:
             cursor = conn.cursor()
             timestamp = datetime.datetime.now()  # TIMESTAMP real, não string
@@ -68,6 +96,7 @@ def save_analysis_to_history(
                 (timestamp, user_story, analysis_report, test_plan_report),
             )
             conn.commit()
+            print(f"💾 Análise salva no histórico em {timestamp}")
     except sqlite3.Error as e:
         print(f"[DB ERROR] Falha ao salvar análise: {e}")
 
@@ -95,12 +124,16 @@ def get_analysis_by_id(analysis_id: int):
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
+            # 🔧 converte para inteiro de forma segura
             cursor.execute(
-                "SELECT * FROM analysis_history WHERE id = ?;", (analysis_id,)
+                "SELECT * FROM analysis_history WHERE id = ?;", (int(analysis_id),)
             )
             return cursor.fetchone()
     except sqlite3.Error as e:
         print(f"[DB ERROR] Falha ao buscar análise {analysis_id}: {e}")
+        return None
+    except (ValueError, TypeError):
+        print(f"[DB ERROR] ID inválido fornecido: {analysis_id}")
         return None
 
 
