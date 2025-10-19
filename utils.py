@@ -300,3 +300,35 @@ def gerar_csv_azure_from_df(  # noqa: C901
     csv_bytes = buffer.getvalue().encode("utf-8-sig")
     buffer.close()
     return csv_bytes
+
+
+# ==========================================================
+# 🚀 Salva Gherkin após edição do usuário
+# ==========================================================
+
+
+def gerar_relatorio_md_dos_cenarios(df):
+    """
+    Gera texto Markdown consolidado com os cenários Gherkin atuais.
+    Cada linha do DataFrame vira um bloco Markdown formatado.
+    """
+    if df is None or df.empty:
+        return "⚠️ Nenhum cenário disponível para gerar relatório."
+
+    blocos = []
+    for _, row in df.iterrows():
+        titulo = row.get("titulo", "Sem título")
+        prioridade = row.get("prioridade", "-")
+        criterio = row.get("criterio_de_aceitacao_relacionado", "")
+        cenario = row.get("cenario", "")
+
+        bloco = f"""### 🧩 {titulo}
+**Prioridade:** {prioridade}  
+**Critério de Aceitação:** {criterio}
+
+```gherkin
+{cenario.strip()}
+```
+"""
+        blocos.append(bloco)
+    return "\n".join(blocos)

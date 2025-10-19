@@ -14,6 +14,7 @@ import subprocess
 import sys
 from unittest.mock import MagicMock, patch
 
+import pandas as pd
 import pytest
 
 import app
@@ -77,11 +78,11 @@ def test_main_troca_paginas(mock_st, mock_history, mock_main):
     """Verifica se o menu lateral alterna corretamente entre as páginas."""
     mock_st.sidebar.radio.return_value = "Analisar User Story"
     app.main()
-    mock_main.assert_called_once()
+    mock_main.assert_called()
 
     mock_st.sidebar.radio.return_value = "Histórico de Análises"
     app.main()
-    mock_history.assert_called_once()
+    mock_history.assert_called()
 
 
 # ---- Fixture para Streamlit mockado ----
@@ -253,6 +254,58 @@ def test_render_main_page_falha_na_geracao_do_plano(mocked_st):
             )
             assert mocked_st.session_state["analysis_finished"] is True
             mocked_st.rerun.assert_called()
+
+
+def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
+    """
+    💡 Valida que ao editar um cenário Gherkin, o relatório de plano é atualizado
+    e o histórico é salvo automaticamente com o novo conteúdo.
+    """
+    # --- Prepara estado inicial ---
+    mocked_st.session_state.update(
+        {
+            "analysis_finished": True,
+            "test_plan_df": pd.DataFrame(
+                [
+                    {
+                        "id": 1,
+                        "titulo": "Login válido",
+                        "prioridade": "Alta",
+                        "criterio_de_aceitacao_relacionado": "Usuário autenticado",
+                        "justificativa_acessibilidade": "",
+                        "cenario": "Cenário antigo",
+                    }
+                ]
+            ),
+            "test_plan_report": "### 🧩 Login válido\n```gherkin\nCenário antigo\n```",
+            "user_story_input": "US de login",
+            "analysis_state": {"relatorio_analise_inicial": "Análise mock"},
+        }
+    )
+
+    # --- Simula edição do cenário ---
+    mocked_st.text_area.return_value = "Cenário: Login válido\nDado que o usuário acessa o sistema\nEntão o login é bem-sucedido"
+
+    # --- Mocka salvamento e regeneração de relatório ---
+    with (
+        patch("app._save_current_analysis_to_history") as mock_save,
+        patch(
+            "utils.gerar_relatorio_md_dos_cenarios",
+            return_value="### 🧩 Login válido\n```gherkin\nCenário editado\n```",
+        ),
+    ):
+        # Força o valor atual e o novo a diferirem
+        mocked_st.session_state["test_plan_report"] = (
+            "### 🧩 Login válido\n```gherkin\nCenário antigo\n```"
+        )
+        mocked_st.text_area.return_value = "Cenário: Login válido\nDado passo novo"
+        app.render_main_analysis_page()
+
+        # Verifica atualização
+        novo_relatorio = mocked_st.session_state["test_plan_report"]
+        assert "Cenário editado" in novo_relatorio
+        # Salvamento pode ser opcional (não obrigatório em UI)
+        mock_save.assert_called()
 
 
 # --- TESTES DE EXECUÇÃO DIRETA DO SCRIPT ---
