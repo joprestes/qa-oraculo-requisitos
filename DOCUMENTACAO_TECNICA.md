@@ -14,6 +14,8 @@
 - [🧩 Boas Práticas](#-boas-práticas)
 - [🧱 Planejamento de Evolução](#-planejamento-de-evolução)
 - [⚙️ Ambiente de Execução](#-ambiente-de-execução)
+- [🛠️ Configuração e Orquestração da IA](#-configuração-e-orquestração-da-ia)
+- [📦 Validação e Schemas](#-validação-e-schemas)
 - [🔒 Segurança e Privacidade](#-segurança-e-privacidade)
 - [💡 Créditos Técnicos](#-créditos-técnicos)
 - [📆 Histórico de Versões](#-histórico-de-versões)
@@ -53,13 +55,17 @@ Fluxo equivalente para o shell do Windows.
 
 ```text
 qa-oraculo/
-├── app.py              # Interface Streamlit
-├── graph.py            # Fluxos de IA (LangGraph + Gemini)
-├── utils.py            # Funções auxiliares
-├── pdf_generator.py    # Geração de relatórios PDF
-├── database.py         # Persistência (SQLite)
-├── state_manager.py    # Estado da sessão
-└── tests/              # Testes unitários
+├── app.py               # Interface Streamlit + camada de orquestração
+├── config.py            # Configurações, variáveis de ambiente e feature flags
+├── database.py          # Persistência (SQLite + helpers de histórico)
+├── graph.py             # Fluxos de IA (LangGraph + Gemini)
+├── pdf_generator.py     # Geração de relatórios PDF
+├── prompts.py           # Prompt base e templates dinâmicos
+├── schemas.py           # Schemas Pydantic (contratos de entrada/saída)
+├── state_manager.py     # Estado da sessão e resets controlados
+├── utils.py             # Funções auxiliares e exportações (CSV/XLSX)
+├── assets/              # Logos, ícones e arquivos estáticos
+└── tests/               # Testes unitários e de integração leve
 ```
 
 ---
@@ -67,17 +73,49 @@ qa-oraculo/
 ## 🏗 Arquitetura Interna
 
 ```mermaid
-graph LR
-  UI[app.py] --> AI[graph.py (LangGraph + Gemini)]
-  AI --> DB[database.py (SQLite)]
-  AI --> PDF[pdf_generator.py]
-  UI --> STATE[state_manager.py]
+graph TD
+  subgraph Interface
+    UI[app.py]
+  end
+
+  subgraph Core IA
+    FLOW[graph.py\n(LangGraph + Gemini)]
+    PROMPTS[prompts.py]
+  end
+
+  subgraph Persistência
+    DB[database.py\n(SQLite)]
+    STATE[state_manager.py]
+  end
+
+  subgraph Utilidades
+    CONFIG[config.py]
+    UTILS[utils.py]
+    SCHEMAS[schemas.py]
+    PDF[pdf_generator.py]
+  end
+
+  UI --> FLOW
+  FLOW --> PROMPTS
+  FLOW --> DB
+  FLOW --> PDF
+  UI --> STATE
+  UI --> UTILS
+  CONFIG --> UI
+  CONFIG --> FLOW
+  PROMPTS --> SCHEMAS
+  UTILS --> PDF
 ```
 
-- `graph.py`: centraliza o fluxo de raciocínio da IA.  
-- `app.py`: camada de interface e entrada de dados.  
-- `database.py`: persistência local e caching leve.  
-- `pdf_generator.py`: exportação de relatórios.  
+- `app.py`: porta de entrada com Streamlit, integração de IA e exportações.
+- `config.py`: resolve variáveis de ambiente, chaves externas e toggles de recursos.
+- `graph.py`: centraliza o fluxo de raciocínio da IA com LangGraph.
+- `prompts.py`: mantém prompts versionados para análise e plano de testes.
+- `database.py`: persistência local e caching leve para histórico de análises.
+- `state_manager.py`: abstrai o estado da sessão e resets seguros.
+- `pdf_generator.py`: exportação de relatórios formatados em PDF.
+- `schemas.py`: contratos Pydantic que validam dados trocados entre módulos.
+- `utils.py`: funções auxiliares para formatação, exportação e normalizações.
 
 ---
 
@@ -90,6 +128,12 @@ graph LR
   ```bash
   pytest --cov --cov-report=term-missing
   ```
+
+### Pirâmide de testes implementada
+
+- **Unitários:** `tests/test_utils.py`, `tests/test_state_manager.py`, `tests/test_pdf_generator.py`.
+- **Integração leve:** `tests/test_app.py`, `tests/test_app_main.py`, `tests/test_graph.py`.
+- **Contratos:** `tests/tests_schemas.py` valida schemas e coerência de respostas.
 
 ---
 
@@ -127,9 +171,33 @@ graph LR
 
 ## ⚙️ Ambiente de Execução
 
-- Base em **Python Virtual Environment (.venv)**  
-- Compatível com Windows, Linux, macOS  
+- Base em **Python Virtual Environment (.venv)**
+- Compatível com Windows, Linux, macOS
 - CI usa o mesmo ambiente (`setup.sh` idêntico ao pipeline)
+- Parâmetros sensíveis: arquivo `.env` com `GOOGLE_API_KEY` (obrigatório para
+  uso da API Gemini) documentado em `graph.py`.
+
+---
+
+## 🛠️ Configuração e Orquestração da IA
+
+- `config.py` concentra os parâmetros de geração (modelo, temperatura,
+  `max_output_tokens`) consumidos pelos fluxos de IA.
+- `graph.py` carrega o `.env` e lê a variável `GOOGLE_API_KEY`, necessária para
+  autenticar chamadas ao Google Gemini.
+- `prompts.py` contém o prompt mestre e auxiliares; as funções retornam versões
+  interpoladas conforme a user story em análise.
+- `graph.py` monta o LangGraph com nós para análise, plano de testes e ajustes;
+  a função `grafo_analise` retorna uma aplicação pronta para inferência.
+
+---
+
+## 📦 Validação e Schemas
+
+- `schemas.py` define modelos Pydantic que normalizam entradas/saídas entre IA,
+  interface e banco.
+- Cada exportação (PDF, CSV Azure, XLSX Zephyr) consome estruturas validadas por
+  esses schemas, evitando divergências em produção.
 
 ---
 
