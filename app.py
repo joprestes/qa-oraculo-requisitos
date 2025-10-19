@@ -20,6 +20,15 @@ import sqlite3
 import pandas as pd
 import streamlit as st
 
+from a11y import (
+    accessible_button,
+    accessible_text_area,
+    announce,
+    apply_accessible_styles,
+    render_accessibility_info,
+    render_keyboard_shortcuts_guide,
+)
+
 # ===== Reexportações para compatibilidade com testes =====
 # Os testes (tests/test_app_history_delete.py) fazem patch direto em:
 # - app.delete_analysis_by_id
@@ -193,12 +202,15 @@ def _save_current_analysis_to_history(update_existing: bool = False):
 
     except sqlite3.Error as db_error:
         print(f"❌ Erro de banco de dados ao salvar: {db_error}")
-        st.error("Erro ao salvar no banco de dados. Verifique o arquivo de log.")
+        announce(
+            "Erro ao salvar no banco de dados. Verifique o arquivo de log.", "error"
+        )
     except Exception as e:
         print(f"❌ Erro inesperado ao salvar no histórico: {e}")
-        st.warning(
+        announce(
             "Ocorreu um erro ao salvar ou atualizar a análise no histórico, "
-            "mas o fluxo principal não foi interrompido."
+            "mas o fluxo principal não foi interrompido.",
+            "warning",
         )
 
 
@@ -257,12 +269,21 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
         # Se ainda não há análise no estado, exibimos o input inicial
         if not st.session_state.get("analysis_state"):
-            st.text_area(
-                "Insira a User Story aqui:", height=250, key="user_story_input"
+            accessible_text_area(
+                label="Insira a User Story aqui:",
+                key="user_story_input",
+                height=250,
+                help_text="Digite ou cole sua User Story no formato: Como [persona], quero [ação], para [objetivo].",
+                placeholder="Exemplo: Como usuário do app, quero redefinir minha senha via email...",
             )
 
             # Botão que dispara a análise inicial usando o grafo
-            if st.button("Analisar User Story", type="primary"):
+            if accessible_button(
+                label="Analisar User Story",
+                key="btn_analyze",
+                context="Inicia a análise de IA da User Story fornecida. Aguarde alguns segundos para o resultado.",
+                type="primary",
+            ):
                 user_story_txt = st.session_state.get("user_story_input", "")
 
                 if user_story_txt.strip():
@@ -280,7 +301,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                         # Re-renderiza a página para exibir a seção de edição
                         st.rerun()
                 else:
-                    st.warning("Por favor, insira uma User Story antes de analisar.")
+                    announce(
+                        "Por favor, insira uma User Story antes de analisar.", "warning"
+                    )
 
         # ------------------------------------------------------
         # 2) Edição dos blocos gerados pela IA
@@ -290,8 +313,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
             # Enquanto a edição não for salva, mostramos o formulário editável
             if not st.session_state.get("show_generate_plan_button"):
-                st.info(
-                    "🔮 O Oráculo gerou a análise abaixo. Revise, edite se necessário e clique em 'Salvar' para prosseguir."
+                announce(
+                    " 🔮 O Oráculo gerou a análise abaixo. Revise, edite se necessário e clique em 'Salvar' para prosseguir.",
+                    "info",
                 )
 
                 # Extrai o bloco 'analise_da_us' (estrutura recomendada)
@@ -329,39 +353,49 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 with st.form(key="analysis_edit_form"):
                     st.subheader("📝 Análise Editável")
 
-                    st.text_area(
-                        "Avaliação Geral",
-                        value=avaliacao_str,
+                    accessible_text_area(
+                        label="Avaliação Geral",
                         key="edit_avaliacao",
                         height=75,
+                        value=avaliacao_str,
+                        help_text="Descreva o entendimento geral da User Story — clareza, coerência e completude.",
+                        placeholder="Exemplo: A User Story apresenta objetivo claro, mas falta detalhar critérios de sucesso.",
                     )
 
-                    st.text_area(
-                        "Pontos Ambíguos",
-                        value=pontos_str,
+                    accessible_text_area(
+                        label="Pontos Ambíguos",
                         key="edit_pontos",
                         height=125,
+                        value=pontos_str,
+                        help_text="Liste trechos da User Story que podem gerar múltiplas interpretações ou dúvidas.",
+                        placeholder="Exemplo: O termo 'processar pagamento' não especifica o meio de pagamento utilizado.",
                     )
 
-                    st.text_area(
-                        "Perguntas para PO",
-                        value=perguntas_str,
+                    accessible_text_area(
+                        label="Perguntas para o PO",
                         key="edit_perguntas",
                         height=125,
+                        value=perguntas_str,
+                        help_text="Inclua perguntas que o QA faria ao PO para esclarecer requisitos e expectativas.",
+                        placeholder="Exemplo: O campo de CPF será validado no backend ou apenas no frontend?",
                     )
 
-                    st.text_area(
-                        "Critérios de Aceite",
-                        value=criterios_str,
+                    accessible_text_area(
+                        label="Critérios de Aceite",
                         key="edit_criterios",
                         height=150,
+                        value=criterios_str,
+                        help_text="Defina os critérios objetivos para considerar a User Story concluída com sucesso.",
+                        placeholder="Exemplo: O usuário deve receber um email de confirmação após redefinir a senha.",
                     )
 
-                    st.text_area(
-                        "Riscos e Dependências",
-                        value=riscos_str,
+                    accessible_text_area(
+                        label="Riscos e Dependências",
                         key="edit_riscos",
                         height=100,
+                        value=riscos_str,
+                        help_text="Aponte riscos técnicos, dependências entre times ou pré-condições para execução.",
+                        placeholder="Exemplo: Depende da API de autenticação, ainda em desenvolvimento pelo time backend.",
                     )
 
                     submitted = st.form_submit_button("Salvar Análise e Continuar")
@@ -408,7 +442,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     # Agora podemos avançar para a geração de plano
                     st.session_state["show_generate_plan_button"] = True
 
-                    st.success("Análise refinada salva com sucesso!")
+                    announce("Análise refinada salva com sucesso!", "success")
                     st.rerun()
 
         # ------------------------------------------------------
@@ -423,9 +457,11 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 )
                 st.markdown(clean_markdown_report(relatorio), unsafe_allow_html=True)
 
-            st.info(
-                "Deseja que o Oráculo gere um Plano de Testes com base na análise refinada?"
+            announce(
+                "Deseja que o Oráculo gere um Plano de Testes com base na análise refinada?",
+                "info",
             )
+
             col1, col2, _ = st.columns([1, 1, 2])
 
             # Botão para gerar o plano de testes com LangGraph
@@ -479,15 +515,16 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                             st.session_state["history_saved"] = True  # evita duplicação
 
                         st.session_state["analysis_finished"] = True
-                        st.success("Plano de Testes gerado com sucesso!")
+                        announce("Plano de Testes gerado com sucesso!", "success")
                         st.rerun()
                         # ===== FIM DO BLOCO DE RISCO =====
 
                     except Exception as e:
                         # Em caso de falha, informa o usuário, mas não perde o progresso
                         print(f"❌ Falha na geração do plano de testes: {e}")
-                        st.error(
-                            "O Oráculo não conseguiu gerar um plano de testes estruturado."
+                        announce(
+                            "O Oráculo não conseguiu gerar um plano de testes estruturado.",
+                            "error",
                         )
                         # Limpa qualquer resquício de plano de teste para não exibir dados errados
                         st.session_state["test_plan_report"] = ""
@@ -507,7 +544,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     # 4) Tela de resultados e exportações
     # ------------------------------------------------------
     if st.session_state.get("analysis_finished"):
-        st.success("✅ Análise concluída com sucesso!")
+        announce("Análise concluída com sucesso!", "success")
 
         # ==================================================
         # 📘 ANÁLISE REFINADA DA USER STORY
@@ -581,11 +618,18 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                             if row.get("cenario"):
                                 st.markdown("**Cenário Gherkin (editável):**")
 
-                                cenario_editado = st.text_area(
-                                    label=f"Editar cenário {test_id}",
+                                cenario_editado = accessible_text_area(
+                                    label=f"Editar Cenário {test_id}",
+                                    key=f"edit_cenario_{test_id}",
                                     value=row["cenario"],
                                     height=220,
-                                    key=f"edit_cenario_{test_id}",
+                                    help_text="Edite o cenário de teste mantendo a estrutura Gherkin (Dado, Quando, Então).",
+                                    placeholder=(
+                                        "Exemplo:\n"
+                                        "Dado que o usuário possui um cartão válido\n"
+                                        "Quando ele realiza a compra\n"
+                                        "Então o sistema deve gerar um token de pagamento com sucesso"
+                                    ),
                                 )
 
                                 # Atualiza o DataFrame se houve edição
@@ -615,8 +659,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                                         "✅ Cenário atualizado e persistido no histórico (ID existente)."
                                     )
                             else:
-                                st.info(
-                                    "⚠️ Este caso de teste ainda não possui cenário em formato Gherkin."
+                                announce(
+                                    "Este caso de teste ainda não possui cenário em formato Gherkin.",
+                                    "info",
                                 )
 
         # ==================================================
@@ -685,10 +730,16 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     "QA-Oraculo",
                     key="jira_labels",
                 )
-                st.text_area(
-                    "Descrição Padrão:",
-                    "Caso de teste gerado pelo QA Oráculo.",
+                accessible_text_area(
+                    label="Descrição Padrão",
                     key="jira_description",
+                    value="Caso de teste gerado pelo QA Oráculo.",
+                    height=100,
+                    help_text=(
+                        "Descrição padrão enviada ao Jira ao criar o caso de teste. "
+                        "Você pode editar para adicionar detalhes específicos da funcionalidade."
+                    ),
+                    placeholder="Exemplo: Caso de teste gerado automaticamente a partir da análise de requisitos.",
                 )
 
             # ------------------------------------------------------
@@ -752,12 +803,13 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
             st.session_state.pop("history_saved", None)
             reset_session()  # já limpa user_story_input, analysis_state, etc.
 
-        st.button(
-            "🔄 Realizar Nova Análise",
+        accessible_button(
+            label="🔄 Realizar Nova Análise",
+            key="nova_analise_button",
+            context="Limpa os resultados anteriores e reinicia o fluxo de análise da User Story.",
             type="primary",
             use_container_width=True,
             on_click=resetar_fluxo,
-            key="nova_analise_button",
         )
 
 
@@ -793,9 +845,9 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
     # 🗑️ EXCLUSÃO INDIVIDUAL (um único registro)
     if st.session_state.get("confirm_delete_id"):
         with st.container(border=True):
-            st.warning(
-                f"Tem certeza que deseja excluir a análise ID "
-                f"{st.session_state['confirm_delete_id']}?"
+            announce(
+                f"Tem certeza que deseja excluir a análise ID {st.session_state['confirm_delete_id']}?",
+                "warning",
             )
 
             col_del_1, col_del_2 = st.columns(2)
@@ -809,9 +861,9 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 st.session_state.pop("confirm_delete_id", None)
 
                 if result:
-                    st.success("Análise excluída com sucesso!")
+                    announce("Análise excluída com sucesso!", "success")
                 else:
-                    st.error("Falha ao excluir a análise.")
+                    announce("Falha ao excluir a análise.", "error")
 
                 st.rerun()
 
@@ -819,14 +871,15 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 "❌ Cancelar", key="cancelar_delete", use_container_width=True
             ):
                 st.session_state.pop("confirm_delete_id", None)
-                st.info("A exclusão foi cancelada.")
+                announce("A exclusão foi cancelada.", "info")
                 st.rerun()
 
     # 🧹 EXCLUSÃO TOTAL DO HISTÓRICO
     if st.session_state.get("confirm_clear_all"):
         with st.container(border=True):
-            st.warning(
-                "Tem certeza que deseja excluir **TODO o histórico** de análises?"
+            announce(
+                "Tem certeza que deseja excluir TODO o histórico de análises?",
+                "warning",
             )
             col_all_1, col_all_2 = st.columns(2)
 
@@ -837,14 +890,16 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
             ):
                 removed_count = clear_history()
                 st.session_state.pop("confirm_clear_all", None)
-                st.success(f"{removed_count} análises foram removidas.")
+                announce(
+                    f"{removed_count} análises foram removidas com sucesso.", "success"
+                )
                 st.rerun()
 
             if col_all_2.button(
                 "❌ Cancelar", key="cancelar_delete_all", use_container_width=True
             ):
                 st.session_state.pop("confirm_clear_all", None)
-                st.info("A exclusão total foi cancelada.")
+                announce("A exclusão total foi cancelada.", "info")
                 st.rerun()
 
     # ==========================================================
@@ -893,7 +948,13 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
             analysis_entry = None
 
         if analysis_entry:
-            st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
+            accessible_button(
+                label="⬅️ Voltar para a Lista",
+                key="btn_voltar_lista",
+                context="Retorna à lista principal de análises, limpando os filtros e parâmetros atuais.",
+                on_click=lambda: st.query_params.clear(),
+                type="secondary",
+            )
 
             created = analysis_entry.get("created_at")
 
@@ -934,7 +995,9 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                         unsafe_allow_html=True,
                     )
                 else:
-                    st.info("⚠️ Nenhum plano de testes foi gerado para esta análise.")
+                    announce(
+                        "Nenhum plano de testes foi gerado para esta análise.", "info"
+                    )
 
             st.divider()
 
@@ -944,21 +1007,34 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
             )
 
         else:
-            st.error("Análise não encontrada.")
-            st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
+            announce("Análise não encontrada.", "error")
+            accessible_button(
+                label="⬅️ Voltar para a Lista",
+                key="btn_voltar_lista",
+                context="Retorna à lista principal de análises e limpa os parâmetros de busca atuais.",
+                type="secondary",
+                on_click=lambda: st.query_params.clear(),
+            )
 
     # ----------------------------------------------------------
     # 📚 Modo de listagem geral (todas as análises)
     # ----------------------------------------------------------
     else:
         if not history_entries:
-            st.info(
-                "Ainda não há análises no histórico. Realize uma nova análise para começar."
+            announce(
+                "Ainda não há análises no histórico. Realize uma nova análise para começar.",
+                "info",
             )
+
             return
 
         # 🧹 Excluir todo histórico
-        if st.button("🗑️ Excluir TODO o Histórico", key="btn-limpar-historico"):
+        if accessible_button(
+            label="🗑️ Excluir TODO o Histórico",
+            key="btn_limpar_historico",
+            context="Remove todos os registros de análises armazenados. Esta ação é irreversível.",
+            type="danger",
+        ):
             st.session_state["confirm_clear_all"] = True
             st.rerun()
 
@@ -992,9 +1068,10 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    if st.button(
-                        "🔍 Ver detalhes",
-                        key=f"detalhes_{entry['id']}",
+                    if accessible_button(
+                        label="🔍 Ver Detalhes",
+                        key=f"btn_detalhes_{entry['id']}",
+                        context=f"Exibe os detalhes completos da análise #{entry['id']}, incluindo critérios, perguntas e pontos ambíguos.",
                         type="primary",
                         use_container_width=True,
                     ):
@@ -1002,11 +1079,12 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                         st.rerun()
 
                 with col2:
-                    if st.button(
-                        "🗑️ Excluir",
-                        key=f"del_{entry['id']}",
+                    if accessible_button(
+                        label="🗑️ Excluir",
+                        key=f"btn_excluir_{entry['id']}",
+                        context=f"Remove permanentemente a análise #{entry['id']}. Esta ação não pode ser desfeita.",
+                        type="danger",
                         use_container_width=True,
-                        help="Excluir esta análise",
                     ):
                         st.session_state["confirm_delete_id"] = entry["id"]
                         st.rerun()
@@ -1029,12 +1107,9 @@ def main():
     • Configura layout e título da página.
     • Inicializa o banco de dados (SQLite).
     • Inicializa o estado global (session_state).
+    • Aplica estilos e informações de acessibilidade.
     • Cria o menu lateral de navegação.
     • Carrega dinamicamente a página selecionada.
-
-    Estrutura de navegação:
-      - "Analisar User Story" → render_main_analysis_page()
-      - "Histórico de Análises" → render_history_page()
     """
     # ------------------------------------------------------
     # ⚙️ Configuração inicial da interface
@@ -1044,11 +1119,7 @@ def main():
     # ------------------------------------------------------
     # 🧱 Inicialização de banco e estado
     # ------------------------------------------------------
-    # Garante que o banco (SQLite) e suas tabelas existam.
-    # O init_db() é idempotente — pode ser chamado várias vezes.
     init_db()
-
-    # Inicializa variáveis persistentes no session_state
     initialize_state()
 
     # ------------------------------------------------------
@@ -1059,11 +1130,14 @@ def main():
         "Histórico de Análises": render_history_page,
     }
 
-    # Cria o menu lateral
     selected_page = st.sidebar.radio("Navegação", list(pages.keys()))
-
-    # Executa a função da página selecionada
     pages[selected_page]()
+    # ------------------------------------------------------
+    # ♿ Acessibilidade global (NOVO BLOCO)
+    # ------------------------------------------------------
+    apply_accessible_styles()
+    render_keyboard_shortcuts_guide()
+    render_accessibility_info()
 
 
 # ==========================================================
