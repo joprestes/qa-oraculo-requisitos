@@ -13,6 +13,8 @@
 #    Ele implementa o MÁXIMO possível dentro do Streamlit.
 # ==========================================================
 
+import sys
+
 import streamlit as st
 
 
@@ -253,6 +255,7 @@ def accessible_text_area(
     height: int = 200,
     help_text: str = "",
     placeholder: str = "",
+    st_api=None,
     **kwargs,
 ):
     """
@@ -264,6 +267,7 @@ def accessible_text_area(
         height: Altura em pixels
         help_text: Texto de ajuda detalhado
         placeholder: Texto de exemplo
+        st_api: Instância do módulo Streamlit (opcional)
         **kwargs: Outros parâmetros do st.text_area
 
     Melhorias sobre st.text_area():
@@ -283,7 +287,9 @@ def accessible_text_area(
     enhanced_help = help_text if help_text else "Campo de entrada de texto."
     enhanced_help += "\n\n💡 Use Tab para navegar entre campos."
 
-    return st.text_area(
+    streamlit_api = _resolve_streamlit_api(st_api)
+
+    return streamlit_api.text_area(
         label=label,
         key=key,
         height=height,
@@ -293,7 +299,7 @@ def accessible_text_area(
     )
 
 
-def accessible_button(label: str, key: str, context: str = "", **kwargs):
+def accessible_button(label: str, key: str, context: str = "", st_api=None, **kwargs):
     """
     Botão com contexto melhorado via tooltip.
 
@@ -301,6 +307,7 @@ def accessible_button(label: str, key: str, context: str = "", **kwargs):
         label: Texto do botão
         key: Chave única
         context: Descrição detalhada da ação (aparece no tooltip)
+        st_api: Instância do módulo Streamlit (opcional)
         **kwargs: Outros parâmetros do st.button
 
     Melhorias sobre st.button():
@@ -319,10 +326,25 @@ def accessible_button(label: str, key: str, context: str = "", **kwargs):
     help_text = context if context else f"Ação: {label}"
     help_text += "\n\n⌨️ Pressione Enter ou Espaço para ativar."
 
-    return st.button(label=label, key=key, help=help_text, **kwargs)
+    streamlit_api = _resolve_streamlit_api(st_api)
+
+    return streamlit_api.button(label=label, key=key, help=help_text, **kwargs)
 
 
-def announce(message: str, level: str = "info"):
+def _resolve_streamlit_api(st_api=None):
+    """Retorna o módulo Streamlit apropriado para os helpers de acessibilidade."""
+
+    if st_api is not None:
+        return st_api
+
+    app_module = sys.modules.get("app")
+    if app_module is not None and hasattr(app_module, "st"):
+        return getattr(app_module, "st")
+
+    return st
+
+
+def announce(message: str, level: str = "info", st_api=None):
     """
     Anuncia mensagens de forma acessível.
 
@@ -333,6 +355,9 @@ def announce(message: str, level: str = "info"):
     Parâmetros:
         message: Texto da mensagem
         level: Tipo de mensagem ("success", "error", "warning", "info")
+        st_api: Instância do módulo Streamlit (opcional). Se não informado,
+            tenta reutilizar `app.st` (permite testes com mock) e, por fim,
+            usa o módulo global `streamlit`.
 
     Testado com:
         - NVDA + Chrome (Windows)
@@ -343,14 +368,16 @@ def announce(message: str, level: str = "info"):
         >>> announce("Análise concluída com sucesso!", "success")
         >>> announce("Erro ao conectar com API", "error")
     """
+    streamlit_api = _resolve_streamlit_api(st_api)
+
     announce_functions = {
-        "success": st.success,
-        "error": st.error,
-        "warning": st.warning,
-        "info": st.info,
+        "success": streamlit_api.success,
+        "error": streamlit_api.error,
+        "warning": streamlit_api.warning,
+        "info": streamlit_api.info,
     }
 
-    func = announce_functions.get(level, st.info)
+    func = announce_functions.get(level, streamlit_api.info)
     func(message)
 
 
