@@ -16,7 +16,7 @@
 
 import datetime
 import sqlite3
-
+from database import save_analysis_to_history
 import pandas as pd
 import streamlit as st
 

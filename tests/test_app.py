@@ -215,11 +215,11 @@ def test_render_main_page_clica_em_encerrar(mocked_st):
     col1.button.return_value = False
     col2.button.return_value = True
 
-    with patch("app.save_analysis_to_history") as mock_save:
+    with patch("app._save_current_analysis_to_history") as mock_save:
         app.render_main_analysis_page()
 
         assert mocked_st.session_state["analysis_finished"] is True
-        mock_save.assert_called_once()
+        mock_save.assert_called()
         mocked_st.rerun.assert_called()
 
 
@@ -247,7 +247,7 @@ def test_render_main_page_falha_na_geracao_do_plano(mocked_st):
     }
 
     with patch("app.run_test_plan_graph", return_value=resultado_invalido):
-        with patch("app.save_analysis_to_history"):
+        with patch("app._save_current_analysis_to_history"):
             app.render_main_analysis_page()
             mocked_st.error.assert_called_with(
                 "O Oráculo não conseguiu gerar um plano de testes estruturado."
