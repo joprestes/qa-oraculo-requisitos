@@ -16,6 +16,7 @@
 
 import datetime
 import sqlite3
+
 import pandas as pd
 import streamlit as st
 
@@ -854,11 +855,9 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
     history_entries = get_all_analysis_history()
 
     # Debug logs
-    print(f"🔍 [DEBUG] Total de registros no histórico: {len(history_entries)}")
 
     # Pega o ID da URL de forma segura
     raw_id = st.query_params.get("analysis_id")
-    print(f"🔍 [DEBUG] raw_id do query_params: {raw_id} (tipo: {type(raw_id)})")
 
     selected_id = None
 
@@ -871,9 +870,7 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
         if raw_id:
             try:
                 selected_id = int(raw_id)
-                print(f"🔍 [DEBUG] selected_id convertido: {selected_id}")
-            except (ValueError, TypeError) as e:
-                print(f"🔍 [DEBUG] Erro ao converter ID: {e}")
+            except (ValueError, TypeError):
                 selected_id = None
 
     # Cria container vazio no topo para manter compatibilidade com testes
@@ -884,26 +881,21 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
     # 🔎 Modo de visualização detalhada
     # ----------------------------------------------------------
     if selected_id:
-        print(f"🔍 [DEBUG] Buscando análise com ID: {selected_id}")
 
         try:
             analysis_entry = get_analysis_by_id(selected_id)
-            print(f"🔍 [DEBUG] Resultado da busca: {analysis_entry is not None}")
 
             # ✅ CORREÇÃO 3: Garante conversão para dict
             if analysis_entry and not isinstance(analysis_entry, dict):
                 analysis_entry = dict(analysis_entry)
-                print("🔍 [DEBUG] Convertido sqlite3.Row para dict")
 
-        except (TypeError, ValueError) as e:
-            print(f"🔍 [DEBUG] Erro ao buscar análise: {e}")
+        except (TypeError, ValueError):
             analysis_entry = None
 
         if analysis_entry:
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
 
             created = analysis_entry.get("created_at")
-            print(f"🔍 [DEBUG] created_at: {created} (tipo: {type(created)})")
 
             # ✅ CORREÇÃO 4: Formatação segura de datas
             if isinstance(created, str):
@@ -953,9 +945,6 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
 
         else:
             st.error("Análise não encontrada.")
-            print(
-                f"🔍 [DEBUG] Análise com ID {selected_id} não foi encontrada no banco"
-            )
             st.button("⬅️ Voltar para a lista", on_click=lambda: st.query_params.clear())
 
     # ----------------------------------------------------------
@@ -1010,7 +999,6 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                         use_container_width=True,
                     ):
                         st.query_params["analysis_id"] = str(entry["id"])
-                        print(f"🔍 [DEBUG] Clicou em Ver detalhes, ID: {entry['id']}")
                         st.rerun()
 
                 with col2:
