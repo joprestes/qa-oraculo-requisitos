@@ -79,12 +79,12 @@ graph TD
   end
 
   subgraph Core IA
-    FLOW[graph.py\n(LangGraph + Gemini)]
+    FLOW[graph.py<br/>(LangGraph + Gemini)]
     PROMPTS[prompts.py]
   end
 
   subgraph Persistência
-    DB[database.py\n(SQLite)]
+    DB[database.py<br/>(SQLite)]
     STATE[state_manager.py]
   end
 
@@ -105,6 +105,7 @@ graph TD
   CONFIG --> FLOW
   PROMPTS --> SCHEMAS
   UTILS --> PDF
+
 ```
 
 - `app.py`: porta de entrada com Streamlit, integração de IA e exportações.
