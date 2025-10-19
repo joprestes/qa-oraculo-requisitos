@@ -32,7 +32,6 @@ from database import (
     get_all_analysis_history,
     get_analysis_by_id,
     init_db,
-    save_analysis_to_history,
 )
 
 # Grafos de IA (LangGraph) — invocados nas funções cacheadas
@@ -104,20 +103,18 @@ def _ensure_bytes(data):
 # ==========================================================
 # 헬 Auxiliar: Salva a análise atual no histórico (CORRIGIDO)
 # ==========================================================
-def _save_current_analysis_to_history():
+def _save_current_analysis_to_history(update_existing: bool = False):
     """
-    Extrai os dados da sessão atual e os salva no banco de dados.
-    Esta função centraliza a lógica de salvamento para evitar duplicação.
+    Extrai os dados da sessão atual e salva ou atualiza no histórico.
 
-    CORREÇÃO APLICADA:
-    - Remove verificação prematura de 'history_saved'
-    - Valida dados ANTES de tentar salvar
-    - Marca como salva SOMENTE após sucesso do banco
+    🔧 NOVO COMPORTAMENTO:
+    - Se update_existing=False → cria um novo registro (modo padrão)
+    - Se update_existing=True  → atualiza o registro já salvo no histórico
+
+    💡 O ID do último registro salvo é armazenado em st.session_state["last_saved_id"].
     """
 
     try:
-        # --- 1. EXTRAÇÃO SEGURA DE DADOS ---
-        # Pega a User Story de múltiplas fontes possíveis
         user_story_from_input = st.session_state.get("user_story_input") or ""
         user_story_from_state = (
             st.session_state.get("analysis_state", {}).get("user_story") or ""
@@ -129,58 +126,78 @@ def _save_current_analysis_to_history():
             or "⚠️ User Story não disponível."
         )
 
-        # Pega o relatório de análise
         analysis_report = st.session_state.get("analysis_state", {}).get(
             "relatorio_analise_inicial"
         )
         analysis_report_to_save = (analysis_report or "").strip()
 
-        # Pega o plano de testes
         test_plan_report = st.session_state.get("test_plan_report")
         test_plan_report_to_save = (test_plan_report or "").strip()
 
-        # --- 2. VALIDAÇÃO DE DADOS ---
-        # Só tenta salvar se houver pelo menos UM campo válido
-        has_valid_data = any(
+        # 🔍 Validação mínima
+        if not any(
             [
                 user_story_to_save
                 and user_story_to_save != "⚠️ User Story não disponível.",
                 analysis_report_to_save,
                 test_plan_report_to_save,
             ]
-        )
-
-        if not has_valid_data:
+        ):
             print("⚠️ Nenhum dado válido para salvar no histórico.")
             return
 
-        # --- 3. VERIFICA SE JÁ FOI SALVO (PROTEÇÃO CONTRA DUPLICAÇÃO) ---
-        # MOVIDO PARA DEPOIS DA VALIDAÇÃO!
-        if st.session_state.get("history_saved"):
-            print("⚙️ Análise já havia sido salva. Evitando duplicação.")
-            return
+        from database import get_db_connection  # evita dependência circular
 
-        # --- 4. PERSISTÊNCIA NO BANCO ---
-        save_analysis_to_history(
-            user_story_to_save,
-            analysis_report_to_save,
-            test_plan_report_to_save,
-        )
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            timestamp = datetime.datetime.now()
 
-        # ✅ CORREÇÃO CRÍTICA: Marca como salva SOMENTE após sucesso
-        st.session_state["history_saved"] = True
-        print(f"💾 Análise salva no histórico em {datetime.datetime.now()}")
+            # --- Se já houver registro e pedimos update_existing=True, atualiza ---
+            if update_existing and st.session_state.get("last_saved_id"):
+                cursor.execute(
+                    """
+                    UPDATE analysis_history
+                    SET created_at = ?, user_story = ?, analysis_report = ?, test_plan_report = ?
+                    WHERE id = ?;
+                    """,
+                    (
+                        timestamp,
+                        user_story_to_save,
+                        analysis_report_to_save,
+                        test_plan_report_to_save,
+                        st.session_state["last_saved_id"],
+                    ),
+                )
+                print(
+                    f"♻️ Registro existente atualizado (ID {st.session_state['last_saved_id']}) em {timestamp}"
+                )
+            else:
+                # Caso contrário, cria um novo registro
+                cursor.execute(
+                    """
+                    INSERT INTO analysis_history (created_at, user_story, analysis_report, test_plan_report)
+                    VALUES (?, ?, ?, ?);
+                    """,
+                    (
+                        timestamp,
+                        user_story_to_save,
+                        analysis_report_to_save,
+                        test_plan_report_to_save,
+                    ),
+                )
+                st.session_state["last_saved_id"] = cursor.lastrowid
+                st.session_state["history_saved"] = True
+                print(f"💾 Análise salva no histórico em {timestamp}")
+
+            conn.commit()
 
     except sqlite3.Error as db_error:
-        # Erro específico de banco de dados
         print(f"❌ Erro de banco de dados ao salvar: {db_error}")
         st.error("Erro ao salvar no banco de dados. Verifique o arquivo de log.")
-
     except Exception as e:
-        # Outros erros inesperados
         print(f"❌ Erro inesperado ao salvar no histórico: {e}")
         st.warning(
-            "Ocorreu um erro ao salvar a análise no histórico, "
+            "Ocorreu um erro ao salvar ou atualizar a análise no histórico, "
             "mas o fluxo principal não foi interrompido."
         )
 
@@ -590,13 +607,13 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                                         novo_relatorio
                                     )
 
-                                    # 💾 Atualiza histórico com a versão revisada
-                                    _save_current_analysis_to_history()
-
-                                    st.toast(
-                                        "✅ Cenário atualizado e salvo no histórico."
+                                    # 💾 Atualiza histórico com a versão revisada (atualização em linha)
+                                    _save_current_analysis_to_history(
+                                        update_existing=True
                                     )
-
+                                    st.toast(
+                                        "✅ Cenário atualizado e persistido no histórico (ID existente)."
+                                    )
                             else:
                                 st.info(
                                     "⚠️ Este caso de teste ainda não possui cenário em formato Gherkin."
