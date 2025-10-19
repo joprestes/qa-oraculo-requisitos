@@ -73,38 +73,37 @@ qa-oraculo/
 ## 🏗 Arquitetura Interna
 
 ```mermaid
-graph TD
-  subgraph Interface
-    UI[app.py]
-  end
 
-  subgraph Core IA
-    FLOW[graph.py<br/>(LangGraph + Gemini)]
-    PROMPTS[prompts.py]
+graph TB
+  subgraph "Camada de Apresentação"
+    UI[app.py - Interface Streamlit]
   end
-
-  subgraph Persistência
-    DB[database.py<br/>(SQLite)]
+  
+  subgraph "Camada de Lógica"
+    FLOW[graph.py - Fluxos de IA]
+    PROMPTS[prompts.py - Templates]
+  end
+  
+  subgraph "Camada de Dados"
+    DB[database.py - SQLite]
     STATE[state_manager.py]
   end
-
-  subgraph Utilidades
-    CONFIG[config.py]
-    UTILS[utils.py]
-    SCHEMAS[schemas.py]
+  
+  subgraph "Camada de Utilidades"
+    UTILS[utils.py - Helpers]
     PDF[pdf_generator.py]
   end
 
   UI --> FLOW
-  FLOW --> PROMPTS
+  UI --> STATE
   FLOW --> DB
   FLOW --> PDF
-  UI --> STATE
-  UI --> UTILS
-  CONFIG --> UI
-  CONFIG --> FLOW
-  PROMPTS --> SCHEMAS
   UTILS --> PDF
+
+  style UI fill:#667eea,stroke:#333,stroke-width:3px,color:#fff
+  style FLOW fill:#764ba2,stroke:#333,stroke-width:3px,color:#fff
+  style DB fill:#48c774,stroke:#333,stroke-width:3px,color:#fff
+  style UTILS fill:#f39c12,stroke:#333,stroke-width:3px,color:#fff
 
 ```
 
