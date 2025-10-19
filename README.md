@@ -1,68 +1,87 @@
 # 🔮 QA Oráculo
-
 <p align="center">
-  <img src="assets/logo_oraculo.png" alt="Logotipo do QA Oráculo" width="200"/>
+
+  <!-- Linguagem principal -->
+  <img src="https://img.shields.io/badge/python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
+
+  <!-- Framework principal -->
+  <img src="https://img.shields.io/badge/streamlit-app-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit"/>
+
+  <!-- Build Status (GitHub Actions) -->
+  <img src="https://img.shields.io/github/actions/workflow/status/joprestes/qa-oraculo-requisitos/ci.yml?branch=main&style=for-the-badge&logo=github" alt="Status CI"/>
+
+  <!-- Test Coverage (ajuste manual se necessário) -->
+  <img src="https://img.shields.io/badge/coverage-97%25-6E40C9?style=for-the-badge" alt="Cobertura de Testes"/>
+
+  <!-- Licença -->
+  <img src="https://img.shields.io/badge/license-CC%20BY--NC%204.0-8A2BE2?style=for-the-badge" alt="Licença CC BY-NC 4.0"/>
+
+  <!-- Code Style -->
+  <img src="https://img.shields.io/badge/code_style-black-000000?style=for-the-badge&logo=python&logoColor=white" alt="Black Code Style"/>
+
 </p>
-
-
-<p align="center"><i>Análise de Requisitos com Inteligência Artificial</i></p>
 
 ---
 
 ## 🚀 Por que usar o QA Oráculo?
 
-Cansou de **User Stories vagas** e **reuniões intermináveis** para alinhar entendimentos?
+Cansou de **User Stories vagas** e **reuniões infinitas** só pra entender o básico?
 
-O **QA Oráculo** transforma requisitos soltos em **especificações prontas para teste** usando IA de ponta.
+O **QA Oráculo** transforma requisitos dispersos em **especificações prontas para teste**, com o poder da IA.  
+Em poucos minutos, você terá:
 
-👉 Em **minutos**, você terá:
-- ✅ Critérios de aceite objetivos  
-- ❓ Perguntas inteligentes para o PO  
-- 📝 Planos de teste completos e organizados  
-- 🧪 Cenários em Gherkin sob demanda  
-- 📄 Relatórios exportáveis (.md, .pdf, .xlsx)  
+✅ Critérios de aceite objetivos e editáveis  
+❓ Perguntas inteligentes para o PO  
+🧪 Cenários Gherkin prontos para refino  
+📄 Relatórios exportáveis (.md, .pdf, .xlsx, Azure, Jira)  
 
-É como ter um **QA Sênior disponível 24/7**, acelerando o planejamento e reduzindo falhas antes mesmo do primeiro bug aparecer.
-
----
-
-## 📸 Preview da Interface
-
-![Demonstração animada do QA Oráculo mostrando a análise interativa](assets/qa_oraculo_cartoon_demo.gif)
+É como ter um **QA Sênior disponível 24/7**, acelerando o planejamento e prevenindo falhas antes mesmo do primeiro bug aparecer.
 
 ---
 
-## 🚀 Principais Funcionalidades
+## 🧠 Preview da Interface
 
-- 💻 **Interface Web Interativa** (Streamlit).  
-- 📝 **Análise Editável e Interativa**: refino humano sobre a análise da IA.  
-- 🔍 **Detecção de ambiguidades** e sugestão de perguntas para o PO.  
-- ✅ **Geração de Critérios de Aceite** verificáveis.  
-- 📊 **Tabela de Casos de Teste** interativa.  
-- 📥 **Exportação múltipla** (`.md`, `.pdf`, Azure, Jira).  
-- 📖 **Histórico de Análises** com exclusão seletiva.  
-- 🏗️ **Código Modular, Otimizado e Testado**.  
+<p align="center">
+  <img src="assets/qa_oraculo_cartoon_demo.gif" alt="Demonstração da Interface" width="600"/>
+</p>
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 💎 Principais Funcionalidades
 
-- 🐍 Python 3.11+  
-- 🌐 Streamlit (interface web)  
-- 🧠 LangGraph & Google Gemini (IA)  
-- 📊 Pandas  
-- 📄 FPDF2 (PDF)  
-- 📈 Openpyxl (Excel)  
+- 💻 **Interface Web Interativa** – construída em Streamlit, simples e responsiva.  
+- ✏️ **Edição Inteligente** – refine critérios e cenários Gherkin direto na interface, com salvamento automático.  
+- 🔍 **Detecção de Ambiguidades** – a IA sugere perguntas relevantes para o PO.  
+- ✅ **Critérios de Aceite Verificáveis** – claros e rastreáveis.  
+- 📊 **Plano de Teste Interativo** – expanda, edite e regenere relatórios instantaneamente.  
+- 📥 **Exportação Avançada e Configurável**:
+  - Formulário dedicado para Azure DevOps e Jira (Area Path, Assigned To, labels etc.)
+  - CSV formatado para Azure com passos Gherkin e tratamento automático de prioridade e idioma  
+  - PDF acessível com fonte Unicode, capa e cabeçalho padronizado  
+- 📖 **Histórico de Análises Aprimorado** – visualização expandida, exclusão segura e navegação por URL.  
+- 🧱 **Código Modular e Testado** – cobertura alta e estrutura limpa.
 
 ---
 
-## ⚙️ Como Executar Localmente
+## 🛠️ Stack Tecnológica
+
+🐍 **Python 3.11+**  
+🌐 **Streamlit** – interface web  
+🧠 **LangGraph & Google Gemini** – análise e geração IA  
+📊 **Pandas** – manipulação de dados  
+📄 **FPDF2** – geração de PDFs acessíveis  
+📈 **Openpyxl** – exportação Excel  
+
+---
+
+## ⚙️ Instalação e Execução
 
 ### 📌 Pré-requisitos
-- Python 3.11+  
-- Chave de API do Google ([obter aqui](https://console.cloud.google.com))  
+- Python 3.11+
+- Chave de API do Google (serviço *Generative Language* ativo)
 
-### 🚀 Instalação
+### 🧩 Passos
+
 ```bash
 # Clone o repositório
 git clone https://github.com/joprestes/qa-oraculo-requisitos.git
@@ -75,16 +94,19 @@ source venv/bin/activate  # Mac/Linux
 
 # Instale as dependências
 pip install -r requirements.txt
-pip install -r requirements-dev.txt  # Para testes e dev
+pip install -r requirements-dev.txt  # Para testes e desenvolvimento
 ```
 
 ### 🔑 Configuração da API
-Crie um arquivo `.env` na raiz:
+
+Crie um arquivo `.env` na raiz do projeto:
+
 ```env
 GOOGLE_API_KEY="sua_chave_de_api_aqui"
 ```
 
 ### ▶️ Executar
+
 ```bash
 streamlit run app.py
 ```
@@ -95,184 +117,131 @@ streamlit run app.py
 
 ## 📋 Como Usar
 
-1. **Insira a User Story** no campo indicado.  
+1. Insira a **User Story** no campo indicado.  
 2. Clique em **“Analisar User Story”**.  
-3. **Revise e edite** a análise gerada pela IA.  
-4. Escolha gerar o **plano de testes** ou encerrar.  
-5. **Exporte** para `.md`, `.pdf`, `.xlsx`, Azure ou Jira.  
-6. Consulte e gerencie o **histórico de análises**.  
-7. Clique em **“Nova Análise”** para começar de novo.  
+3. Revise e edite os **critérios de aceite** e **cenários Gherkin** gerados.  
+4. Gere o **plano de testes completo**.  
+5. Exporte artefatos (.md, .pdf, Azure, Jira).  
+6. Consulte o **histórico interativo** ou inicie uma nova análise.
 
-### 🔎 Exemplo prático
-**Input:**  
+---
+
+## 🔎 Exemplo Prático
+
+### **Entrada**
 ```
 Como usuário do app de banco,
 quero redefinir minha senha via e-mail,
 para recuperar o acesso em caso de esquecimento.
 ```
 
-**Saída gerada:**  
-- Critérios de Aceite:
-  - Link de redefinição enviado em menos de 1 minuto.  
-  - O link expira em 24h.  
-  - Nova senha deve ter mínimo de 8 caracteres, com letras e números.  
+### **Saída (editável)**
 
-- Perguntas ao PO:
-  - O link de redefinição expira em quantas horas?  
-  - Há limite de tentativas de redefinição por dia?  
+**Critérios de Aceite**
+- Link de redefinição enviado em menos de 1 minuto  
+- O link expira em 24h  
+- Nova senha deve ter pelo menos 8 caracteres com letras e números  
 
-- Cenário Gherkin:
-  ```gherkin
-  Scenario: Redefinir senha com sucesso
-    Given que o usuário informou um e-mail válido
-    When solicita redefinição de senha
-    Then recebe um link de redefinição válido por 24h
-  ```
+**Perguntas ao PO**
+- O link expira em quantas horas?  
+- Há limite de tentativas por dia?  
 
----
-
-## 🤔 Solução de Problemas
-
-❌ **Erro: API Key inválida**  
-✔️ Verifique `.env` e se a API “Generative Language” está ativa.  
-
-❌ **Erro: comando `streamlit` não encontrado**  
-✔️ Ative o ambiente virtual `venv`.  
+**Cenário Gherkin**
+```gherkin
+Scenario: Redefinir senha com sucesso
+  Given que o usuário informou um e-mail válido
+  When solicita redefinição de senha
+  Then recebe um link de redefinição válido por 24h
+```
 
 ---
 
 ## 🧪 Testes e Qualidade
 
-- **Cobertura ≥97%** com `pytest`.  
-- **Novos testes** garantem histórico limpo e consistente.  
+Cobertura atual: **≥97%**
 
 ```bash
 pytest
 pytest --cov
 ```
 
-Configurações centralizadas em `pyproject.toml`:  
-- `black` (linha: 88)  
-- `pytest` com cobertura e warnings desabilitados  
+Lint, formatação e cobertura são validados via **CI** (GitHub Actions).  
+Falhas de lint ou cobertura abaixo do mínimo **bloqueiam merges automáticos**, mantendo a qualidade contínua.
 
 ---
 
-## 🧰 Setup Automático e Revisão de Qualidade
+## ⚙️ Setup Automático
 
-O QA Oráculo possui scripts prontos para **configurar o ambiente e validar a qualidade do código automaticamente**.  
-Eles garantem que tudo esteja 100% conforme os padrões do CI **antes do commit e push**.
-
-### ⚙️ Scripts disponíveis
+Scripts prontos para preparar o ambiente e validar o código:
 
 | Sistema | Arquivo | Descrição |
 |----------|----------|-----------|
-| 🪟 Windows | `setup.bat` | Cria `.venv`, instala dependências e executa validações de qualidade (Black, Ruff, Pytest e TOML). |
-| 🐧 Linux / 🍎 macOS | `setup.sh` | Versão equivalente em shell POSIX, com a mesma revisão automática antes do push. |
-
----
+| 🪟 Windows | `setup.bat` | Cria `.venv`, instala dependências e executa Black, Ruff, Pytest e validação TOML |
+| 🐧 Linux / 🍎 macOS | `setup.sh` | Mesma automação em Shell POSIX |
 
 ### ▶️ Execução rápida
 
-**Windows**
 ```bash
+# Linux/Mac
+chmod +x setup.sh
+./setup.sh
+
+# Windows
 setup.bat
 ```
 
-**Linux / Mac**
-```bash
-chmod +x setup.sh
-./setup.sh
+💡 Ao final:
+```
+✅ Tudo validado! Pronto para commit e push 🚀
 ```
 
-Esses scripts executam automaticamente:
-1. 🧱 Criação do ambiente virtual `.venv`
-2. 📦 Instalação de dependências (`requirements.txt` e `requirements-dev.txt`)
-3. 🧩 Validação de sintaxe do `pyproject.toml`
-4. 🎯 Lint com **Ruff**
-5. 🎨 Formatação com **Black**
-6. 🧪 Testes com cobertura mínima de 90%
-7. 🔍 Revisão completa de pré-push (TOML → Ruff → Black → Pytest)
+---
 
-> 💡 Ao final, o terminal exibirá:  
-> `✅ Tudo validado! Pronto para commit e push 🚀`
+## 🔄 Integração Contínua (CI)
+
+Cada **push** ou **pull request** executa automaticamente:
+
+✅ Black → formatação PEP8  
+🔎 Ruff → lint e boas práticas  
+🧪 Pytest → testes unitários  
+📊 Cobertura mínima: **90%**
+
+Arquivo: `.github/workflows/ci.yml`
 
 ---
 
-### 🧠 Revisão manual (opcional)
-Caso queira rodar os comandos individualmente:
+## 📘 Documentação e Roadmap
 
-```bash
-# Validação do pyproject.toml
-python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"
+📄 [DOCUMENTACAO_TECNICA.md](./DOCUMENTACAO_TECNICA.md)
 
-# Lint
-ruff check .
-
-# Formatação
-black --check .
-
-# Testes
-pytest --cov --cov-report=term-missing
-```
-
-Esses comandos são executados automaticamente pelos scripts,  
-mas podem ser usados manualmente antes de um commit para revisões rápidas.
-
----
-
-> 🔎 **Boas práticas QA Oráculo:**  
-> Sempre rode `setup.sh` (Linux/Mac) ou `setup.bat` (Windows) antes de fazer `git push`.  
-> Isso garante que o código local esteja no mesmo padrão exigido pelo CI.
-
----
-
-### 🔄 Integração Contínua (CI)
-
-Cada *push* ou *pull request* na branch `main` executa o workflow de CI:
-
-- ✅ **Black**: garante conformidade com PEP8  
-- 🔎 **Ruff**: lint de boas práticas e imports  
-- 🧪 **Pytest**: roda todos os testes unitários  
-- 📊 **Cobertura mínima exigida**: **90%**
-
-Arquivo: [`/.github/workflows/ci.yml`](.github/workflows/ci.yml)
-
-> 💬 Falhas de lint ou cobertura abaixo do mínimo bloqueiam o merge automático, garantindo a integridade do código.
-
----
-
-## 📘 Documentação Técnica
-
-Para detalhes técnicos e de contribuição, consulte:  
-👉 [`DOCUMENTACAO_TECNICA.md`](DOCUMENTACAO_TECNICA.md)
-
----
-
-## 📌 Roadmap
-
-- [x] Interface web com Streamlit  
-- [x] Exportação para `.md`, `.pdf`, Azure, Jira  
-- [x] Histórico com exclusão seletiva  
-- [x] Integração contínua (CI) com cobertura mínima 90%  
-- [ ] Acessibilidade automática (Pa11y + WCAG 2.1)  
-- [ ] Documentação viva (MkDocs + GitHub Pages)  
-- [ ] Testes E2E com Playwright  
+**Roadmap:**
+- Interface aprimorada  
+- Exportação para .md, .pdf, Azure, Jira  
+- Documentação viva (MkDocs + GitHub Pages)  
+- Testes E2E com Playwright  
+- Acessibilidade (Pa11y + WCAG 2.1)
 
 ---
 
 ## 🤝 Contribuição
 
-Contribuições são bem-vindas!  
-- Abra uma **issue** para bugs ou melhorias.  
-- Faça um **Pull Request** com novas features.  
+Contribuições são muito bem-vindas!  
+Abra uma **issue** para bugs ou melhorias, ou envie um **Pull Request** com novas features.
 
-⭐ Se este projeto te ajudou, deixe uma **estrela** no repositório!
+⭐ Se este projeto te ajudou, **deixe uma estrela** no repositório!
 
 ---
 
 ## 📜 Licença
 
-Este projeto está sob **CC BY-NC 4.0**.  
-Uso **pessoal e acadêmico permitido**, uso **comercial proibido**.  
-
+Licenciado sob **CC BY-NC 4.0**.  
+Uso **pessoal e acadêmico** permitido.  
+Uso **comercial proibido**.  
 Mais detalhes em [Creative Commons](https://creativecommons.org/licenses/by-nc/4.0/).
+
+---
+
+<p align="center">
+  <i>Desenvolvido com 💜 por <b>Joelma Prestes Ferreira</b></i>
+</p>
+
