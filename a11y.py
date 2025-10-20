@@ -14,6 +14,8 @@
 # ==========================================================
 
 
+from typing import Any, Optional
+
 import streamlit as st
 
 
@@ -219,6 +221,35 @@ def apply_accessible_styles():
     }
 
     /* ==========================================================
+       MEDIA QUERIES PARA PREFÊRENCIAS DO USUÁRIO
+       ========================================================== */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+
+    @media (prefers-contrast: more), (forced-colors: active) {
+        html, body, [data-testid="stAppViewContainer"] {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+
+        .stButton > button,
+        a,
+        .stMarkdown a {
+            color: #000000 !important;
+        }
+
+        .stButton > button {
+            border: 2px solid currentColor !important;
+        }
+    }
+
+    /* ==========================================================
        SCREEN READER SUPPORT
        ========================================================== */
     .sr-only {
@@ -249,11 +280,13 @@ def apply_accessible_styles():
 
 
 def accessible_text_area(  # noqa: PLR0913
-    label: str,
-    key: str,
-    height: int = 200,
-    help_text: str = "",
-    placeholder: str = "",
+    label: Optional[str] = None,
+    key: Optional[str] = None,
+    *,
+    config: Optional[Any] = None,
+    height: Optional[int] = None,
+    help_text: Optional[str] = None,
+    placeholder: Optional[str] = None,
     st_api=None,
     **kwargs,
 ):
@@ -282,18 +315,30 @@ def accessible_text_area(  # noqa: PLR0913
         ...     placeholder="Como [persona], quero [ação], para [objetivo]"
         ... )
     """
-    # Combina help text com dicas de navegação
-    enhanced_help = help_text if help_text else "Campo de entrada de texto."
-    enhanced_help += "\n\n💡 Use Tab para navegar entre campos."
+    if config is not None:
+        label = getattr(config, "label", label)
+        key = getattr(config, "key", key)
+        height = getattr(config, "height", height)
+        help_text = getattr(config, "help_text", help_text)
+        placeholder = getattr(config, "placeholder", placeholder)
+
+    if label is None or key is None:
+        raise TypeError("accessible_text_area() requires 'label' and 'key' parameters.")
+
+    resolved_height = 200 if height is None else height
+    resolved_placeholder = "" if placeholder is None else placeholder
+
+    base_help = help_text if help_text else f"Campo de entrada de texto: {label}"
+    enhanced_help = f"{base_help}\n\n💡 Use Tab para navegar entre campos."
 
     streamlit_api = _resolve_streamlit_api(st_api)
 
     return streamlit_api.text_area(
         label=label,
         key=key,
-        height=height,
+        height=resolved_height,
         help=enhanced_help,
-        placeholder=placeholder,
+        placeholder=resolved_placeholder,
         **kwargs,
     )
 
