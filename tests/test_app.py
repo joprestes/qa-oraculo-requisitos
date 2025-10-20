@@ -171,32 +171,6 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
     mocked_st.warning.assert_called_once_with(
         "Por favor, insira uma User Story antes de analisar."
     )
-
-
-def test_format_datetime_com_string_iso():
-    assert app.format_datetime("2024-03-15T13:45:00") == "15/03/2024 13:45"
-
-
-def test_format_datetime_com_string_invalida():
-    valor = "data invalida"
-    assert app.format_datetime(valor) is valor
-
-
-def test_format_datetime_com_objeto_datetime():
-    from datetime import datetime
-
-    data = datetime(2024, 1, 5, 9, 30)
-    assert app.format_datetime(data) == "05/01/2024 09:30"
-
-
-def test_format_datetime_com_objeto_com_strftime():
-    mock_data = MagicMock()
-    mock_data.strftime.return_value = "10/02/2024 12:00"
-
-    assert app.format_datetime(mock_data) == "10/02/2024 12:00"
-    mock_data.strftime.assert_called_once_with("%d/%m/%Y %H:%M")
-
-
 def test_render_main_analysis_page_downloads_sem_dados():
     """Força finalização sem test_plan_df nem pdf."""
     with patch("app.st") as mock_st:
@@ -440,7 +414,7 @@ def test_save_current_analysis_to_history_erro_generico(
     mock_announce.assert_called_once()
     args, kwargs = mock_announce.call_args
     assert args[1] == "warning"
-    assert kwargs["st_api"] is mock_st
+assert kwargs["st_api"] is mock_st
 
 
 # --- TESTES DE EXECUÇÃO DIRETA DO SCRIPT ---

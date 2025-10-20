@@ -17,28 +17,24 @@ def test_ensure_bytes_getvalue():
     assert app._ensure_bytes(buffer) == b"xyz"
 
 
-def test_ensure_bytes_getvalue_lanca_excecao():
-    class FalhaGetvalue:
+def test_ensure_bytes_getvalue_lanca_excecao_faz_fallback():
+    class Broken:
         def getvalue(self):
-            raise RuntimeError("falha")
+            raise RuntimeError("falha intencional")
 
         def __str__(self):
-            return "conteudo"
+            return "conteudo alternativo"
 
-    assert app._ensure_bytes(FalhaGetvalue()) == b"conteudo"
+    resultado = app._ensure_bytes(Broken())
+
+    assert resultado == b"conteudo alternativo"
 
 
-def test_ensure_bytes_objeto_generico():
-    class Fake:
+def test_ensure_bytes_sem_getvalue_usa_str_para_bytes():
+    class SemGetValue:
         def __str__(self):
-            return "fake"
+            return "dado com acentuação: çã"
 
-    assert app._ensure_bytes(Fake()) == b"fake"
+    resultado = app._ensure_bytes(SemGetValue())
 
-
-def test_ensure_bytes_sem_getvalue_fallback_str():
-    class SemGetvalue:
-        def __str__(self):
-            return "sem_getvalue"
-
-    assert app._ensure_bytes(SemGetvalue()) == b"sem_getvalue"
+    assert resultado == "dado com acentuação: çã".encode("utf-8")
