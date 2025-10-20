@@ -37,4 +37,4 @@ def test_ensure_bytes_sem_getvalue_usa_str_para_bytes():
 
     resultado = app._ensure_bytes(SemGetValue())
 
-    assert resultado == "dado com acentuação: çã".encode("utf-8")
+    assert resultado == "dado com acentuação: çã".encode()

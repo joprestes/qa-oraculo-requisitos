@@ -102,7 +102,7 @@ def _ensure_bytes(data):
             # Se getvalue falhar, cai para as alternativas abaixo
             pass
 
-    if isinstance(data, (bytes, bytearray)):
+    if isinstance(data, (bytes | bytearray)):
         return data
 
     # Fallback absoluto — converte para string e depois para bytes
@@ -320,7 +320,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                         st.rerun()
                 else:
                     announce(
-                        "Por favor, insira uma User Story antes de analisar.", "warning", st_api=st
+                        "Por favor, insira uma User Story antes de analisar.",
+                        "warning",
+                        st_api=st,
                     )
 
         # ------------------------------------------------------
@@ -466,7 +468,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     # Agora podemos avançar para a geração de plano
                     st.session_state["show_generate_plan_button"] = True
 
-                    announce("Análise refinada salva com sucesso!", "success", st_api=st)
+                    announce(
+                        "Análise refinada salva com sucesso!", "success", st_api=st
+                    )
                     st.rerun()
 
         # ------------------------------------------------------
@@ -540,7 +544,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                             st.session_state["history_saved"] = True  # evita duplicação
 
                         st.session_state["analysis_finished"] = True
-                        announce("Plano de Testes gerado com sucesso!", "success", st_api=st)
+                        announce(
+                            "Plano de Testes gerado com sucesso!", "success", st_api=st
+                        )
                         st.rerun()
                         # ===== FIM DO BLOCO DE RISCO =====
 
@@ -1150,7 +1156,7 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
         )
 
 
-def _render_history_page_test_mode(st_api):
+def _render_history_page_test_mode(st_api):  # noqa: C901, PLR0911, PLR0912, PLR0915
     """Versão simplificada do histórico para testes unitários legados."""
 
     st_api.title("📖 Histórico de Análises")
@@ -1195,7 +1201,11 @@ def _render_history_page_test_mode(st_api):
 
     history_entries = get_all_analysis_history()
 
-    raw_id = st_api.query_params.get("analysis_id") if hasattr(st_api, "query_params") else None
+    raw_id = (
+        st_api.query_params.get("analysis_id")
+        if hasattr(st_api, "query_params")
+        else None
+    )
     selected_id = None
     if raw_id:
         if isinstance(raw_id, list):

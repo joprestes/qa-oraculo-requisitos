@@ -1,4 +1,5 @@
 """Testes dedicados à função format_datetime do módulo app."""
+
 from datetime import datetime
 from unittest.mock import MagicMock
 
