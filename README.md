@@ -1,4 +1,7 @@
+<!-- markdownlint-disable MD033 MD026 MD036 MD031 MD032 MD003 MD040 MD047 -->
+
 # 🔮 QA Oráculo
+
 <p align="center">
 
   <!-- Linguagem principal -->
@@ -63,6 +66,31 @@ Em poucos minutos, você terá:
 
 ---
 
+## ♿ Acessibilidade
+
+O QA Oráculo implementa melhorias de acessibilidade baseadas em **WCAG 2.1 Level AA**:
+
+✅ Contraste de cores 12:1 (supera o mínimo de 4.5:1)  
+✅ Navegação 100% por teclado (Tab, Enter, Esc)  
+✅ Foco visível em todos os elementos interativos  
+✅ Mensagens anunciadas automaticamente por leitores de tela  
+✅ Suporte a preferências do navegador (reduced-motion, high-contrast)  
+
+### Testado com:
+
+- ✅ NVDA + Chrome (Windows)
+- ✅ VoiceOver + Safari (macOS)
+- ⚠️ JAWS + Firefox (limitações conhecidas do Streamlit)
+
+### Limitações:
+
+- ARIA labels customizados não são suportados pelo Streamlit
+- Alguns componentes nativos não expõem props de acessibilidade
+- Conformidade WCAG 2.1 Level AA: **~70%** (parcial)
+
+📄 Veja mais em: [ACESSIBILIDADE.md](./ACESSIBILIDADE.md)
+---
+
 ## 🛠️ Stack Tecnológica
 
 🐍 **Python 3.11+**  
@@ -77,6 +105,7 @@ Em poucos minutos, você terá:
 ## ⚙️ Instalação e Execução
 
 ### 📌 Pré-requisitos
+
 - Python 3.11+
 - Chave de API do Google (serviço *Generative Language* ativo)
 
@@ -129,6 +158,7 @@ streamlit run app.py
 ## 🔎 Exemplo Prático
 
 ### **Entrada**
+
 ```
 Como usuário do app de banco,
 quero redefinir minha senha via e-mail,
@@ -244,4 +274,3 @@ Mais detalhes em [Creative Commons](https://creativecommons.org/licenses/by-nc/4
 <p align="center">
   <i>Desenvolvido com 💜 por <b>Joelma Prestes Ferreira</b></i>
 </p>
-

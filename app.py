@@ -733,7 +733,6 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 accessible_text_area(
                     label="Descrição Padrão",
                     key="jira_description",
-                    value="Caso de teste gerado pelo QA Oráculo.",
                     height=100,
                     help_text=(
                         "Descrição padrão enviada ao Jira ao criar o caso de teste. "
@@ -952,8 +951,8 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                 label="⬅️ Voltar para a Lista",
                 key="btn_voltar_lista",
                 context="Retorna à lista principal de análises, limpando os filtros e parâmetros atuais.",
-                on_click=lambda: st.query_params.clear(),
                 type="secondary",
+                on_click=lambda: st.query_params.clear(),
             )
 
             created = analysis_entry.get("created_at")
@@ -1033,7 +1032,6 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
             label="🗑️ Excluir TODO o Histórico",
             key="btn_limpar_historico",
             context="Remove todos os registros de análises armazenados. Esta ação é irreversível.",
-            type="danger",
         ):
             st.session_state["confirm_clear_all"] = True
             st.rerun()
@@ -1083,7 +1081,6 @@ def render_history_page():  # noqa: C901, PLR0912, PLR0915
                         label="🗑️ Excluir",
                         key=f"btn_excluir_{entry['id']}",
                         context=f"Remove permanentemente a análise #{entry['id']}. Esta ação não pode ser desfeita.",
-                        type="danger",
                         use_container_width=True,
                     ):
                         st.session_state["confirm_delete_id"] = entry["id"]
@@ -1121,6 +1118,12 @@ def main():
     # ------------------------------------------------------
     init_db()
     initialize_state()
+    # ------------------------------------------------------
+    # ♿ Acessibilidade global
+    # ------------------------------------------------------
+    apply_accessible_styles()
+    render_keyboard_shortcuts_guide()
+    render_accessibility_info()
 
     # ------------------------------------------------------
     # 🧭 Mapa de páginas (sidebar)
@@ -1132,12 +1135,6 @@ def main():
 
     selected_page = st.sidebar.radio("Navegação", list(pages.keys()))
     pages[selected_page]()
-    # ------------------------------------------------------
-    # ♿ Acessibilidade global (NOVO BLOCO)
-    # ------------------------------------------------------
-    apply_accessible_styles()
-    render_keyboard_shortcuts_guide()
-    render_accessibility_info()
 
 
 # ==========================================================

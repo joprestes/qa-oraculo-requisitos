@@ -13,7 +13,6 @@
 #    Ele implementa o MÁXIMO possível dentro do Streamlit.
 # ==========================================================
 
-import sys
 
 import streamlit as st
 
@@ -249,7 +248,7 @@ def apply_accessible_styles():
     )
 
 
-def accessible_text_area(
+def accessible_text_area(  # noqa: PLR0913
     label: str,
     key: str,
     height: int = 200,
@@ -332,16 +331,8 @@ def accessible_button(label: str, key: str, context: str = "", st_api=None, **kw
 
 
 def _resolve_streamlit_api(st_api=None):
-    """Retorna o módulo Streamlit apropriado para os helpers de acessibilidade."""
-
-    if st_api is not None:
-        return st_api
-
-    app_module = sys.modules.get("app")
-    if app_module is not None and hasattr(app_module, "st"):
-        return getattr(app_module, "st")
-
-    return st
+    """Retorna o módulo Streamlit apropriado (global ou mock)."""
+    return st_api if st_api is not None else st
 
 
 def announce(message: str, level: str = "info", st_api=None):

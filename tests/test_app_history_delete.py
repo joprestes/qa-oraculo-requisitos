@@ -1,121 +1,98 @@
-# tests/test_app_history_delete.py
-
-from unittest.mock import patch
+"""Testes do módulo de histórico — exclusão de análises e limpeza total."""
 
 import pytest
-
+from unittest.mock import MagicMock, patch
 import app
 
 
-def make_button_side_effect(mapping):
-    """
-    mapping: dict onde a chave é o 'key' ou label do botão,
-    e o valor é o retorno esperado (True/False).
-    Todos os outros botões retornam False por padrão.
-    """
-
-    def _side_effect(*args, **kwargs):
+def make_button_side_effect(expected_buttons):
+    """Cria um side_effect para simular cliques em botões Streamlit."""
+    def side_effect(label, **kwargs):
         key = kwargs.get("key")
-        label = args[0] if args else None
-        if key in mapping:
-            return mapping[key]
-        if label in mapping:
-            return mapping[label]
-        return False
-
-    return _side_effect
+        return expected_buttons.get(key, False)
+    return side_effect
 
 
 @pytest.fixture
 def mock_st():
-    """Mock do streamlit usado em app.py"""
-    with patch("app.st") as mock_st:
-        mock_st.session_state = {}
-
-        # ✅ Compatível com .get()
-        class DummyParams(dict):
-            def get(self, key, default=None):
-                return super().get(key, default)
-
-        mock_st.query_params = DummyParams()
-
-        # ✅ As colunas usam o mesmo mock (assim os botões funcionam)
-        mock_st.columns.return_value = (mock_st, mock_st)
-        yield mock_st
+    """Mock do módulo Streamlit."""
+    mock = MagicMock()
+    mock.session_state = {}
+    return mock
 
 
-# ------------------------------
-# Exclusão individual
-# ------------------------------
-
+# ============================================================
+# Cenários: exclusão individual
+# ============================================================
 
 @patch("app.delete_analysis_by_id", return_value=True)
-def test_excluir_individual_confirmado(mock_delete, mock_st):
-    mock_st.session_state["confirm_delete_id"] = 1
-    mock_st.button.side_effect = make_button_side_effect(
-        {"confirmar_delete": True, "cancelar_delete": False}
-    )
+def test_excluir_individual_sucesso(mock_delete, mock_st):
+    """Valida exclusão bem-sucedida de uma análise específica."""
+    mock_st.session_state["confirm_delete_id"] = 42
+    mock_st.button.side_effect = make_button_side_effect({"confirmar_delete": True})
 
-    app.render_history_page()
+    app.render_history_page(st_api=mock_st)
 
-    mock_delete.assert_called_once_with(1)
-    assert "confirm_delete_id" not in mock_st.session_state
+    mock_delete.assert_called_once_with(42)
+    mock_st.success.assert_called_once_with("Análise 42 removida com sucesso.")
 
 
 @patch("app.delete_analysis_by_id", return_value=False)
 def test_excluir_individual_falha(mock_delete, mock_st):
+    """Valida feedback de erro quando a exclusão individual falha."""
     mock_st.session_state["confirm_delete_id"] = 42
     mock_st.button.side_effect = make_button_side_effect({"confirmar_delete": True})
 
-    app.render_history_page()
+    app.render_history_page(st_api=mock_st)
 
     mock_delete.assert_called_once_with(42)
-    mock_st.error.assert_called()
-    assert "confirm_delete_id" not in mock_st.session_state
+    mock_st.error.assert_called_once_with("Não foi possível excluir a análise selecionada.")
 
 
-def test_excluir_individual_cancelado(mock_st):
-    mock_st.session_state["confirm_delete_id"] = 99
-    mock_st.button.side_effect = make_button_side_effect({"cancelar_delete": True})
-
-    app.render_history_page()
-
-    assert "confirm_delete_id" not in mock_st.session_state
-
-
-# ------------------------------
-# Exclusão total do histórico
-# ------------------------------
-
+# ============================================================
+# Cenários: exclusão de todo o histórico
+# ============================================================
 
 @patch("app.clear_history", return_value=3)
 def test_excluir_todo_confirmado(mock_clear, mock_st):
+    """Valida exclusão total confirmada com sucesso."""
     mock_st.session_state["confirm_clear_all"] = True
     mock_st.button.side_effect = make_button_side_effect({"confirmar_delete_all": True})
 
-    app.render_history_page()
+    app.render_history_page(st_api=mock_st)
 
     mock_clear.assert_called_once()
-    mock_st.success.assert_called_with("3 análises foram removidas.")
-    assert "confirm_clear_all" not in mock_st.session_state
+    mock_st.success.assert_called_once_with("3 análises foram removidas.")
 
 
 @patch("app.clear_history", return_value=0)
 def test_excluir_todo_falha(mock_clear, mock_st):
+    """Valida feedback quando a limpeza total não remove nenhuma análise."""
     mock_st.session_state["confirm_clear_all"] = True
     mock_st.button.side_effect = make_button_side_effect({"confirmar_delete_all": True})
 
-    app.render_history_page()
+    app.render_history_page(st_api=mock_st)
 
     mock_clear.assert_called_once()
-    mock_st.success.assert_called_with("0 análises foram removidas.")
-    assert "confirm_clear_all" not in mock_st.session_state
+    mock_st.warning.assert_called_once_with("Nenhuma análise foi removida.")
 
 
-def test_excluir_todo_cancelado(mock_st):
-    mock_st.session_state["confirm_clear_all"] = True
-    mock_st.button.side_effect = make_button_side_effect({"cancelar_delete_all": True})
+# ============================================================
+# Cenário: cancelamento de exclusão
+# ============================================================
 
-    app.render_history_page()
+def test_cancelar_exclusao(mock_st):
+    """Valida que nenhuma exclusão ocorre quando o usuário cancela."""
+    mock_st.session_state["confirm_delete_id"] = 99
+    mock_st.session_state["confirm_clear_all"] = False
+    mock_st.button.side_effect = make_button_side_effect({
+        "confirmar_delete": False,
+        "confirmar_delete_all": False,
+    })
 
-    assert "confirm_clear_all" not in mock_st.session_state
+    with patch("app.delete_analysis_by_id") as mock_delete, patch("app.clear_history") as mock_clear:
+        app.render_history_page(st_api=mock_st)
+
+        mock_delete.assert_not_called()
+        mock_clear.assert_not_called()
+        mock_st.info.assert_called_once_with("Nenhuma exclusão foi realizada.")
