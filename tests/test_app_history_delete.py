@@ -18,6 +18,7 @@ def mock_st():
     """Mock do módulo Streamlit."""
     mock = MagicMock()
     mock.session_state = {}
+    mock.query_params = {}
     return mock
 
 
@@ -96,3 +97,51 @@ def test_cancelar_exclusao(mock_st):
         mock_delete.assert_not_called()
         mock_clear.assert_not_called()
         mock_st.info.assert_called_once_with("Nenhuma exclusão foi realizada.")
+
+
+# ============================================================
+# Cenários: visualização de histórico
+# ============================================================
+
+
+@patch("app.get_analysis_by_id")
+@patch("app.get_all_analysis_history")
+def test_visualizar_analise_por_query_param(mock_get_all, mock_get_by_id, mock_st):
+    """Garante que uma análise específica seja mostrada via query param."""
+
+    mock_get_all.return_value = [
+        {
+            "id": 1,
+            "created_at": "2024-01-01",
+            "user_story": "Como usuário, quero ...",
+            "analysis_report": "Relatório disponível.",
+            "test_plan_report": "",
+        }
+    ]
+    mock_get_by_id.return_value = {
+        "id": 1,
+        "created_at": "2024-01-01",
+        "user_story": "Como usuário, quero ...",
+        "analysis_report": "Relatório disponível.",
+        "test_plan_report": "",
+    }
+    mock_st.query_params = {"analysis_id": ["1"]}
+
+    app.render_history_page(st_api=mock_st)
+
+    mock_get_all.assert_called_once()
+    mock_get_by_id.assert_called_once_with(1)
+    mock_st.code.assert_called_once_with("Como usuário, quero ...", language="gherkin")
+    mock_st.info.assert_called_once_with("Nenhum plano de testes foi gerado para esta análise.")
+
+
+@patch("app.get_all_analysis_history", return_value=[])
+def test_visualizar_historico_vazio(mock_get_all, mock_st):
+    """Garante mensagem informativa quando não há análises armazenadas."""
+
+    app.render_history_page(st_api=mock_st)
+
+    mock_get_all.assert_called_once()
+    mock_st.info.assert_called_once_with(
+        "Ainda não há análises no histórico. Realize uma nova análise para começar."
+    )
