@@ -10,9 +10,10 @@ Este arquivo cobre:
 """
 
 import importlib
+import sqlite3
 import subprocess
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pandas as pd
 import pytest
@@ -170,8 +171,6 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
     mocked_st.warning.assert_called_once_with(
         "Por favor, insira uma User Story antes de analisar."
     )
-
-
 def test_render_main_analysis_page_downloads_sem_dados():
     """Força finalização sem test_plan_df nem pdf."""
     with patch("app.st") as mock_st:
@@ -306,6 +305,116 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
         assert "Cenário editado" in novo_relatorio
         # Salvamento pode ser opcional (não obrigatório em UI)
         mock_save.assert_called()
+
+
+# ---- Helpers e testes complementares do histórico ----
+def _build_session_state_para_historia_valida():
+    return {
+        "user_story_input": "  Como tester quero validar  ",
+        "analysis_state": {
+            "user_story": "História original",
+            "relatorio_analise_inicial": "  Relatório inicial  ",
+        },
+        "test_plan_report": "  Plano completo  ",
+        "history_saved": False,
+    }
+
+
+@patch("database.get_db_connection")
+@patch("app.announce")
+@patch("app.st")
+def test_save_current_analysis_to_history_sem_dados_suficientes(
+    mock_st, mock_announce, mock_get_conn
+):
+    """Quando não há dados válidos nada é salvo."""
+
+    mock_st.session_state = {
+        "user_story_input": "",
+        "analysis_state": {},
+        "test_plan_report": None,
+    }
+
+    app._save_current_analysis_to_history()
+
+    mock_get_conn.assert_not_called()
+    mock_announce.assert_not_called()
+
+
+@patch("database.get_db_connection")
+@patch("app.st")
+def test_save_current_analysis_to_history_atualiza_existente(mock_st, mock_get_conn):
+    """Atualiza registros existentes quando update_existing=True."""
+
+    mock_cursor = MagicMock()
+    mock_conn = MagicMock()
+    mock_conn.__enter__.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
+    mock_get_conn.return_value = mock_conn
+
+    session_state = _build_session_state_para_historia_valida()
+    session_state["last_saved_id"] = 42
+    mock_st.session_state = session_state
+
+    app._save_current_analysis_to_history(update_existing=True)
+
+    update_calls = [
+        call for call in mock_cursor.execute.call_args_list if "UPDATE" in call.args[0]
+    ]
+    assert update_calls, "Deve executar UPDATE ao atualizar registro existente"
+
+    _, params = update_calls[0].args
+    assert params[1] == "Como tester quero validar"
+    assert params[2] == "Relatório inicial"
+    assert params[3] == "Plano completo"
+
+    # Garante que não foi feito INSERT
+    assert all("INSERT" not in call.args[0] for call in mock_cursor.execute.call_args_list)
+    mock_conn.commit.assert_called_once()
+
+
+@patch("database.get_db_connection")
+@patch("app.announce")
+@patch("app.st")
+def test_save_current_analysis_to_history_sqlite_error(
+    mock_st, mock_announce, mock_get_conn
+):
+    """Erros de SQLite devem ser comunicados ao usuário."""
+
+    mock_st.session_state = _build_session_state_para_historia_valida()
+    mock_get_conn.side_effect = sqlite3.Error("db locked")
+
+    app._save_current_analysis_to_history()
+
+    mock_announce.assert_called_once()
+    args, kwargs = mock_announce.call_args
+    assert args[1] == "error"
+    assert kwargs["st_api"] is mock_st
+
+
+@patch("database.get_db_connection")
+@patch("app.announce")
+@patch("app.st")
+def test_save_current_analysis_to_history_erro_generico(
+    mock_st, mock_announce, mock_get_conn
+):
+    """Qualquer outro erro gera aviso sem interromper o fluxo principal."""
+
+    class ExplodingConn:
+        def __enter__(self):
+            raise RuntimeError("boom")
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    mock_st.session_state = _build_session_state_para_historia_valida()
+    mock_get_conn.return_value = ExplodingConn()
+
+    app._save_current_analysis_to_history()
+
+    mock_announce.assert_called_once()
+    args, kwargs = mock_announce.call_args
+    assert args[1] == "warning"
+    assert kwargs["st_api"] is mock_st
 
 
 # --- TESTES DE EXECUÇÃO DIRETA DO SCRIPT ---

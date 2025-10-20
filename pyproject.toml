@@ -30,7 +30,7 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
-source = ["app", "database", "graph", "pdf_generator", "state_manager", "utils"]
+source = ["app", "database", "graph", "pdf_generator", "state_manager", "utils", "a11y"]
 omit = [
     "schemas.py",
     "tests_schemas.py",

@@ -92,6 +92,46 @@ class TestDatabaseLogic(unittest.TestCase):
         retrieved = get_analysis_by_id(999)
         self.assertIsNone(retrieved)
 
+    @patch("database.get_db_connection")
+    def test_save_analysis_to_history_with_fallback_text(self, mock_get_conn):
+        connection = sqlite3.connect(
+            ":memory:", detect_types=sqlite3.PARSE_DECLTYPES, check_same_thread=False
+        )
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE analysis_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TIMESTAMP NOT NULL,
+                user_story TEXT NOT NULL,
+                analysis_report TEXT,
+                test_plan_report TEXT
+            );
+            """
+        )
+        connection.commit()
+
+        mock_get_conn.return_value = connection
+
+        try:
+            save_analysis_to_history(None, None, None)
+            retrieved = get_analysis_by_id(1)
+
+            self.assertIsNotNone(retrieved)
+            self.assertEqual(
+                retrieved["user_story"], "⚠️ User Story não disponível."
+            )
+            self.assertEqual(
+                retrieved["analysis_report"], "⚠️ Relatório de análise não disponível."
+            )
+            self.assertEqual(
+                retrieved["test_plan_report"],
+                "⚠️ Plano de Testes não disponível ou não pôde ser gerado.",
+            )
+        finally:
+            connection.close()
+
 
 class TestDatabaseDelete(unittest.TestCase):
     def setUp(self):
@@ -124,33 +164,79 @@ class TestDatabaseDelete(unittest.TestCase):
         self.assertEqual(len(all_entries), 0)
 
 
-@patch("database.get_db_connection")
-def test_save_analysis_to_history_com_erro(mock_conn):
-    mock_conn.side_effect = sqlite3.Error("DB fail")
+def test_init_db_com_erro(monkeypatch, capsys):
+    def fail_connect(*args, **kwargs):
+        raise sqlite3.Error("DB fail")
+
+    monkeypatch.setattr(database.sqlite3, "connect", fail_connect)
+
+    database.init_db()
+
+    captured = capsys.readouterr()
+    assert "[DB ERROR] Falha ao inicializar DB: DB fail" in captured.out
+
+
+def test_save_analysis_to_history_com_erro(monkeypatch, capsys):
+    def fail_connect(*args, **kwargs):
+        raise sqlite3.Error("DB fail")
+
+    monkeypatch.setattr(database.sqlite3, "connect", fail_connect)
+
     database.save_analysis_to_history("us", "report", "plan")
 
+    captured = capsys.readouterr()
+    assert "[DB ERROR] Falha ao salvar análise: DB fail" in captured.out
 
-@patch("database.get_db_connection")
-def test_get_all_analysis_history_com_erro(mock_conn):
-    mock_conn.side_effect = sqlite3.Error("DB fail")
+
+def test_get_all_analysis_history_com_erro(monkeypatch):
+    def fail_connect(*args, **kwargs):
+        raise sqlite3.Error("DB fail")
+
+    monkeypatch.setattr(database.sqlite3, "connect", fail_connect)
+
     assert database.get_all_analysis_history() == []
 
 
-@patch("database.get_db_connection")
-def test_get_analysis_by_id_com_erro(mock_conn):
-    mock_conn.side_effect = sqlite3.Error("DB fail")
+def test_get_analysis_by_id_com_erro(monkeypatch):
+    def fail_connect(*args, **kwargs):
+        raise sqlite3.Error("DB fail")
+
+    monkeypatch.setattr(database.sqlite3, "connect", fail_connect)
+
     assert database.get_analysis_by_id(1) is None
 
 
-@patch("database.get_db_connection")
-def test_delete_analysis_by_id_com_erro(mock_conn):
-    mock_conn.side_effect = sqlite3.Error("DB fail")
+def test_get_analysis_by_id_com_id_invalido(monkeypatch):
+    class DummyContext:
+        def __enter__(self):
+            self.conn = sqlite3.connect(":memory:")
+            self.conn.row_factory = sqlite3.Row
+            return self.conn
+
+        def __exit__(self, exc_type, exc, tb):
+            self.conn.close()
+            return False
+
+    monkeypatch.setattr(database, "get_db_connection", DummyContext)
+
+    assert database.get_analysis_by_id("abc") is None
+
+
+def test_delete_analysis_by_id_com_erro(monkeypatch):
+    def fail_connect(*args, **kwargs):
+        raise sqlite3.Error("DB fail")
+
+    monkeypatch.setattr(database.sqlite3, "connect", fail_connect)
+
     assert database.delete_analysis_by_id(1) is False
 
 
-@patch("database.get_db_connection")
-def test_clear_history_com_erro(mock_conn):
-    mock_conn.side_effect = sqlite3.Error("DB fail")
+def test_clear_history_com_erro(monkeypatch):
+    def fail_connect(*args, **kwargs):
+        raise sqlite3.Error("DB fail")
+
+    monkeypatch.setattr(database.sqlite3, "connect", fail_connect)
+
     assert database.clear_history() == 0
 
 

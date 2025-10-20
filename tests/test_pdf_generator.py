@@ -6,6 +6,8 @@ import pandas as pd
 import pytest
 from fpdf.enums import XPos, YPos
 
+import pdf_generator
+
 from pdf_generator import (
     PDF,
     add_cover,
@@ -126,18 +128,20 @@ def test_generate_pdf_report_df_vazio(mock_findfont, mock_PDF):
 
 
 def test_generate_pdf_report_sem_fonte(monkeypatch):
-    monkeypatch.setattr(
-        "matplotlib.font_manager.findfont",
-        lambda _: (_ for _ in ()).throw(ValueError("Fonte não encontrada")),
-    )
-    with pytest.raises(RuntimeError):
+    def _raise_font_error(_):
+        raise ValueError("Fonte não encontrada")
+
+    monkeypatch.setattr(pdf_generator.fm, "findfont", _raise_font_error)
+
+    with pytest.raises(RuntimeError, match=r"Fonte 'DejaVu Sans' não encontrada\."):
         generate_pdf_report("Relatório", pd.DataFrame())
 
 
 def test_pdf_falha_fonte(monkeypatch):
-    monkeypatch.setattr(
-        "matplotlib.font_manager.findfont",
-        lambda name: (_ for _ in ()).throw(Exception("Fonte não encontrada")),
-    )
-    with pytest.raises(RuntimeError):
+    def _raise_generic_error(_):
+        raise Exception("Fonte não encontrada")
+
+    monkeypatch.setattr(pdf_generator.fm, "findfont", _raise_generic_error)
+
+    with pytest.raises(RuntimeError, match=r"Fonte 'DejaVu Sans' não encontrada\."):
         generate_pdf_report("texto", pd.DataFrame())
