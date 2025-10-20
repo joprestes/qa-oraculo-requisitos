@@ -189,6 +189,16 @@ def test_format_datetime_com_objeto_datetime():
     assert app.format_datetime(data) == "05/01/2024 09:30"
 
 
+def test_format_datetime_com_objeto_mock_que_tem_strftime():
+    mock_value = MagicMock()
+    mock_value.strftime.return_value = "31/12/2024 23:59"
+
+    resultado = app.format_datetime(mock_value)
+
+    mock_value.strftime.assert_called_once_with("%d/%m/%Y %H:%M")
+    assert resultado == "31/12/2024 23:59"
+
+
 def test_render_main_analysis_page_downloads_sem_dados():
     """Força finalização sem test_plan_df nem pdf."""
     with patch("app.st") as mock_st:
