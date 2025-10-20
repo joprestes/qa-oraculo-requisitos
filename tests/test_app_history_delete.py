@@ -1,15 +1,19 @@
 """Testes do módulo de histórico — exclusão de análises e limpeza total."""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 import app
 
 
 def make_button_side_effect(expected_buttons):
     """Cria um side_effect para simular cliques em botões Streamlit."""
+
     def side_effect(label, **kwargs):
         key = kwargs.get("key")
         return expected_buttons.get(key, False)
+
     return side_effect
 
 
@@ -25,6 +29,7 @@ def mock_st():
 # ============================================================
 # Cenários: exclusão individual
 # ============================================================
+
 
 @patch("app.delete_analysis_by_id", return_value=True)
 def test_excluir_individual_sucesso(mock_delete, mock_st):
@@ -47,12 +52,15 @@ def test_excluir_individual_falha(mock_delete, mock_st):
     app.render_history_page(st_api=mock_st)
 
     mock_delete.assert_called_once_with(42)
-    mock_st.error.assert_called_once_with("Não foi possível excluir a análise selecionada.")
+    mock_st.error.assert_called_once_with(
+        "Não foi possível excluir a análise selecionada."
+    )
 
 
 # ============================================================
 # Cenários: exclusão de todo o histórico
 # ============================================================
+
 
 @patch("app.clear_history", return_value=3)
 def test_excluir_todo_confirmado(mock_clear, mock_st):
@@ -118,16 +126,22 @@ def test_cancelar_limpeza_total_botao(mock_st):
 # Cenário: cancelamento de exclusão
 # ============================================================
 
+
 def test_cancelar_exclusao(mock_st):
     """Valida que nenhuma exclusão ocorre quando o usuário cancela."""
     mock_st.session_state["confirm_delete_id"] = 99
     mock_st.session_state["confirm_clear_all"] = False
-    mock_st.button.side_effect = make_button_side_effect({
-        "confirmar_delete": False,
-        "confirmar_delete_all": False,
-    })
+    mock_st.button.side_effect = make_button_side_effect(
+        {
+            "confirmar_delete": False,
+            "confirmar_delete_all": False,
+        }
+    )
 
-    with patch("app.delete_analysis_by_id") as mock_delete, patch("app.clear_history") as mock_clear:
+    with (
+        patch("app.delete_analysis_by_id") as mock_delete,
+        patch("app.clear_history") as mock_clear,
+    ):
         app.render_history_page(st_api=mock_st)
 
         mock_delete.assert_not_called()
@@ -168,12 +182,16 @@ def test_visualizar_analise_por_query_param(mock_get_all, mock_get_by_id, mock_s
     mock_get_all.assert_called_once()
     mock_get_by_id.assert_called_once_with(1)
     mock_st.code.assert_called_once_with("Como usuário, quero ...", language="gherkin")
-    mock_st.info.assert_called_once_with("Nenhum plano de testes foi gerado para esta análise.")
+    mock_st.info.assert_called_once_with(
+        "Nenhum plano de testes foi gerado para esta análise."
+    )
 
 
 @patch("app.get_analysis_by_id", return_value=None)
 @patch("app.get_all_analysis_history", return_value=[{"id": 10}])
-def test_visualizar_analise_inexistente_exibe_erro(mock_get_all, mock_get_by_id, mock_st):
+def test_visualizar_analise_inexistente_exibe_erro(
+    mock_get_all, mock_get_by_id, mock_st
+):
     """Simula query param inexistente e verifica mensagem de erro apropriada."""
 
     mock_st.query_params = {"analysis_id": ["999"]}

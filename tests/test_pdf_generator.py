@@ -7,7 +7,6 @@ import pytest
 from fpdf.enums import XPos, YPos
 
 import pdf_generator
-
 from pdf_generator import (
     PDF,
     add_cover,

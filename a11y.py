@@ -14,7 +14,7 @@
 # ==========================================================
 
 
-from typing import Any, Optional
+from typing import Any
 
 import streamlit as st
 
@@ -280,13 +280,13 @@ def apply_accessible_styles():
 
 
 def accessible_text_area(  # noqa: PLR0913
-    label: Optional[str] = None,
-    key: Optional[str] = None,
+    label: str | None = None,
+    key: str | None = None,
     *,
-    config: Optional[Any] = None,
-    height: Optional[int] = None,
-    help_text: Optional[str] = None,
-    placeholder: Optional[str] = None,
+    config: Any | None = None,
+    height: int | None = None,
+    help_text: str | None = None,
+    placeholder: str | None = None,
     st_api=None,
     **kwargs,
 ):

@@ -314,7 +314,7 @@ def test_to_excel_dataframe_vazio():
     """
     df = pd.DataFrame()
     buf = to_excel(df, sheet_name="Vazio")
-    assert isinstance(buf, (bytes, bytearray))
+    assert isinstance(buf, (bytes | bytearray))
 
 
 def test_ensure_bytes_com_getvalue():
@@ -544,7 +544,7 @@ def test_gerar_csv_azure_locale_invalido(monkeypatch):
     csv_bytes = utils.gerar_csv_azure_from_df(df, "Area", "QA")
 
     # ✅ Ainda deve retornar um arquivo válido
-    assert isinstance(csv_bytes, (bytes, bytearray))
+    assert isinstance(csv_bytes, (bytes | bytearray))
     assert b"Test Case" in csv_bytes
 
 

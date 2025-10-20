@@ -119,9 +119,7 @@ class TestDatabaseLogic(unittest.TestCase):
             retrieved = get_analysis_by_id(1)
 
             self.assertIsNotNone(retrieved)
-            self.assertEqual(
-                retrieved["user_story"], "⚠️ User Story não disponível."
-            )
+            self.assertEqual(retrieved["user_story"], "⚠️ User Story não disponível.")
             self.assertEqual(
                 retrieved["analysis_report"], "⚠️ Relatório de análise não disponível."
             )

@@ -13,7 +13,7 @@ import importlib
 import sqlite3
 import subprocess
 import sys
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -49,8 +49,8 @@ def test_render_history_page_com_historico(mock_st):
     with patch("app.get_all_analysis_history", return_value=history):
         app.render_history_page()
 
-    calls = [str(call) for call in mock_st.markdown.call_args_list]
-    assert any("2025-09-26" in c for c in calls)
+    calls = [str(mock_call) for mock_call in mock_st.markdown.call_args_list]
+    assert any("2025-09-26" in call_str for call_str in calls)
 
 
 @patch("app.st")
@@ -96,7 +96,7 @@ def mocked_st():
         def fake_columns(arg):
             if isinstance(arg, int):
                 return tuple(MagicMock() for _ in range(arg))
-            if isinstance(arg, (list, tuple)):
+            if isinstance(arg, (list | tuple)):
                 return tuple(MagicMock() for _ in arg)
             return (MagicMock(), MagicMock())
 
@@ -171,6 +171,8 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
     mocked_st.warning.assert_called_once_with(
         "Por favor, insira uma User Story antes de analisar."
     )
+
+
 def test_render_main_analysis_page_downloads_sem_dados():
     """Força finalização sem test_plan_df nem pdf."""
     with patch("app.st") as mock_st:
@@ -358,7 +360,9 @@ def test_save_current_analysis_to_history_atualiza_existente(mock_st, mock_get_c
     app._save_current_analysis_to_history(update_existing=True)
 
     update_calls = [
-        call for call in mock_cursor.execute.call_args_list if "UPDATE" in call.args[0]
+        mock_call
+        for mock_call in mock_cursor.execute.call_args_list
+        if "UPDATE" in mock_call.args[0]
     ]
     assert update_calls, "Deve executar UPDATE ao atualizar registro existente"
 
@@ -368,7 +372,10 @@ def test_save_current_analysis_to_history_atualiza_existente(mock_st, mock_get_c
     assert params[3] == "Plano completo"
 
     # Garante que não foi feito INSERT
-    assert all("INSERT" not in call.args[0] for call in mock_cursor.execute.call_args_list)
+    assert all(
+        "INSERT" not in mock_call.args[0]
+        for mock_call in mock_cursor.execute.call_args_list
+    )
     mock_conn.commit.assert_called_once()
 
 
