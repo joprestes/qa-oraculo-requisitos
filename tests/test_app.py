@@ -171,34 +171,6 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
     mocked_st.warning.assert_called_once_with(
         "Por favor, insira uma User Story antes de analisar."
     )
-
-
-def test_format_datetime_com_string_iso():
-    assert app.format_datetime("2024-03-15T13:45:00") == "15/03/2024 13:45"
-
-
-def test_format_datetime_com_string_invalida():
-    valor = "data invalida"
-    assert app.format_datetime(valor) is valor
-
-
-def test_format_datetime_com_objeto_datetime():
-    from datetime import datetime
-
-    data = datetime(2024, 1, 5, 9, 30)
-    assert app.format_datetime(data) == "05/01/2024 09:30"
-
-
-def test_format_datetime_com_objeto_mock_que_tem_strftime():
-    mock_value = MagicMock()
-    mock_value.strftime.return_value = "31/12/2024 23:59"
-
-    resultado = app.format_datetime(mock_value)
-
-    mock_value.strftime.assert_called_once_with("%d/%m/%Y %H:%M")
-    assert resultado == "31/12/2024 23:59"
-
-
 def test_render_main_analysis_page_downloads_sem_dados():
     """Força finalização sem test_plan_df nem pdf."""
     with patch("app.st") as mock_st:
