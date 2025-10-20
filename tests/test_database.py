@@ -92,6 +92,46 @@ class TestDatabaseLogic(unittest.TestCase):
         retrieved = get_analysis_by_id(999)
         self.assertIsNone(retrieved)
 
+    @patch("database.get_db_connection")
+    def test_save_analysis_to_history_with_fallback_text(self, mock_get_conn):
+        connection = sqlite3.connect(
+            ":memory:", detect_types=sqlite3.PARSE_DECLTYPES, check_same_thread=False
+        )
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE analysis_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TIMESTAMP NOT NULL,
+                user_story TEXT NOT NULL,
+                analysis_report TEXT,
+                test_plan_report TEXT
+            );
+            """
+        )
+        connection.commit()
+
+        mock_get_conn.return_value = connection
+
+        try:
+            save_analysis_to_history(None, None, None)
+            retrieved = get_analysis_by_id(1)
+
+            self.assertIsNotNone(retrieved)
+            self.assertEqual(
+                retrieved["user_story"], "⚠️ User Story não disponível."
+            )
+            self.assertEqual(
+                retrieved["analysis_report"], "⚠️ Relatório de análise não disponível."
+            )
+            self.assertEqual(
+                retrieved["test_plan_report"],
+                "⚠️ Plano de Testes não disponível ou não pôde ser gerado.",
+            )
+        finally:
+            connection.close()
+
 
 class TestDatabaseDelete(unittest.TestCase):
     def setUp(self):
