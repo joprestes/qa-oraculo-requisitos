@@ -238,3 +238,23 @@ def test_render_accessibility_info():
         mock_st.sidebar.expander.assert_called_once()
         # Valida que o contexto do expander foi acessado
         mock_st.sidebar.expander.return_value.__enter__.assert_called()
+
+
+def test_check_accessibility_preferences_injeta_script_e_retorna_padrao():
+    """Garante que o script de detecção é injetado e retorna valores padrão."""
+    with patch("a11y.st") as mock_st:
+        resultado = a11y.check_accessibility_preferences()
+
+        # Script deve ser injetado com unsafe_allow_html=True
+        mock_st.markdown.assert_called_once()
+        args, kwargs = mock_st.markdown.call_args
+        assert "<script>" in args[0]
+        assert "prefers-reduced-motion" in args[0]
+        assert kwargs["unsafe_allow_html"] is True
+
+        # Resultado padrão documentado
+        assert resultado == {
+            "reduced_motion": False,
+            "high_contrast": False,
+            "dark_mode": True,
+        }
