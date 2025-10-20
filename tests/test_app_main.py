@@ -128,10 +128,20 @@ def test_nova_analise_button(mock_reset, mock_st):
     mock_st.session_state["analysis_finished"] = True
     mock_st.session_state["analysis_state"] = make_analysis_state()
     mock_st.session_state["test_plan_report"] = "Plano final"
+    mock_st.session_state["history_saved"] = True
 
-    mock_st.button.return_value = True
+    def button_side_effect(*args, **kwargs):
+        if kwargs.get("key") == "nova_analise_button" and kwargs.get("on_click"):
+            kwargs["on_click"]()
+            return True
+        return False
+
+    mock_st.button.side_effect = button_side_effect
 
     app.render_main_analysis_page()
+
+    assert "history_saved" not in mock_st.session_state
+    mock_reset.assert_called_once_with()
 
 
 # ----------------------------
