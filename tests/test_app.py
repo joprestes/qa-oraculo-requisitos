@@ -414,7 +414,7 @@ def test_save_current_analysis_to_history_erro_generico(
     mock_announce.assert_called_once()
     args, kwargs = mock_announce.call_args
     assert args[1] == "warning"
-assert kwargs["st_api"] is mock_st
+    assert kwargs["st_api"] is mock_st
 
 
 # --- TESTES DE EXECUÇÃO DIRETA DO SCRIPT ---
