@@ -33,7 +33,7 @@ Arquivo: `.github/workflows/ci.yml`
 4. Instala dependências e ferramentas de qualidade  
 5. Lint (Black) e Ruff  
 6. Testes e cobertura (`pytest --cov`)  
-7. Gate de cobertura ≥ 90 %  
+7. Gate de cobertura ≥ 95 %
 8. Validação do `pyproject.toml`
 
 ---
@@ -123,7 +123,7 @@ graph TB
 
 - Framework: **Pytest**  
 - Banco de testes: **SQLite in-memory**  
-- Cobertura mínima: **90 % (meta: 97 %)**  
+- Cobertura mínima: **95 % (meta: 97 %)**
 - Execução:
   ```bash
   pytest --cov --cov-report=term-missing
@@ -152,7 +152,7 @@ graph TB
 
 1. Rodar `setup.sh` (ou `.bat`) antes do commit.  
 2. Garantir lint limpo (`ruff check .`, `black --check .`).  
-3. Cobertura mínima ≥ 90 %.  
+3. Cobertura mínima ≥ 95 %.
 4. Commits semânticos (`feat:`, `fix:`, `docs:`, `ci:`).  
 
 ---

@@ -39,8 +39,8 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - **Integração Contínua (CI)** completa via GitHub Actions:
   - Execução em Python 3.11, 3.12 e 3.13.
   - Verificações automáticas com **Black** e **Ruff**.
-  - Testes unitários com **Pytest** e cobertura mínima de 90%.
-  - Gate automático para falha em cobertura abaixo de 90%.
+  - Testes unitários com **Pytest** e cobertura mínima de 95%.
+  - Gate automático para falha em cobertura abaixo de 95%.
   - Validação de sintaxe do `pyproject.toml`.
 - **Scripts automáticos de setup:**
   - `setup.sh` (Linux/Mac) e `setup.bat` (Windows).

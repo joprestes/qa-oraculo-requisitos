@@ -10,7 +10,7 @@
 # 2. Roda o Ruff (lint) para detectar más práticas, imports e bugs comuns.
 # 3. Executa todos os testes unitários com pytest.
 # 4. Gera relatório de cobertura de testes.
-# 5. Falha o pipeline se a cobertura for menor que 90%.
+# 5. Falha o pipeline se a cobertura for menor que 95%.
 # =====================================================================
 
 name: CI
@@ -108,7 +108,7 @@ jobs:
             --cov-report=xml
 
       # ---------------------------------------------------------------
-      # 8️⃣ Verifica se a cobertura de testes é >= 90%
+      # 8️⃣ Verifica se a cobertura de testes é >= 95%
       # Se não for, falha o workflow
       # ---------------------------------------------------------------
       - name: "Gate - verifica se cobertura é suficiente"
@@ -123,8 +123,8 @@ jobs:
           cov = float(r['line-rate']) * 100
           print(f'📊 Cobertura total: {cov:.2f}%')
 
-          if cov < 85.0:
-              print("❌ Cobertura abaixo do mínimo exigido (85%)")
+          if cov < 95.0:
+              print("❌ Cobertura abaixo do mínimo exigido (95%)")
               exit(1)
           else:
               print("✅ Cobertura mínima atingida!")

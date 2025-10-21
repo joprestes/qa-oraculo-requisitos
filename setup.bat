@@ -39,7 +39,7 @@ black --check .
 
 :: 5️⃣ Testes com cobertura
 ECHO 🧪 Executando testes unitários e cobertura...
-pytest --cov --cov-report=term-missing
+pytest --cov --cov-report=term-missing --cov-fail-under=95
 
 :: 6️⃣ Revisão final de pré-push
 ECHO ================================================================
@@ -48,7 +48,7 @@ ECHO --------------------------------------------------
 python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"
 ruff check .
 black --check .
-pytest --cov --cov-report=term-missing
+pytest --cov --cov-report=term-missing --cov-fail-under=95
 ECHO --------------------------------------------------
 ECHO ✅ Tudo validado! Pronto para commit e push 🚀
 ECHO ================================================================

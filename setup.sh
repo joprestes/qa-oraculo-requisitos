@@ -41,7 +41,7 @@ black --check .
 
 # 5️⃣ Testes com cobertura
 echo "🧪 Executando testes unitários e cobertura..."
-pytest --cov --cov-report=term-missing
+pytest --cov --cov-report=term-missing --cov-fail-under=95
 
 # 6️⃣ Revisão final de pré-push
 echo "🧱 Revisão QA Oráculo antes do push..."
@@ -49,7 +49,7 @@ echo "--------------------------------------------------"
 python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"
 ruff check .
 black --check .
-pytest --cov --cov-report=term-missing
+pytest --cov --cov-report=term-missing --cov-fail-under=95
 echo "--------------------------------------------------"
 echo "✅ Tudo validado! Pronto para commit e push 🚀"
 

@@ -234,7 +234,7 @@ Cada **push** ou **pull request** executa automaticamente:
 ✅ Black → formatação PEP8  
 🔎 Ruff → lint e boas práticas  
 🧪 Pytest → testes unitários  
-📊 Cobertura mínima: **90%**
+📊 Cobertura mínima: **95%**
 
 Arquivo: `.github/workflows/ci.yml`
 
