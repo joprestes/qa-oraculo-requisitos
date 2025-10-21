@@ -174,7 +174,9 @@ def test_generate_pdf_report_trata_entradas_vazias(
 @patch("pdf_generator.add_test_case_table")
 @patch("pdf_generator.PDF")
 @patch("matplotlib.font_manager.findfont", return_value="dummy_path.ttf")
-def test_generate_pdf_report_normaliza_iteraveis(mock_findfont, mock_PDF, mock_add_table):
+def test_generate_pdf_report_normaliza_iteraveis(
+    mock_findfont, mock_PDF, mock_add_table
+):
     mock_pdf_instance = MagicMock()
     mock_pdf_instance.output.return_value = b"pdf"
     mock_PDF.return_value = mock_pdf_instance

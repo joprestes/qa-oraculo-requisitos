@@ -9,16 +9,14 @@
 #  • Padrão QA Oráculo: acessível, limpo e automatizável
 # ==========================================================
 
+import math
 from datetime import datetime
 from typing import Any
-
-import math
 
 import matplotlib.font_manager as fm
 import pandas as pd
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
-
 
 # ==========================================================
 # Constantes internas
