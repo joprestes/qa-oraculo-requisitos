@@ -10,11 +10,19 @@
 # ==========================================================
 
 from datetime import datetime
+from typing import Any
 
 import matplotlib.font_manager as fm
 import pandas as pd
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
+
+
+# ==========================================================
+# Constantes internas
+# ==========================================================
+
+_ANALYSIS_FALLBACK_MESSAGE = "⚠️ Relatório de análise não disponível."
 
 
 # ==========================================================
@@ -182,9 +190,37 @@ def add_test_case_table(pdf: FPDF, df: pd.DataFrame):
 
 
 # ==========================================================
+# Funções internas auxiliares
+# ==========================================================
+
+
+def _normalize_test_plan_df(test_plan_df: Any) -> pd.DataFrame:
+    """Garante que os dados do plano de testes sejam convertidos para DataFrame."""
+
+    if test_plan_df is None:
+        return pd.DataFrame()
+
+    if isinstance(test_plan_df, pd.DataFrame):
+        return test_plan_df
+
+    if isinstance(test_plan_df, list):
+        return pd.DataFrame(test_plan_df)
+
+    if isinstance(test_plan_df, dict):
+        return pd.DataFrame([test_plan_df])
+
+    raise TypeError(
+        "test_plan_df deve ser um pandas.DataFrame, uma lista de registros ou um dicionário."
+    )
+
+
+# ==========================================================
 # Função principal de geração do PDF
 # ==========================================================
-def generate_pdf_report(analysis_report: str, test_plan_df: pd.DataFrame) -> bytes:
+def generate_pdf_report(
+    analysis_report: str | None,
+    test_plan_df: pd.DataFrame | list[dict[str, Any]] | dict[str, Any] | None,
+) -> bytes:
     """Gera o relatório PDF completo (Análise + Casos de Teste)."""
     pdf = PDF()
 
@@ -206,11 +242,15 @@ def generate_pdf_report(analysis_report: str, test_plan_df: pd.DataFrame) -> byt
     # --- Seção 1: Análise da User Story ---
     add_section_title(pdf, "1. Análise de Qualidade da User Story")
     pdf.set_font("DejaVu", "", 12)
-    pdf.multi_cell(0, 8, clean_text_for_pdf(analysis_report))
+    analysis_text = clean_text_for_pdf(analysis_report or _ANALYSIS_FALLBACK_MESSAGE)
+    if not analysis_text.strip():
+        analysis_text = clean_text_for_pdf(_ANALYSIS_FALLBACK_MESSAGE)
+    pdf.multi_cell(0, 8, analysis_text)
     pdf.ln(10)
 
     # --- Seção 2: Casos de Teste ---
-    if not test_plan_df.empty:
-        add_test_case_table(pdf, test_plan_df)
+    normalized_df = _normalize_test_plan_df(test_plan_df)
+    if not normalized_df.empty:
+        add_test_case_table(pdf, normalized_df)
 
     return bytes(pdf.output())

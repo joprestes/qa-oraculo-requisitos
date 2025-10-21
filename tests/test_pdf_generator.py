@@ -105,6 +105,8 @@ def test_generate_pdf_report_fluxo_completo(mock_findfont, mock_PDF):
     analysis_report = "Relatório"
     test_plan_df = pd.DataFrame([{"id": "CT-001"}])
 
+    mock_pdf_instance.output.return_value = b"pdf"
+
     generate_pdf_report(analysis_report, test_plan_df)
 
     mock_PDF.assert_called_once()
@@ -118,6 +120,8 @@ def test_generate_pdf_report_fluxo_completo(mock_findfont, mock_PDF):
 def test_generate_pdf_report_df_vazio(mock_findfont, mock_PDF):
     mock_pdf_instance = MagicMock()
     mock_PDF.return_value = mock_pdf_instance
+
+    mock_pdf_instance.output.return_value = b"pdf"
 
     generate_pdf_report("Relatório", pd.DataFrame())
 
@@ -144,3 +148,38 @@ def test_pdf_falha_fonte(monkeypatch):
 
     with pytest.raises(RuntimeError, match=r"Fonte 'DejaVu Sans' não encontrada\."):
         generate_pdf_report("texto", pd.DataFrame())
+
+
+@patch("pdf_generator.add_test_case_table")
+@patch("pdf_generator.PDF")
+@patch("matplotlib.font_manager.findfont", return_value="dummy_path.ttf")
+def test_generate_pdf_report_trata_entradas_vazias(
+    mock_findfont, mock_PDF, mock_add_table
+):
+    mock_pdf_instance = MagicMock()
+    mock_pdf_instance.output.return_value = b"pdf"
+    mock_PDF.return_value = mock_pdf_instance
+
+    resultado = generate_pdf_report(None, None)
+
+    assert resultado == b"pdf"
+    mock_pdf_instance.multi_cell.assert_called_with(
+        0, 8, "⚠️ Relatório de análise não disponível."
+    )
+    mock_add_table.assert_not_called()
+
+
+@patch("pdf_generator.add_test_case_table")
+@patch("pdf_generator.PDF")
+@patch("matplotlib.font_manager.findfont", return_value="dummy_path.ttf")
+def test_generate_pdf_report_normaliza_iteraveis(mock_findfont, mock_PDF, mock_add_table):
+    mock_pdf_instance = MagicMock()
+    mock_pdf_instance.output.return_value = b"pdf"
+    mock_PDF.return_value = mock_pdf_instance
+
+    generate_pdf_report("Relatório", [{"id": "CT-1", "titulo": "Caso"}])
+
+    assert mock_add_table.call_count == 1
+    _, df_passado = mock_add_table.call_args[0]
+    assert isinstance(df_passado, pd.DataFrame)
+    assert not df_passado.empty
