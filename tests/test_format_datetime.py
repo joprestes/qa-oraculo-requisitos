@@ -13,6 +13,7 @@ import app
     [
         ("2024-03-15T13:45:00", "15/03/2024 13:45"),
         (datetime(2024, 1, 5, 9, 30), "05/01/2024 09:30"),
+        (123, "123"),
     ],
 )
 def test_format_datetime_formata_inputs_validos(valor, esperado):
