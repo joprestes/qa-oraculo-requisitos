@@ -15,17 +15,12 @@
 # ==========================================================
 
 
-import os
+import sqlite3
 
 import pandas as pd
-import sqlite3
 import streamlit as st
+
 import utils as utils_module
-
-
-def _is_test_mode() -> bool:
-    return type(st).__name__ == "MagicMock"
-
 from a11y import (
     accessible_button,
     accessible_text_area,
@@ -69,6 +64,10 @@ from utils import (
     preparar_df_para_zephyr_xlsx,
     to_excel,
 )
+
+
+def _is_test_mode() -> bool:
+    return type(st).__name__ == "MagicMock"
 
 
 # ==========================================================
@@ -118,6 +117,63 @@ def _ensure_bytes(data):
 
 
 # ==========================================================
+# 🔄 Helpers de persistência
+# ==========================================================
+def _get_session_snapshot(update_existing: bool):
+    session = st.session_state
+    legacy_state = session.get("analysis_state") or {}
+    user_story = session.get("user_story_input") or legacy_state.get("user_story", "")
+    analysis_report = legacy_state.get("relatorio_analise_inicial") or session.get(
+        "analysis_report", ""
+    )
+    test_plan_report = session.get("test_plan_report") or legacy_state.get(
+        "relatorio_plano_de_testes", ""
+    )
+    existing_id = session.get("last_saved_id") if update_existing else None
+    return user_story, analysis_report, test_plan_report, existing_id
+
+
+def _safe_get_state_or_none():
+    try:
+        return get_state()
+    except RuntimeError:
+        return None
+
+
+def _fallback_if_blank(value: str | None, fallback: str) -> str:
+    if isinstance(value, str) and value.strip():
+        return value
+    return fallback or ""
+
+
+def _merge_state_with_snapshot(
+    state: AnalysisState | None,
+    snapshot: tuple[str, str, str, str | None],
+    update_existing: bool,
+) -> tuple[str, str, str, str | None]:
+    fallback_user_story, fallback_analysis, fallback_plan, fallback_existing = snapshot
+
+    if state is None:
+        existing = fallback_existing if update_existing else None
+        return (
+            fallback_user_story or "",
+            fallback_analysis or "",
+            fallback_plan or "",
+            existing,
+        )
+
+    user_story = _fallback_if_blank(state.user_story, fallback_user_story)
+    analysis_report = _fallback_if_blank(state.analysis_report, fallback_analysis)
+    test_plan_report = state.test_plan_report or fallback_plan or ""
+    existing_id = state.saved_history_id if update_existing else None
+
+    if update_existing and not existing_id:
+        existing_id = fallback_existing
+
+    return user_story, analysis_report, test_plan_report, existing_id
+
+
+# ==========================================================
 # 헬 Auxiliar: Salva a análise atual no histórico (CORRIGIDO)
 # ==========================================================
 def _save_current_analysis_to_history(update_existing: bool = False):
@@ -129,71 +185,30 @@ def _save_current_analysis_to_history(update_existing: bool = False):
     que manipulam ``st.session_state`` diretamente.
     """
 
-    def _get_session_fallback():
-        session = st.session_state
-        legacy_state = session.get("analysis_state") or {}
-        user_story = session.get("user_story_input") or legacy_state.get("user_story", "")
-        analysis_report = legacy_state.get("relatorio_analise_inicial") or session.get(
-            "analysis_report", ""
-        )
-        test_plan_report = session.get("test_plan_report") or legacy_state.get(
-            "relatorio_plano_de_testes", ""
-        )
-        existing_id = session.get("last_saved_id") if update_existing else None
-        return user_story, analysis_report, test_plan_report, existing_id
+    state = _safe_get_state_or_none()
+    snapshot = _get_session_snapshot(update_existing)
+    user_story, analysis_report, test_plan_report, existing_id = _merge_state_with_snapshot(
+        state,
+        snapshot,
+        update_existing,
+    )
+
+    if not user_story.strip():
+        print("⚠️ Nenhum dado para salvar (User Story vazia)")
+        return
+
+    if not analysis_report.strip():
+        print("⚠️ Nenhum dado para salvar (Relatório vazio)")
+        return
 
     try:
-        try:
-            state = get_state()
-        except RuntimeError:
-            state = None
-
-        if state is not None:
-            user_story = state.user_story or ""
-            analysis_report = state.analysis_report or ""
-            test_plan_report = state.test_plan_report or ""
-            existing_id = state.saved_history_id if update_existing else None
-        else:
-            user_story, analysis_report, test_plan_report, existing_id = _get_session_fallback()
-
-        fallback_user_story, fallback_analysis, fallback_plan, fallback_existing = _get_session_fallback()
-
-        if not (user_story and user_story.strip()):
-            user_story = fallback_user_story
-
-        if not (analysis_report and analysis_report.strip()):
-            analysis_report = fallback_analysis
-
-        if not test_plan_report:
-            test_plan_report = fallback_plan
-
-        if update_existing and not existing_id:
-            existing_id = fallback_existing
-
-        if not (user_story and user_story.strip()):
-            print("⚠️ Nenhum dado para salvar (User Story vazia)")
-            return
-
-        if not (analysis_report and analysis_report.strip()):
-            print("⚠️ Nenhum dado para salvar (Relatório vazio)")
-            return
-
         history_id = save_or_update_analysis(
             user_story=user_story,
             analysis_report=analysis_report,
-            test_plan_report=test_plan_report or "",
+            test_plan_report=test_plan_report,
             existing_id=existing_id,
         )
-
-        st.session_state["last_saved_id"] = history_id
-        st.session_state["history_saved"] = True
-
-        if state is not None:
-            state.mark_as_saved(history_id)
-
-        print(f"💾 Análise persistida: ID {history_id}")
-
-    except Exception as exc:  # noqa: BLE001 - queremos reportar qualquer falha
+    except Exception as exc:
         print(f"❌ Erro ao salvar: {exc}")
         level = "error" if isinstance(exc, sqlite3.Error) else "warning"
         announce(
@@ -201,6 +216,15 @@ def _save_current_analysis_to_history(update_existing: bool = False):
             level,
             st_api=st,
         )
+        return
+
+    st.session_state["last_saved_id"] = history_id
+    st.session_state["history_saved"] = True
+
+    if state is not None:
+        state.mark_as_saved(history_id)
+
+    print(f"💾 Análise persistida: ID {history_id}")
 
 
 def save_analysis_to_history(update_existing: bool = False):
@@ -265,6 +289,7 @@ def _render_main_analysis_page_legacy():  # noqa: C901, PLR0912, PLR0915
     """Implementa o comportamento legado esperado pelos testes unitários."""
 
     session = st.session_state
+    should_stop = False
 
     session.setdefault("analysis_state", None)
     session.setdefault("analysis_finished", False)
@@ -282,26 +307,28 @@ def _render_main_analysis_page_legacy():  # noqa: C901, PLR0912, PLR0915
         user_story = session.get("user_story_input", "").strip()
         if not user_story:
             st.warning("Por favor, insira uma User Story antes de analisar.")
-            return
-
-        with st.spinner("🔍 Analisando a User Story..."):
-            try:
-                resultado = run_analysis_graph(user_story)
-            except Exception as exc:  # noqa: BLE001
-                print(f"❌ Falha na análise: {exc}")
-                st.error("Não foi possível analisar a User Story.")
-                return
-
-        session["analysis_state"] = resultado or {}
-        session["analysis_state"]["user_story"] = user_story
-        session["analysis_finished"] = False
-        session["show_generate_plan_button"] = False
-        session.pop("test_plan_report", None)
-        session.pop("test_plan_df", None)
-        session.pop("pdf_report_bytes", None)
-        session.pop("last_saved_id", None)
-        session["history_saved"] = False
-        st.success("Análise gerada! Revise e edite antes de prosseguir.")
+            should_stop = True
+        else:
+            with st.spinner("🔍 Analisando a User Story..."):
+                try:
+                    resultado = run_analysis_graph(user_story)
+                except Exception as exc:
+                    print(f"❌ Falha na análise: {exc}")
+                    st.error("Não foi possível analisar a User Story.")
+                    should_stop = True
+                else:
+                    session["analysis_state"] = resultado or {}
+                    session["analysis_state"]["user_story"] = user_story
+                    session["analysis_finished"] = False
+                    session["show_generate_plan_button"] = False
+                    session.pop("test_plan_report", None)
+                    session.pop("test_plan_df", None)
+                    session.pop("pdf_report_bytes", None)
+                    session.pop("last_saved_id", None)
+                    session["history_saved"] = False
+                    st.success("Análise gerada! Revise e edite antes de prosseguir.")
+                    should_stop = True
+    if should_stop:
         return
 
     analysis_state = session.get("analysis_state")
@@ -410,7 +437,6 @@ def _render_main_analysis_page_legacy():  # noqa: C901, PLR0912, PLR0915
                 session["show_generate_plan_button"] = True
                 st.success("Análise refinada salva com sucesso!")
                 st.rerun()
-                return
 
         if session.get("show_generate_plan_button"):
             with st.expander("📘 Análise Refinada da User Story", expanded=False):
@@ -479,9 +505,8 @@ def _render_main_analysis_page_legacy():  # noqa: C901, PLR0912, PLR0915
                         session["analysis_finished"] = True
                         st.success("Plano de Testes gerado com sucesso!")
                         st.rerun()
-                        return
 
-                    except Exception as exc:  # noqa: BLE001
+                    except Exception as exc:
                         print(f"❌ Falha na geração do plano de testes: {exc}")
                         st.error(
                             "O Oráculo não conseguiu gerar um plano de testes estruturado."
@@ -493,7 +518,6 @@ def _render_main_analysis_page_legacy():  # noqa: C901, PLR0912, PLR0915
                         _save_current_analysis_to_history()
                         session["history_saved"] = True
                         st.rerun()
-                        return
 
             encerrar_clicked = col2.button("Não, Encerrar", use_container_width=True)
 
@@ -516,7 +540,6 @@ def _render_main_analysis_page_legacy():  # noqa: C901, PLR0912, PLR0915
                 session["history_saved"] = True
                 session["analysis_finished"] = True
                 st.rerun()
-                return
 
     if session.get("analysis_finished"):
         st.success("Análise concluída com sucesso!")

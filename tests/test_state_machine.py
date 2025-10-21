@@ -7,7 +7,6 @@ import pytest
 
 from state_machine import AnalysisStage, AnalysisState
 
-
 # Constantes de apoio para evitar valores mágicos
 PROGRESS_INITIAL = 0
 PROGRESS_ANALYZING = 25
