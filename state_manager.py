@@ -33,6 +33,24 @@ def initialize_state():
         st.session_state[_STATE_KEY] = AnalysisState()
         print("🆕 Estado inicializado com valores padrão")
 
+    defaults = {
+        "analysis_finished": False,
+        "analysis_state": None,
+        "test_plan_report": None,
+        "test_plan_df": None,
+        "pdf_report_bytes": None,
+        "show_generate_plan_button": False,
+        "user_story_input": "",
+        "area_path_input": "",
+        "assigned_to_input": "",
+        "jira_priority": "Medium",
+        "jira_labels": "QA-Oraculo",
+        "jira_description": "Caso de teste gerado pelo QA Oráculo.",
+    }
+
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
+
     # Migração de estados legados (compatibilidade retroativa)
     _migrate_legacy_state()
 
@@ -72,19 +90,14 @@ def reset_session():
         st.session_state[_STATE_KEY].reset_completely()
         print("🔄 Estado resetado para nova análise")
 
-    # Remove flags legadas se existirem
-    legacy_keys = [
-        "analysis_finished",
-        "show_generate_plan_button",
-        "history_saved",
-        "last_saved_id",
-        "confirm_delete_id",
-        "confirm_clear_all",
-    ]
+    preserved_prefixes = ("FormSubmitter:",)
 
-    for key in legacy_keys:
-        if key in st.session_state:
-            del st.session_state[key]
+    for key in list(st.session_state.keys()):
+        if key == _STATE_KEY:
+            continue
+        if any(key.startswith(prefix) for prefix in preserved_prefixes):
+            continue
+        del st.session_state[key]
 
 
 def update_user_story(user_story: str):
