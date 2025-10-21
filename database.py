@@ -19,6 +19,8 @@
 # ==========================================================
 import datetime
 import sqlite3
+import threading
+from contextlib import contextmanager
 
 # Adaptador: Python datetime -> str
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat())
@@ -29,6 +31,136 @@ sqlite3.register_converter(
 )
 
 DB_NAME = "qa_oraculo_history.db"
+
+
+# Lock global para garantir atomicidade em ambientes multi-thread
+_save_lock = threading.Lock()
+
+
+@contextmanager
+def atomic_transaction():
+    """
+    Context manager para operações atômicas no banco.
+
+    Garante que múltiplas escritas simultâneas não corrompam dados.
+    Faz rollback automático em caso de erro.
+
+    Uso:
+        with atomic_transaction() as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT ...")
+            # commit automático ao sair do bloco
+    """
+    with _save_lock:
+        conn = get_db_connection()
+        try:
+            yield conn
+            conn.commit()
+            print("✅ Transação commitada com sucesso")
+        except Exception as e:
+            conn.rollback()
+            print(f"❌ Erro na transação, rollback executado: {e}")
+            raise
+        finally:
+            conn.close()
+
+
+def save_or_update_analysis(
+    user_story: str,
+    analysis_report: str,
+    test_plan_report: str | None = None,
+    existing_id: int | None = None,
+) -> int:
+    """
+    Salva ou atualiza análise de forma atômica e segura.
+
+    VANTAGENS sobre save_analysis_to_history():
+    - ✅ Transação atômica (thread-safe)
+    - ✅ Atualização em linha (sem duplicação)
+    - ✅ Retorna ID do registro
+    - ✅ Validação de campos obrigatórios
+
+    Args:
+        user_story: Texto da User Story (obrigatório)
+        analysis_report: Relatório de análise (obrigatório)
+        test_plan_report: Plano de testes (opcional)
+        existing_id: ID para atualizar (None = novo registro)
+
+    Returns:
+        int: ID do registro salvo/atualizado
+
+    Raises:
+        ValueError: Se user_story ou analysis_report estiverem vazios
+        sqlite3.Error: Em caso de erro no banco
+    """
+    # Validação de entrada
+    if not user_story or not user_story.strip():
+        raise ValueError("User Story não pode estar vazia")
+
+    if not analysis_report or not analysis_report.strip():
+        raise ValueError("Relatório de análise não pode estar vazio")
+
+    # Sanitização (mantém compatibilidade com código legado)
+    user_story = user_story.strip()
+    analysis_report = analysis_report.strip()
+    test_plan_report = (test_plan_report or "").strip()
+
+    with atomic_transaction() as conn:
+        cursor = conn.cursor()
+        timestamp = datetime.datetime.now()
+
+        if existing_id:
+            # ATUALIZAÇÃO de registro existente
+            cursor.execute(
+                """
+                UPDATE analysis_history
+                SET created_at = ?,
+                    user_story = ?,
+                    analysis_report = ?,
+                    test_plan_report = ?
+                WHERE id = ?
+                """,
+                (timestamp, user_story, analysis_report, test_plan_report, existing_id),
+            )
+
+            if cursor.rowcount == 0:
+                raise ValueError(f"Registro com ID {existing_id} não existe")
+
+            print(f"♻️ Registro {existing_id} atualizado em {timestamp}")
+            return existing_id
+
+        else:
+            # CRIAÇÃO de novo registro
+            cursor.execute(
+                """
+                INSERT INTO analysis_history
+                (created_at, user_story, analysis_report, test_plan_report)
+                VALUES (?, ?, ?, ?)
+                """,
+                (timestamp, user_story, analysis_report, test_plan_report),
+            )
+
+            new_id = cursor.lastrowid
+            print(f"💾 Novo registro criado: ID {new_id} em {timestamp}")
+            return new_id
+
+
+# ==========================================================
+# FUNÇÃO DE MIGRAÇÃO
+# ==========================================================
+def migrate_to_atomic_saves():
+    """
+    Função helper para migrar código legado que usa save_analysis_to_history().
+
+    Não precisa ser chamada diretamente, apenas documentação.
+
+    ANTES (código legado):
+        save_analysis_to_history(us, analysis, plan)
+
+    DEPOIS (novo código):
+        history_id = save_or_update_analysis(us, analysis, plan)
+        state.mark_as_saved(history_id)
+    """
 
 
 def get_db_connection():

@@ -14,8 +14,6 @@
 #   • Comentários didáticos onde a lógica não for óbvia
 # ==========================================================
 
-import datetime
-import sqlite3
 
 import pandas as pd
 import streamlit as st
@@ -41,6 +39,7 @@ from database import (
     get_all_analysis_history,
     get_analysis_by_id,
     init_db,
+    save_or_update_analysis,  # Nova função atômica
 )
 
 # Grafos de IA (LangGraph) — invocados nas funções cacheadas
@@ -48,9 +47,10 @@ from graph import grafo_analise, grafo_plano_testes
 
 # Gerador de PDF — consolida análise e plano de testes em um relatório
 from pdf_generator import generate_pdf_report
+from state_machine import AnalysisStage
 
 # Estado global e reset — para nova análise sem resquícios
-from state_manager import initialize_state, reset_session
+from state_manager import get_state, initialize_state, reset_session, update_user_story
 
 # Utilitários — helpers de exportação, normalização e formatação
 from utils import (
@@ -112,107 +112,46 @@ def _ensure_bytes(data):
 # ==========================================================
 # 헬 Auxiliar: Salva a análise atual no histórico (CORRIGIDO)
 # ==========================================================
-def _save_current_analysis_to_history(update_existing: bool = False):
+def _save_current_analysis_to_history():
     """
-    Extrai os dados da sessão atual e salva ou atualiza no histórico.
+    Salva análise atual usando a nova função atômica.
 
-    🔧 NOVO COMPORTAMENTO:
-    - Se update_existing=False → cria um novo registro (modo padrão)
-    - Se update_existing=True  → atualiza o registro já salvo no histórico
-
-    💡 O ID do último registro salvo é armazenado em st.session_state["last_saved_id"].
+    MUDANÇAS:
+    - Usa get_state() ao invés de session_state direto
+    - Usa save_or_update_analysis() (thread-safe)
+    - Remove flag manual "history_saved"
     """
-
     try:
-        user_story_from_input = st.session_state.get("user_story_input") or ""
-        user_story_from_state = (
-            st.session_state.get("analysis_state", {}).get("user_story") or ""
-        )
+        state = get_state()
 
-        user_story_to_save = (
-            user_story_from_input.strip()
-            or user_story_from_state.strip()
-            or "⚠️ User Story não disponível."
-        )
-
-        analysis_report = st.session_state.get("analysis_state", {}).get(
-            "relatorio_analise_inicial"
-        )
-        analysis_report_to_save = (analysis_report or "").strip()
-
-        test_plan_report = st.session_state.get("test_plan_report")
-        test_plan_report_to_save = (test_plan_report or "").strip()
-
-        # 🔍 Validação mínima
-        if not any(
-            [
-                user_story_to_save
-                and user_story_to_save != "⚠️ User Story não disponível.",
-                analysis_report_to_save,
-                test_plan_report_to_save,
-            ]
-        ):
-            print("⚠️ Nenhum dado válido para salvar no histórico.")
+        # Validação: só salva se houver dados válidos
+        if not state.user_story.strip():
+            print("⚠️ Nenhum dado para salvar (User Story vazia)")
             return
 
-        from database import get_db_connection  # evita dependência circular
+        # Prepara dados para salvamento
+        user_story = state.user_story
+        analysis_report = state.analysis_report or "⚠️ Relatório não disponível"
+        test_plan_report = state.test_plan_report or ""
 
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            timestamp = datetime.datetime.now()
-
-            # --- Se já houver registro e pedimos update_existing=True, atualiza ---
-            if update_existing and st.session_state.get("last_saved_id"):
-                cursor.execute(
-                    """
-                    UPDATE analysis_history
-                    SET created_at = ?, user_story = ?, analysis_report = ?, test_plan_report = ?
-                    WHERE id = ?;
-                    """,
-                    (
-                        timestamp,
-                        user_story_to_save,
-                        analysis_report_to_save,
-                        test_plan_report_to_save,
-                        st.session_state["last_saved_id"],
-                    ),
-                )
-                print(
-                    f"♻️ Registro existente atualizado (ID {st.session_state['last_saved_id']}) em {timestamp}"
-                )
-            else:
-                # Caso contrário, cria um novo registro
-                cursor.execute(
-                    """
-                    INSERT INTO analysis_history (created_at, user_story, analysis_report, test_plan_report)
-                    VALUES (?, ?, ?, ?);
-                    """,
-                    (
-                        timestamp,
-                        user_story_to_save,
-                        analysis_report_to_save,
-                        test_plan_report_to_save,
-                    ),
-                )
-                st.session_state["last_saved_id"] = cursor.lastrowid
-                st.session_state["history_saved"] = True
-                print(f"💾 Análise salva no histórico em {timestamp}")
-
-            conn.commit()
-
-    except sqlite3.Error as db_error:
-        print(f"❌ Erro de banco de dados ao salvar: {db_error}")
-        announce(
-            "Erro ao salvar no banco de dados. Verifique o arquivo de log.",
-            "error",
-            st_api=st,
+        # Salvamento atômico
+        history_id = save_or_update_analysis(
+            user_story=user_story,
+            analysis_report=analysis_report,
+            test_plan_report=test_plan_report,
+            existing_id=state.saved_history_id,  # None = novo, int = update
         )
+
+        # Atualiza estado com ID do histórico
+        state.mark_as_saved(history_id)
+
+        print(f"💾 Análise persistida: ID {history_id}")
+
     except Exception as e:
-        print(f"❌ Erro inesperado ao salvar no histórico: {e}")
+        print(f"❌ Erro ao salvar: {e}")
         announce(
-            "Ocorreu um erro ao salvar ou atualizar a análise no histórico, "
-            "mas o fluxo principal não foi interrompido.",
-            "warning",
+            "Não foi possível salvar no histórico. Verifique os logs.",
+            "error",
             st_api=st,
         )
 
@@ -274,57 +213,32 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     # ------------------------------------------------------
     # 1) Entrada e execução da análise inicial
     # ------------------------------------------------------
-    if not st.session_state.get("analysis_finished", False):
+    state = get_state()
 
-        # Se ainda não há análise no estado, exibimos o input inicial
-        if not st.session_state.get("analysis_state"):
-            accessible_text_area(
-                label="Insira a User Story aqui:",
-                key="user_story_input",
-                height=250,
-                help_text="Digite ou cole sua User Story no formato: Como [persona], quero [ação], para [objetivo].",
-                placeholder="Exemplo: Como usuário do app, quero redefinir minha senha via email...",
-                st_api=st,
-            )
+    # 🎯 Roteamento baseado no estágio atual
+    if state.stage == AnalysisStage.INITIAL:
+        # Renderiza formulário de entrada
+        _render_input_form(state)
 
-            if getattr(st.text_area, "__module__", "").startswith("unittest.mock"):
-                st.text_area(
-                    "Insira a User Story aqui:",
-                    height=250,
-                    key="user_story_input",
-                )
+    elif state.stage == AnalysisStage.ANALYZING:
+        # Mostra spinner enquanto IA processa
+        _render_analyzing_state(state)
 
-            # Botão que dispara a análise inicial usando o grafo
-            if accessible_button(
-                label="Analisar User Story",
-                key="btn_analyze",
-                context="Inicia a análise de IA da User Story fornecida. Aguarde alguns segundos para o resultado.",
-                type="primary",
-                st_api=st,
-            ):
-                user_story_txt = st.session_state.get("user_story_input", "")
+    elif state.stage == AnalysisStage.EDITING_ANALYSIS:
+        # Permite edição dos resultados
+        _render_editing_form(state)
 
-                if user_story_txt.strip():
-                    with st.spinner(
-                        "🔮 O Oráculo está realizando a análise inicial..."
-                    ):
-                        resultado_analise = run_analysis_graph(user_story_txt)
+    elif state.stage == AnalysisStage.GENERATING_PLAN:
+        # Mostra spinner durante geração do plano
+        _render_generating_plan_state(state)
 
-                        # Guarda o resultado bruto da IA para edição posterior
-                        st.session_state["analysis_state"] = resultado_analise
+    elif state.stage == AnalysisStage.COMPLETED:
+        # Exibe resultados finais + exportações
+        _render_completed_state(state)
 
-                        # Enquanto a edição não é confirmada, não mostramos o botão de gerar o plano
-                        st.session_state["show_generate_plan_button"] = False
-
-                        # Re-renderiza a página para exibir a seção de edição
-                        st.rerun()
-                else:
-                    announce(
-                        "Por favor, insira uma User Story antes de analisar.",
-                        "warning",
-                        st_api=st,
-                    )
-
+    elif state.stage == AnalysisStage.ERROR:
+        # Mostra erro + botão de retry
+        _render_error_state(state)
         # ------------------------------------------------------
         # 2) Edição dos blocos gerados pela IA
         # ------------------------------------------------------
@@ -848,11 +762,302 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
         )
 
 
+def _render_input_form(state: AnalysisState):
+    """Renderiza formulário inicial de entrada da User Story"""
+    accessible_text_area(
+        label="Insira a User Story aqui:",
+        key="user_story_input",
+        height=250,
+        help_text="Digite ou cole sua User Story",
+        placeholder="Exemplo: Como usuário do app...",
+        st_api=st,
+    )
+
+    if accessible_button(
+        label="Analisar User Story",
+        key="btn_analyze",
+        context="Inicia análise de IA",
+        type="primary",
+        st_api=st,
+    ):
+        user_story = st.session_state.get("user_story_input", "")
+
+        if not user_story.strip():
+            announce("Insira uma User Story antes de analisar", "warning", st_api=st)
+            return
+
+        # Atualiza estado e inicia análise
+        update_user_story(user_story)
+
+        try:
+            state.start_analysis()
+            st.rerun()  # Força re-renderização no estado ANALYZING
+        except ValueError as e:
+            announce(f"Erro de validação: {e}", "error", st_api=st)
+
+
+def _render_analyzing_state(state: AnalysisState):
+    """Mostra spinner enquanto IA analisa"""
+    with st.spinner("🔮 O Oráculo está analisando..."):
+        try:
+            resultado = run_analysis_graph(state.user_story)
+
+            # Valida estrutura da resposta
+            if not resultado.get("analise_da_us"):
+                raise ValueError("Resposta da IA incompleta")
+
+            state.complete_analysis(
+                analysis_data=resultado.get("analise_da_us", {}),
+                analysis_report=resultado.get("relatorio_analise_inicial", ""),
+            )
+
+            st.rerun()  # Vai para EDITING_ANALYSIS
+
+        except Exception as e:
+            state.set_error(f"Falha na análise: {e!s}")
+            st.rerun()
+
+
+def _render_editing_form(state: AnalysisState):
+    """Renderiza formulário de edição da análise"""
+    announce("🔮 Revise e edite a análise antes de continuar", "info", st_api=st)
+
+    # Extrai dados da análise (com fallbacks seguros)
+    analise_json = state.analysis_data or {}
+
+    avaliacao_str = get_flexible(analise_json, ["avaliacao_geral"], "")
+    pontos_list = get_flexible(analise_json, ["pontos_ambiguos"], [])
+    perguntas_list = get_flexible(analise_json, ["perguntas_para_po"], [])
+    criterios_list = get_flexible(analise_json, ["sugestao_criterios_aceite"], [])
+    riscos_list = get_flexible(analise_json, ["riscos_e_dependencias"], [])
+
+    # Converte listas em strings
+    pontos_str = "\n".join(pontos_list)
+    perguntas_str = "\n".join(perguntas_list)
+    criterios_str = "\n".join(criterios_list)
+    riscos_str = "\n".join(riscos_list)
+
+    # Formulário de edição
+    with st.form(key="analysis_edit_form"):
+        st.subheader("📝 Análise Editável")
+
+        accessible_text_area(
+            label="Avaliação Geral",
+            key="edit_avaliacao",
+            height=75,
+            value=avaliacao_str,
+            help_text="Descreva o entendimento geral da User Story",
+            st_api=st,
+        )
+
+        accessible_text_area(
+            label="Pontos Ambíguos",
+            key="edit_pontos",
+            height=125,
+            value=pontos_str,
+            help_text="Liste trechos que geram dúvidas",
+            st_api=st,
+        )
+
+        accessible_text_area(
+            label="Perguntas para o PO",
+            key="edit_perguntas",
+            height=125,
+            value=perguntas_str,
+            help_text="Perguntas para esclarecer requisitos",
+            st_api=st,
+        )
+
+        accessible_text_area(
+            label="Critérios de Aceite",
+            key="edit_criterios",
+            height=150,
+            value=criterios_str,
+            help_text="Critérios objetivos de conclusão",
+            st_api=st,
+        )
+
+        accessible_text_area(
+            label="Riscos e Dependências",
+            key="edit_riscos",
+            height=100,
+            value=riscos_str,
+            help_text="Riscos técnicos e dependências",
+            st_api=st,
+        )
+
+        submitted = st.form_submit_button("Salvar e Continuar")
+
+    if submitted:
+        # Atualiza dados editados no estado
+        state.analysis_data = {
+            "avaliacao_geral": st.session_state.get("edit_avaliacao", ""),
+            "pontos_ambiguos": [
+                l.strip()
+                for l in st.session_state.get("edit_pontos", "").split("\n")
+                if l.strip()
+            ],
+            "perguntas_para_po": [
+                l.strip()
+                for l in st.session_state.get("edit_perguntas", "").split("\n")
+                if l.strip()
+            ],
+            "sugestao_criterios_aceite": [
+                l.strip()
+                for l in st.session_state.get("edit_criterios", "").split("\n")
+                if l.strip()
+            ],
+            "riscos_e_dependencias": [
+                l.strip()
+                for l in st.session_state.get("edit_riscos", "").split("\n")
+                if l.strip()
+            ],
+        }
+
+        announce("Edições salvas com sucesso!", "success", st_api=st)
+        st.rerun()
+
+    # Botões de ação
+    st.divider()
+    col1, col2 = st.columns(2)
+
+    if col1.button(
+        "✅ Gerar Plano de Testes", type="primary", use_container_width=True
+    ):
+        try:
+            state.start_plan_generation()
+            st.rerun()
+        except ValueError as e:
+            announce(f"Erro: {e}", "error", st_api=st)
+
+    if col2.button("❌ Cancelar e Encerrar", use_container_width=True):
+        _save_current_analysis_to_history()
+        state.stage = AnalysisStage.COMPLETED
+        st.rerun()
+
+
+def _render_generating_plan_state(state: AnalysisState):
+    """Mostra spinner durante geração do plano"""
+    with st.spinner("🔮 Gerando plano de testes..."):
+        try:
+            # Prepara contexto para a IA
+            analysis_context = {
+                "user_story": state.user_story,
+                "analise_da_us": state.analysis_data,
+            }
+
+            resultado_plano = run_test_plan_graph(analysis_context)
+
+            # Valida resposta
+            casos = resultado_plano.get("plano_e_casos_de_teste", {}).get(
+                "casos_de_teste_gherkin", []
+            )
+
+            if not casos or not isinstance(casos, list):
+                raise ValueError("IA não retornou casos de teste válidos")
+
+            # Converte para DataFrame
+            df = pd.DataFrame(casos)
+            df = df.apply(
+                lambda col: col.apply(
+                    lambda x: "\n".join(map(str, x)) if isinstance(x, list) else x
+                )
+            )
+            df.fillna("", inplace=True)
+
+            # Gera PDF
+            pdf_bytes = generate_pdf_report(state.analysis_report, df)
+
+            # Atualiza estado
+            state.complete_plan_generation(
+                test_plan_data=resultado_plano.get("plano_e_casos_de_teste", {}),
+                test_plan_report=resultado_plano.get("relatorio_plano_de_testes", ""),
+                test_plan_df=df,
+                pdf_bytes=pdf_bytes,
+            )
+
+            # Salva automaticamente
+            _save_current_analysis_to_history()
+
+            announce("Plano gerado com sucesso!", "success", st_api=st)
+            st.rerun()
+
+        except Exception as e:
+            state.set_error(f"Falha ao gerar plano: {e!s}")
+            _save_current_analysis_to_history()  # Salva análise mesmo com erro no plano
+            st.rerun()
+
+
+def _render_error_state(state: AnalysisState):
+    """Renderiza tela de erro com opção de retry"""
+    announce(f"⚠️ Erro: {state.error_message}", "error", st_api=st)
+
+    col1, col2 = st.columns(2)
+
+    if col1.button("🔄 Tentar Novamente", type="primary", use_container_width=True):
+        state.reset_for_retry()
+        st.rerun()
+
+    if col2.button("🏠 Voltar ao Início", use_container_width=True):
+        reset_session()
+        st.rerun()
+
+
+def _render_completed_state(state: AnalysisState):
+    """Renderiza tela final com resultados e exportações"""
+    announce("✅ Análise concluída!", "success", st_api=st)
+
+    # Exibe análise
+    with st.expander("📘 Análise Refinada", expanded=False):
+        st.markdown(
+            clean_markdown_report(state.analysis_report), unsafe_allow_html=True
+        )
+
+    # Exibe casos de teste (se houver)
+    if state.test_plan_df is not None and not state.test_plan_df.empty:
+        st.markdown("### 📊 Casos de Teste")
+        st.dataframe(state.test_plan_df, use_container_width=True)
+
+    # Botões de download
+    st.divider()
+    st.subheader("📥 Downloads")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    # Markdown
+    relatorio_completo = f"{state.analysis_report}\n\n---\n\n{state.test_plan_report}"
+    col1.download_button(
+        "📄 Análise (.md)",
+        _ensure_bytes(relatorio_completo),
+        file_name=gerar_nome_arquivo_seguro(state.user_story, "md"),
+        use_container_width=True,
+    )
+
+    # PDF
+    if state.pdf_bytes:
+        col2.download_button(
+            "📄 Relatório (.pdf)",
+            _ensure_bytes(state.pdf_bytes),
+            file_name=gerar_nome_arquivo_seguro(state.user_story, "pdf"),
+            use_container_width=True,
+        )
+
+    # Botão de nova análise
+    st.divider()
+    if accessible_button(
+        label="🔄 Nova Análise",
+        key="btn_new_analysis",
+        context="Limpa resultados e inicia novo fluxo",
+        type="primary",
+        use_container_width=True,
+        st_api=st,
+    ):
+        reset_session()
+        st.rerun()
+
+
 # ==========================================================
 # 🗂️ Página de Histórico — Visualização e Exclusão
-# ==========================================================
-# ==========================================================
-# 🗂️ Página de Histórico — VERSÃO CORRIGIDA COMPLETA
 # ==========================================================
 def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
     """
@@ -1279,7 +1484,8 @@ def main():
     # 🧱 Inicialização de banco e estado
     # ------------------------------------------------------
     init_db()
-    initialize_state()
+    initialize_state()  # Inicializa state machine
+    # debug_state()  # Descomente para debug
     # ------------------------------------------------------
     # ♿ Acessibilidade global
     # ------------------------------------------------------
