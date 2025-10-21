@@ -100,6 +100,20 @@ def test_accessible_text_area_sem_help_text():
     assert "Use Tab" in call_args[1]["help"]
 
 
+def test_accessible_text_area_exige_label_e_key():
+    """label e key são obrigatórios para evitar componentes sem identificação."""
+
+    with pytest.raises(
+        TypeError, match="accessible_text_area\(\) requires 'label' and 'key' parameters."
+    ):
+        a11y.accessible_text_area(label=None, key="informado", st_api=MagicMock())
+
+    with pytest.raises(
+        TypeError, match="accessible_text_area\(\) requires 'label' and 'key' parameters."
+    ):
+        a11y.accessible_text_area(label="Rótulo", key=None, st_api=MagicMock())
+
+
 def test_accessible_button_com_st_mockado():
     """Valida que accessible_button funciona com mock."""
     mock_st = MagicMock()
@@ -164,6 +178,21 @@ def test_announce_nivel_invalido_usa_info():
 
     # Deve usar info como fallback
     mock_st.info.assert_called_once_with("Teste")
+
+
+# ==========================================================
+# TESTES DO BLOCO __main__
+# ==========================================================
+def test_a11y_main_block_imprime_comandos(capsys):
+    """Executa o módulo como script para validar mensagens educativas."""
+
+    import runpy
+
+    runpy.run_module("a11y", run_name="__main__")
+
+    captured = capsys.readouterr()
+    assert "Módulo de acessibilidade" in captured.out
+    assert "apply_accessible_styles" in captured.out
 
 
 # ==========================================================
