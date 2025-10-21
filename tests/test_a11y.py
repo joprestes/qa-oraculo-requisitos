@@ -104,12 +104,14 @@ def test_accessible_text_area_exige_label_e_key():
     """label e key são obrigatórios para evitar componentes sem identificação."""
 
     with pytest.raises(
-        TypeError, match="accessible_text_area\(\) requires 'label' and 'key' parameters."
+        TypeError,
+        match=r"accessible_text_area\(\) requires 'label' and 'key' parameters.",
     ):
         a11y.accessible_text_area(label=None, key="informado", st_api=MagicMock())
 
     with pytest.raises(
-        TypeError, match="accessible_text_area\(\) requires 'label' and 'key' parameters."
+        TypeError,
+        match=r"accessible_text_area\(\) requires 'label' and 'key' parameters.",
     ):
         a11y.accessible_text_area(label="Rótulo", key=None, st_api=MagicMock())
 
