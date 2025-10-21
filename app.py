@@ -47,7 +47,7 @@ from graph import grafo_analise, grafo_plano_testes
 
 # Gerador de PDF — consolida análise e plano de testes em um relatório
 from pdf_generator import generate_pdf_report
-from state_machine import AnalysisStage
+from state_machine import AnalysisStage, AnalysisState
 
 # Estado global e reset — para nova análise sem resquícios
 from state_manager import get_state, initialize_state, reset_session, update_user_story
@@ -893,24 +893,24 @@ def _render_editing_form(state: AnalysisState):
         state.analysis_data = {
             "avaliacao_geral": st.session_state.get("edit_avaliacao", ""),
             "pontos_ambiguos": [
-                l.strip()
-                for l in st.session_state.get("edit_pontos", "").split("\n")
-                if l.strip()
+                line.strip()
+                for line in st.session_state.get("edit_pontos", "").split("\n")
+                if line.strip()
             ],
             "perguntas_para_po": [
-                l.strip()
-                for l in st.session_state.get("edit_perguntas", "").split("\n")
-                if l.strip()
+                line.strip()
+                for line in st.session_state.get("edit_perguntas", "").split("\n")
+                if line.strip()
             ],
             "sugestao_criterios_aceite": [
-                l.strip()
-                for l in st.session_state.get("edit_criterios", "").split("\n")
-                if l.strip()
+                line.strip()
+                for line in st.session_state.get("edit_criterios", "").split("\n")
+                if line.strip()
             ],
             "riscos_e_dependencias": [
-                l.strip()
-                for l in st.session_state.get("edit_riscos", "").split("\n")
-                if l.strip()
+                line.strip()
+                for line in st.session_state.get("edit_riscos", "").split("\n")
+                if line.strip()
             ],
         }
 
@@ -1022,7 +1022,7 @@ def _render_completed_state(state: AnalysisState):
     st.divider()
     st.subheader("📥 Downloads")
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, _col3, _col4 = st.columns(4)
 
     # Markdown
     relatorio_completo = f"{state.analysis_report}\n\n---\n\n{state.test_plan_report}"

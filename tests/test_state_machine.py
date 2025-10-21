@@ -8,6 +8,22 @@ import pytest
 from state_machine import AnalysisStage, AnalysisState
 
 
+# Constantes de apoio para evitar valores mágicos
+PROGRESS_INITIAL = 0
+PROGRESS_ANALYZING = 25
+PROGRESS_EDITING = 50
+PROGRESS_GENERATING_PLAN = 75
+PROGRESS_COMPLETED = 100
+
+PRIMARY_HISTORY_ID = 42
+SECONDARY_HISTORY_ID = 10
+
+USER_STORY_LOGIN = "Como usuário, quero fazer login"
+USER_STORY_LOGIN_LENGTH = len(USER_STORY_LOGIN)
+
+EXPECTED_TEST_PLAN_ROWS = 2
+
+
 class TestAnalysisState:
     """Suite de testes para AnalysisState"""
 
@@ -19,7 +35,7 @@ class TestAnalysisState:
         assert state.user_story == ""
         assert state.analysis_data is None
         assert state.saved_history_id is None
-        assert state.get_progress_percentage() == 0
+        assert state.get_progress_percentage() == PROGRESS_INITIAL
 
     def test_cannot_start_analysis_without_user_story(self):
         """Não deve permitir análise sem User Story"""
@@ -33,7 +49,7 @@ class TestAnalysisState:
     def test_valid_analysis_flow(self):
         """Fluxo completo válido deve funcionar"""
         state = AnalysisState()
-        state.user_story = "Como usuário, quero fazer login"
+        state.user_story = USER_STORY_LOGIN
 
         # 1. Iniciar análise
         assert state.can_start_analysis()
@@ -55,7 +71,7 @@ class TestAnalysisState:
 
         assert state.stage == AnalysisStage.COMPLETED
         assert state.can_export()
-        assert state.get_progress_percentage() == 100
+        assert state.get_progress_percentage() == PROGRESS_COMPLETED
 
     def test_cannot_skip_stages(self):
         """Não deve permitir pular etapas"""
@@ -90,17 +106,17 @@ class TestAnalysisState:
 
         assert not state.is_saved()
 
-        state.mark_as_saved(42)
+        state.mark_as_saved(PRIMARY_HISTORY_ID)
 
         assert state.is_saved()
-        assert state.saved_history_id == 42
+        assert state.saved_history_id == PRIMARY_HISTORY_ID
 
     def test_complete_reset(self):
         """Reset completo deve limpar tudo"""
         state = AnalysisState()
         state.user_story = "teste"
         state.analysis_data = {"key": "value"}
-        state.saved_history_id = 10
+        state.saved_history_id = SECONDARY_HISTORY_ID
 
         state.reset_completely()
 
@@ -125,14 +141,14 @@ class TestAnalysisState:
     def test_to_dict_serialization(self):
         """Serialização para dict deve funcionar"""
         state = AnalysisState()
-        state.user_story = "Como usuário, quero fazer login"
+        state.user_story = USER_STORY_LOGIN
 
         data = state.to_dict()
 
         assert data["stage"] == "INITIAL"
-        assert data["user_story_length"] == 31
+        assert data["user_story_length"] == USER_STORY_LOGIN_LENGTH
         assert data["has_analysis"] is False
-        assert data["progress"] == 0
+        assert data["progress"] == PROGRESS_INITIAL
 
 
 class TestAnalysisStageTransitions:
@@ -170,11 +186,11 @@ class TestAnalysisStageTransitions:
         state.user_story = "teste"
 
         # Marcar como salvo múltiplas vezes deve manter o ID
-        state.mark_as_saved(10)
-        state.mark_as_saved(10)
-        state.mark_as_saved(10)
+        state.mark_as_saved(SECONDARY_HISTORY_ID)
+        state.mark_as_saved(SECONDARY_HISTORY_ID)
+        state.mark_as_saved(SECONDARY_HISTORY_ID)
 
-        assert state.saved_history_id == 10
+        assert state.saved_history_id == SECONDARY_HISTORY_ID
 
         # Chamar can_* múltiplas vezes não deve alterar estado
         initial_stage = state.stage
@@ -245,11 +261,11 @@ class TestIntegrationFlows:
 
         # 1. Usuário digita User Story
         state.user_story = "Como admin, quero gerenciar usuários"
-        assert state.get_progress_percentage() == 0
+        assert state.get_progress_percentage() == PROGRESS_INITIAL
 
         # 2. Inicia análise
         state.start_analysis()
-        assert state.get_progress_percentage() == 25
+        assert state.get_progress_percentage() == PROGRESS_ANALYZING
 
         # 3. IA retorna análise
         state.complete_analysis(
@@ -259,14 +275,14 @@ class TestIntegrationFlows:
             },
             analysis_report="# Análise\n\nPontos ambíguos encontrados...",
         )
-        assert state.get_progress_percentage() == 50
+        assert state.get_progress_percentage() == PROGRESS_EDITING
 
         # 4. Usuário confirma edições (implícito)
         assert state.can_generate_plan()
 
         # 5. Gera plano de testes
         state.start_plan_generation()
-        assert state.get_progress_percentage() == 75
+        assert state.get_progress_percentage() == PROGRESS_GENERATING_PLAN
 
         # 6. IA retorna plano
         test_df = pd.DataFrame(
@@ -283,7 +299,7 @@ class TestIntegrationFlows:
             pdf_bytes=b"%PDF-1.4...",
         )
 
-        assert state.get_progress_percentage() == 100
+        assert state.get_progress_percentage() == PROGRESS_COMPLETED
         assert state.can_export()
 
         # 7. Salvamento
@@ -291,7 +307,7 @@ class TestIntegrationFlows:
         assert state.is_saved()
 
         # Validações finais
-        assert len(state.test_plan_df) == 2
+        assert len(state.test_plan_df) == EXPECTED_TEST_PLAN_ROWS
         assert state.pdf_bytes is not None
 
     def test_analysis_failure_and_retry(self):
