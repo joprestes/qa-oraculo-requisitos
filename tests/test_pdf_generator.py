@@ -91,7 +91,10 @@ def test_add_test_case_table_normaliza_cenario_lista():
     add_test_case_table(mock_pdf, df)
 
     # O multi_cell final deve conter a junção dos passos separados por quebras de linha
-    assert any("Dado\nQuando\nEntão" in str(call.args[2]) for call in mock_pdf.multi_cell.call_args_list)
+    assert any(
+        "Dado\nQuando\nEntão" in str(call.args[2])
+        for call in mock_pdf.multi_cell.call_args_list
+    )
 
 
 # ===================================================================

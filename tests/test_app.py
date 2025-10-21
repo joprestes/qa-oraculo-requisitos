@@ -383,7 +383,10 @@ def test_render_main_page_gera_plano_com_sucesso(mocked_st):
 
     assert mocked_st.session_state["analysis_finished"] is True
     assert mocked_st.session_state["history_saved"] is True
-    assert mocked_st.session_state["test_plan_df"].iloc[0]["cenario"] == "Dado\nQuando\nEntão"
+    assert (
+        mocked_st.session_state["test_plan_df"].iloc[0]["cenario"]
+        == "Dado\nQuando\nEntão"
+    )
     assert mocked_st.session_state["pdf_report_bytes"] == b"pdf-gerado"
     mock_save.assert_called_once()
     mocked_st.rerun.assert_called()
@@ -623,7 +626,9 @@ def test_render_history_page_impl_cancela_exclusao(
 
     mock_delete.assert_not_called()
     assert "confirm_delete_id" not in mock_st.session_state
-    mock_announce.assert_any_call("Nenhuma exclusão foi realizada.", "info", st_api=mock_st)
+    mock_announce.assert_any_call(
+        "Nenhuma exclusão foi realizada.", "info", st_api=mock_st
+    )
     mock_st.rerun.assert_called_once()
 
 
@@ -665,7 +670,9 @@ def test_render_history_page_impl_confirma_limpeza_total(
 
     mock_clear_history.assert_called_once()
     assert "confirm_clear_all" not in mock_st.session_state
-    mock_announce.assert_any_call("3 análises foram removidas.", "success", st_api=mock_st)
+    mock_announce.assert_any_call(
+        "3 análises foram removidas.", "success", st_api=mock_st
+    )
     mock_st.rerun.assert_called_once()
 
 
