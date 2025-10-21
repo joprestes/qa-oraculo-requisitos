@@ -12,6 +12,8 @@
 from datetime import datetime
 from typing import Any
 
+import math
+
 import matplotlib.font_manager as fm
 import pandas as pd
 from fpdf import FPDF
@@ -81,8 +83,22 @@ class PDF(FPDF):
 # ==========================================================
 # Funções auxiliares
 # ==========================================================
-def clean_text_for_pdf(text: str) -> str:
-    """Limpa emojis e garante que o texto seja uma string."""
+def clean_text_for_pdf(text: Any) -> str:
+    """Limpa emojis, trata valores ausentes e garante que o texto seja uma string."""
+    if text is None:
+        return ""
+
+    # Trata valores especiais como NaN ou pd.NA retornando string vazia
+    if isinstance(text, float) and math.isnan(text):
+        return ""
+
+    try:
+        if pd.isna(text):  # type: ignore[arg-type]
+            return ""
+    except TypeError:
+        # Tipos não suportados por pd.isna seguem o fluxo normal
+        pass
+
     text = str(text)
     replacements = {
         "📌": "- ",
@@ -131,62 +147,90 @@ def add_section_title(pdf: FPDF, text: str):
 
 
 # ==========================================================
-# Nova função — Tabela única e completa de casos de teste
+# Seção — Casos de teste formatados
 # ==========================================================
 def add_test_case_table(pdf: FPDF, df: pd.DataFrame):
-    """Adiciona uma tabela única com todas as informações dos casos de teste (ordem corrigida)."""
+    """Adiciona os casos de teste em um formato semelhante à interface web."""
     if df.empty:
         return
 
     # 🔹 Remove possíveis duplicatas ou cabeçalhos residuais vindos do Markdown da IA
     df = df.loc[:, ~df.columns.duplicated()].copy()
 
-    add_section_title(pdf, "2. Casos de Teste (Resumo Completo)")
-    pdf.set_font("DejaVu", "B", 10)
-    pdf.set_fill_color(230, 230, 230)
+    add_section_title(pdf, "2. Casos de Teste")
 
-    headers = [
-        "ID",
-        "Título",
-        "Prioridade",
-        "Critério de Aceitação Relacionado",
-        "Cenário (Gherkin)",
-        "Justificativa de Acessibilidade",
-    ]
-    col_widths = [18, 45, 22, 55, 70, 55]
+    # --- 2.1 Resumo dos Casos de Teste ---
+    pdf.set_font("DejaVu", "B", 12)
+    pdf.cell(0, 8, "2.1 Resumo dos Casos de Teste", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.ln(2)
 
-    # Cabeçalho
-    for header, width in zip(headers, col_widths, strict=False):
-        pdf.cell(width, 8, header, border=1, align="C", fill=True)
-    pdf.ln()
-
-    pdf.set_font("DejaVu", "", 9)
-
-    for _, row in df.iterrows():
-        pdf.cell(col_widths[0], 8, str(row.get("id", "")), border=1)
-        pdf.cell(col_widths[1], 8, str(row.get("titulo", ""))[:40], border=1)
-        pdf.cell(col_widths[2], 8, str(row.get("prioridade", "")), border=1)
-
-        pdf.cell(
-            col_widths[3],
-            8,
-            str(row.get("criterio_de_aceitacao_relacionado", ""))[:40],
-            border=1,
+    pdf.set_font("DejaVu", "", 10)
+    for index, row in df.iterrows():
+        test_id = row.get("id") or f"CT-{index + 1:03d}"
+        titulo = clean_text_for_pdf(row.get("titulo", "-")) or "-"
+        prioridade = clean_text_for_pdf(row.get("prioridade", "-")) or "-"
+        pdf.multi_cell(
+            0,
+            6,
+            f"- {test_id}: {titulo} (Prioridade: {prioridade})",
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
         )
 
-        # Cenário (multi-linha)
+    pdf.ln(6)
+
+    # --- 2.2 Detalhamento dos Casos de Teste ---
+    pdf.set_font("DejaVu", "B", 12)
+    pdf.cell(
+        0,
+        8,
+        "2.2 Detalhamento dos Casos de Teste",
+        new_x=XPos.LMARGIN,
+        new_y=YPos.NEXT,
+    )
+    pdf.ln(2)
+
+    for index, row in df.iterrows():
+        test_id = row.get("id") or f"CT-{index + 1:03d}"
+        titulo = clean_text_for_pdf(row.get("titulo", "-")) or "-"
+
+        pdf.set_font("DejaVu", "B", 11)
+        pdf.multi_cell(0, 7, f"{test_id} — {titulo}")
+        pdf.ln(1)
+
+        detalhes = [
+            ("Prioridade", row.get("prioridade", "-")),
+            (
+                "Critério de Aceitação Relacionado",
+                row.get("criterio_de_aceitacao_relacionado", "-"),
+            ),
+            (
+                "Justificativa de Acessibilidade",
+                row.get("justificativa_acessibilidade", "-"),
+            ),
+        ]
+
+        for label, value in detalhes:
+            texto = clean_text_for_pdf(value if value not in (None, "") else "-")
+            pdf.set_font("DejaVu", "B", 10)
+            pdf.cell(0, 6, f"{label}:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font("DejaVu", "", 10)
+            pdf.multi_cell(0, 6, texto, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.ln(1)
+
         cenario = row.get("cenario", "")
         if isinstance(cenario, list):
-            cenario = "\n".join(cenario)
-        pdf.multi_cell(col_widths[4], 6, clean_text_for_pdf(str(cenario)), border=1)
+            cenario = "\n".join(str(item) for item in cenario)
+        cenario = clean_text_for_pdf(cenario)
 
-        pdf.cell(
-            col_widths[5],
-            8,
-            str(row.get("justificativa_acessibilidade", ""))[:40],
-            border=1,
-        )
-        pdf.ln()
+        if cenario.strip():
+            pdf.set_font("DejaVu", "B", 10)
+            pdf.cell(0, 6, "Cenário Gherkin:", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font("DejaVu", "", 10)
+            pdf.multi_cell(0, 6, cenario, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+        if index < len(df) - 1:
+            pdf.divider()
 
 
 # ==========================================================

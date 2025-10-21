@@ -23,6 +23,8 @@ from pdf_generator import (
 def test_clean_text_for_pdf():
     assert clean_text_for_pdf("Texto com 📌 emoji") == "Texto com -  emoji"
     assert clean_text_for_pdf(123) == "123"
+    assert clean_text_for_pdf(None) == ""
+    assert clean_text_for_pdf(float("nan")) == ""
 
 
 # ===================================================================
