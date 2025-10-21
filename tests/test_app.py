@@ -20,6 +20,10 @@ import pytest
 
 import app
 
+# Constantes auxiliares para layouts de colunas nos testes
+FOUR_COLUMN_COUNT = 4
+TWO_COLUMN_COUNT = 2
+
 
 # --- TESTES DAS FUNÇÕES WRAPPER ---
 def test_run_analysis_graph():
@@ -346,7 +350,7 @@ def test_render_main_page_gera_plano_com_sucesso(mocked_st):
             col1.button.return_value = True
             col2.button.return_value = False
             return (col1, col2, col3)
-        if arg == 4:
+        if arg == FOUR_COLUMN_COUNT:
             return tuple(MagicMock() for _ in range(4))
         return original_columns_side_effect(arg)
 
@@ -560,7 +564,7 @@ def test_render_history_page_impl_confirma_exclusao(
     confirm_col, cancel_col = MagicMock(), MagicMock()
 
     def columns_side_effect(arg):
-        if arg == 2:
+        if arg == TWO_COLUMN_COUNT:
             return (confirm_col, cancel_col)
         if isinstance(arg, int):
             return tuple(MagicMock() for _ in range(arg))
@@ -604,7 +608,7 @@ def test_render_history_page_impl_cancela_exclusao(
     confirm_col, cancel_col = MagicMock(), MagicMock()
 
     def columns_side_effect(arg):
-        if arg == 2:
+        if arg == TWO_COLUMN_COUNT:
             return (confirm_col, cancel_col)
         if isinstance(arg, int):
             return tuple(MagicMock() for _ in range(arg))
@@ -646,7 +650,7 @@ def test_render_history_page_impl_confirma_limpeza_total(
     confirm_col, cancel_col = MagicMock(), MagicMock()
 
     def columns_side_effect(arg):
-        if arg == 2:
+        if arg == TWO_COLUMN_COUNT:
             return (confirm_col, cancel_col)
         if isinstance(arg, int):
             return tuple(MagicMock() for _ in range(arg))
