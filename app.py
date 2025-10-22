@@ -591,6 +591,20 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 )
 
             # ==================================================
+            # 🧪 RELATÓRIO DO PLANO DE TESTES (VISÃO GERAL)
+            # ==================================================
+            if st.session_state.get("test_plan_report"):
+                with st.expander(
+                    "🧪 Plano de Testes Gerado (Resumo em Markdown)", expanded=True
+                ):
+                    st.markdown(
+                        clean_markdown_report(
+                            st.session_state.get("test_plan_report", "")
+                        ),
+                        unsafe_allow_html=True,
+                    )
+
+            # ==================================================
             # 📂 CASOS DE TESTE (TABELA RESUMO + DETALHES)
             # ==================================================
             if (
