@@ -66,6 +66,13 @@ from utils import (
 
 
 # ==========================================================
+# 🔖 Constantes internas
+# ==========================================================
+
+_ANALYSIS_SAVED_FLAG = "qa_oraculo_analysis_saved"
+
+
+# ==========================================================
 # 🕒 Formatação segura de datas (compatível com testes)
 # ==========================================================
 def format_datetime(value):
@@ -103,6 +110,54 @@ def _ensure_bytes(data):
 
     return bytes(str(data), "utf-8")
 
+
+# ==========================================================
+# 🧾 Markdown seguro da análise refinada
+# ==========================================================
+def _build_analysis_markdown(analysis_data: dict | None) -> str:
+    """Gera um relatório em Markdown a partir dos dados refinados."""
+
+    if not analysis_data:
+        return "⚠️ Análise não disponível."
+
+    def _format_section(title: str, value: str | list[str]) -> str:
+        if isinstance(value, list):
+            if not value:
+                content = "- Nenhum item registrado."
+            else:
+                content = "\n".join(f"- {item}" for item in value if str(item).strip())
+                content = content or "- Nenhum item registrado."
+        else:
+            content = value.strip() if isinstance(value, str) else str(value)
+            if not content:
+                content = "Nenhuma informação adicionada."
+
+        return f"{title}\n\n{content.strip()}"
+
+    sections = [
+        _format_section(
+            "## 🧠 Avaliação Geral",
+            analysis_data.get("avaliacao_geral", ""),
+        ),
+        _format_section(
+            "## ⚠️ Pontos Ambíguos",
+            analysis_data.get("pontos_ambiguos", []),
+        ),
+        _format_section(
+            "## ❓ Perguntas para o PO",
+            analysis_data.get("perguntas_para_po", []),
+        ),
+        _format_section(
+            "## ✅ Critérios de Aceite Sugeridos",
+            analysis_data.get("sugestao_criterios_aceite", []),
+        ),
+        _format_section(
+            "## 🔗 Riscos e Dependências",
+            analysis_data.get("riscos_e_dependencias", []),
+        ),
+    ]
+
+    return "\n\n".join(["# 📘 Análise Refinada", *sections]).strip()
 
 # ==========================================================
 # 💾 Salvamento no Histórico (REFATORADO)
@@ -149,6 +204,12 @@ def _save_current_analysis_to_history():
             "error",
             st_api=st
         )
+
+
+def save_analysis_to_history():
+    """Compatibilidade: alias público para o salvamento da análise atual."""
+
+    _save_current_analysis_to_history()
 
 
 # ==========================================================
@@ -234,12 +295,15 @@ def _render_analyzing_state(state: AnalysisState):
 
 def _render_editing_form(state: AnalysisState):
     """Renderiza formulário de edição da análise."""
-    
-    announce(
-        "🔮 O Oráculo gerou a análise abaixo. Revise, edite se necessário e clique em 'Salvar' para prosseguir.",
-        "info",
-        st_api=st
-    )
+
+    if st.session_state.pop(_ANALYSIS_SAVED_FLAG, False):
+        announce("Análise refinada salva com sucesso!", "success", st_api=st)
+    else:
+        announce(
+            "🔮 O Oráculo gerou a análise abaixo. Revise, edite se necessário e clique em 'Salvar' para prosseguir.",
+            "info",
+            st_api=st,
+        )
     
     # Extrai dados da análise (com fallbacks seguros)
     analise_json = state.analysis_data or {}
@@ -338,7 +402,10 @@ def _render_editing_form(state: AnalysisState):
             ]
         }
         
-        announce("Análise refinada salva com sucesso!", "success", st_api=st)
+        state.analysis_report = _build_analysis_markdown(state.analysis_data)
+        _save_current_analysis_to_history()
+
+        st.session_state[_ANALYSIS_SAVED_FLAG] = True
         st.rerun()
     
     # Botões de ação (após form para permitir navegação por teclado)
@@ -717,17 +784,30 @@ def render_main_analysis_page():
     """
     
     st.title("🤖 QA Oráculo")
-    st.markdown(
-        """
-    ### 👋 Olá, viajante do código!  
-    Sou o **Oráculo de QA**, pronto para analisar suas User Stories e revelar ambiguidades, riscos e critérios de aceitação.  
-    Cole sua história abaixo e inicie a jornada da qualidade! 🚀
-    """
-    )
-    
+
     # Obtém estado atual
     state = get_state()
-    
+    stage_messages = {
+        AnalysisStage.ANALYZING: "### 🔍 O Oráculo está analisando sua User Story. Aguarde alguns instantes...",
+        AnalysisStage.EDITING_ANALYSIS: "### ✍️ Revise a análise sugerida e ajuste conforme necessário antes de seguir em frente.",
+        AnalysisStage.GENERATING_PLAN: "### 🧪 Gerando o Plano de Testes com base na análise refinada...",
+        AnalysisStage.COMPLETED: "### ✅ Análise concluída! Confira os resultados e exporte os artefatos desejados.",
+        AnalysisStage.ERROR: "### ⚠️ Ocorreu um erro durante a análise. Revise a mensagem abaixo para continuar.",
+    }
+
+    if state.stage == AnalysisStage.INITIAL:
+        st.markdown(
+            """
+        ### 👋 Olá, viajante do código!
+        Sou o **Oráculo de QA**, pronto para analisar suas User Stories e revelar ambiguidades, riscos e critérios de aceitação.
+        Cole sua história abaixo e inicie a jornada da qualidade! 🚀
+        """
+        )
+    else:
+        mensagem = stage_messages.get(state.stage)
+        if mensagem:
+            st.markdown(mensagem)
+
     # Roteamento baseado no estágio atual
     if state.stage == AnalysisStage.INITIAL:
         _render_input_form(state)
