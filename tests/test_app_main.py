@@ -124,75 +124,9 @@ def test_sim_gerar_plano(mock_run, mock_pdf, mock_save, mock_st):
     app.render_main_analysis_page()
 
 
-@patch("app.reset_session")
-def test_nova_analise_button(mock_reset, mock_st):
-    mock_st.session_state["analysis_finished"] = True
-    mock_st.session_state["analysis_state"] = make_analysis_state()
-    mock_st.session_state["test_plan_report"] = "Plano final"
-    mock_st.session_state["history_saved"] = True
-
-    def button_side_effect(*args, **kwargs):
-        if kwargs.get("key") == "nova_analise_button" and kwargs.get("on_click"):
-            kwargs["on_click"]()
-            return True
-        return False
-
-    mock_st.button.side_effect = button_side_effect
-
-    app.render_main_analysis_page()
-
-    assert "history_saved" not in mock_st.session_state
-    mock_reset.assert_called_once_with()
-
-
 # ----------------------------
 # Casos extras de cobertura
 # ----------------------------
-def test_sem_user_story_mostra_warning(mock_st):
-    mock_st.session_state.clear()
-    mock_st.session_state["analysis_state"] = None
-    mock_st.session_state["user_story_input"] = ""
-    mock_st.button.return_value = True
-
-    app.render_main_analysis_page()
-    mock_st.warning.assert_called_once_with(
-        "Por favor, insira uma User Story antes de analisar."
-    )
-
-
-def test_salvar_edicao_formulario(mock_st):
-    mock_st.session_state["analysis_finished"] = False
-    mock_st.session_state["analysis_state"] = {
-        "user_story": "Como usuário, quero salvar edições",
-        "analise_da_us": {
-            "avaliacao_geral": "Velha",
-            "pontos_ambiguos": [],
-            "perguntas_para_po": [],
-            "sugestao_criterios_aceite": [],
-            "riscos_e_dependencias": [],
-        },
-    }
-    mock_st.session_state["edit_avaliacao"] = "Nova avaliação"
-    mock_st.session_state["edit_pontos"] = "Novo ponto"
-    mock_st.session_state["edit_perguntas"] = "Nova pergunta"
-    mock_st.session_state["edit_criterios"] = "Novo critério"
-    mock_st.session_state["edit_riscos"] = "Novo risco"
-
-    mock_st.form.return_value.__enter__.return_value = True
-    mock_st.form_submit_button.return_value = True
-
-    app.render_main_analysis_page()
-
-    assert (
-        mock_st.session_state["analysis_state"]["analise_da_us"]["avaliacao_geral"]
-        == "Nova avaliação"
-    )
-    assert (
-        "Novo ponto"
-        in mock_st.session_state["analysis_state"]["analise_da_us"]["pontos_ambiguos"]
-    )
-
-
 def test_render_main_analysis_page_exportadores(mock_st):
     """Força exibição dos exportadores e verifica se os botões de download são chamados."""
     # --- 1. Configura sessão com dados válidos ---
@@ -254,10 +188,36 @@ def test_nova_analise_button(mock_st, mock_get_state, mock_reset):
     state = AnalysisState()
     state.stage = AnalysisStage.COMPLETED
     state.user_story = "História"
-    
+
     mock_get_state.return_value = state
     mock_st.session_state = {}
-    
+
+    def make_context():
+        ctx = MagicMock()
+        ctx.__enter__.return_value = MagicMock()
+        ctx.__exit__.return_value = False
+        return ctx
+
+    mock_st.expander.side_effect = lambda *args, **kwargs: make_context()
+
+    def columns_side_effect(arg):
+        if isinstance(arg, int):
+            count = arg
+        elif isinstance(arg, list | tuple):
+            count = len(arg)
+        else:
+            count = 2
+
+        cols = [MagicMock() for _ in range(count)]
+        for col in cols:
+            col.accessible_button.return_value = False
+            col.button.return_value = False
+            col.download_button.return_value = None
+        return cols
+
+    mock_st.columns.side_effect = columns_side_effect
+    mock_st.rerun = MagicMock()
+
     # Simula botão clicado
     def button_side_effect(*args, **kwargs):
         if kwargs.get("key") == "nova_analise_button" and kwargs.get("on_click"):
@@ -286,11 +246,11 @@ def test_sem_user_story_mostra_warning(mock_st, mock_announce, mock_get_state):
     # Simula botão clicado
     with patch('app.accessible_button', return_value=True):
         app.render_main_analysis_page()
-    
+
     # Verifica que announce foi chamado com warning
     mock_announce.assert_called_once()
     args = mock_announce.call_args[0]
-    assert "insira uma User Story" in args[0].lower()
+    assert "insira uma user story" in args[0].lower()
     assert args[1] == "warning"
 
 
@@ -326,8 +286,25 @@ def test_salvar_edicao_formulario(mock_st, mock_get_state):
     mock_form.__exit__.return_value = None
     mock_st.form.return_value = mock_form
     mock_st.form_submit_button.return_value = True
-    
+
+    def columns_side_effect(arg):
+        if isinstance(arg, int):
+            count = arg
+        elif isinstance(arg, list | tuple):
+            count = len(arg)
+        else:
+            count = 2
+
+        cols = [MagicMock() for _ in range(count)]
+        for col in cols:
+            col.button.return_value = False
+            col.accessible_button.return_value = False
+        return cols
+
+    mock_st.columns.side_effect = columns_side_effect
+    mock_st.rerun = MagicMock()
+
     app.render_main_analysis_page()
-    
+
     # Verifica que analysis_data foi atualizado
     assert state.analysis_data["avaliacao_geral"] == "Nova avaliação"
