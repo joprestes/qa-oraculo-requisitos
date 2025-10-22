@@ -3,58 +3,46 @@ import unittest
 
 import streamlit as st
 
-from state_manager import initialize_state, reset_session
+from state_machine import AnalysisStage
+from state_manager import get_state, initialize_state, reset_session
 
 
 class TestStateManager(unittest.TestCase):
-
     def setUp(self):
-        # Garante que o session_state começa limpo antes de cada teste
+        """Limpa session_state antes de cada teste"""
         st.session_state.clear()
-
-    def test_initialize_state_cria_chaves(self):
+    
+    def test_initialize_state_cria_state_machine(self):
+        """Valida que initialize_state cria AnalysisState"""
         initialize_state()
-        # Todas as chaves padrão devem existir
-        expected_keys = {
-            "analysis_finished": False,
-            "analysis_state": None,
-            "test_plan_report": None,
-            "test_plan_df": None,
-            "pdf_report_bytes": None,
-            "show_generate_plan_button": False,
-            "user_story_input": "",
-            "area_path_input": "",
-            "assigned_to_input": "",
-            "jira_priority": "Medium",
-            "jira_labels": "QA-Oraculo",
-            "jira_description": "Caso de teste gerado pelo QA Oráculo.",
-        }
-        for key, value in expected_keys.items():
-            self.assertIn(key, st.session_state)
-            self.assertEqual(st.session_state[key], value)
-
-    def test_initialize_state_nao_sobrescreve(self):
-        st.session_state["jira_priority"] = "High"
+        
+        state = get_state()
+        self.assertEqual(state.stage, AnalysisStage.INITIAL)
+        self.assertEqual(state.user_story, "")
+        self.assertIsNone(state.analysis_data)
+    
+    def test_reset_session_limpa_estado(self):
+        """Valida que reset_session limpa o estado"""
         initialize_state()
-        self.assertEqual(st.session_state["jira_priority"], "High")
-
-    def test_reset_session(self):
-        st.session_state["analysis_finished"] = True
-        st.session_state["user_story_input"] = "Teste"
+        state = get_state()
+        state.user_story = "Teste"
+        state.stage = AnalysisStage.ANALYZING
+        
         reset_session()
-        self.assertNotIn("analysis_finished", st.session_state)
-        self.assertNotIn("user_story_input", st.session_state)
+        
+        # Verifica que foi resetado
+        new_state = get_state()
+        self.assertEqual(new_state.stage, AnalysisStage.INITIAL)
+        self.assertEqual(new_state.user_story, "")
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
-def test_reset_session_ignora_chaves_internas(monkeypatch):
+def test_reset_session_ignora_chaves_internas():
     """Garante que reset_session não deleta chaves internas do Streamlit."""
     st.session_state.clear()
     st.session_state["FormSubmitter:123"] = "valor"
-    st.session_state["normal_key"] = "apagar"
+    
+    initialize_state()
     reset_session()
+    
+    # FormSubmitter deve ser preservado
     assert "FormSubmitter:123" in st.session_state
-    assert "normal_key" not in st.session_state

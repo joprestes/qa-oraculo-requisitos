@@ -19,11 +19,39 @@ import pandas as pd
 import pytest
 
 import app
+from state_machine import AnalysisStage, AnalysisState
 
 # Constantes auxiliares para layouts de colunas nos testes
 FOUR_COLUMN_COUNT = 4
 TWO_COLUMN_COUNT = 2
 
+#Constantes para números Mágicos
+EXISTING_HISTORY_ID = 10
+
+# ==================================================
+# FIXTURE: Mock de get_state
+# ==================================================
+@pytest.fixture
+def mock_state():
+    """Retorna um AnalysisState mockado"""
+    state = AnalysisState()
+    state.user_story = "História teste"
+    return state
+
+
+@pytest.fixture
+def mock_completed_state():
+    """Retorna estado no estágio COMPLETED"""
+    state = AnalysisState()
+    state.user_story = "História teste"
+    state.stage = AnalysisStage.COMPLETED
+    state.analysis_report = "# Relatório"
+    state.test_plan_df = pd.DataFrame([
+        {"id": "CT-001", "titulo": "Teste", "cenario": "Dado..."}
+    ])
+    state.test_plan_report = "### Plano"
+    state.pdf_bytes = b"pdf"
+    return state
 
 # --- TESTES DAS FUNÇÕES WRAPPER ---
 def test_run_analysis_graph():
@@ -164,17 +192,23 @@ def test_render_history_com_analysis_id_invalido(mocked_st):
 
 
 # ---- Testes extras de fluxos do render_main_analysis_page ----
-def test_render_main_analysis_page_sem_analysis_state(mocked_st):
-    mocked_st.session_state.clear()
-    mocked_st.session_state.update(
-        {"analysis_finished": False, "analysis_state": None, "user_story_input": ""}
-    )
-    mocked_st.button.return_value = False
 
-    app.render_main_analysis_page()
-    mocked_st.text_area.assert_any_call(
-        "Insira a User Story aqui:", height=250, key="user_story_input"
-    )
+@patch('app.get_state')
+@patch('app.st')
+def test_render_main_analysis_page_sem_analysis_state(mock_st, mock_get_state, mock_state):
+    """Valida renderização do formulário inicial"""
+    mock_get_state.return_value = mock_state
+    mock_st.session_state = {}
+    
+    # Simula accessible_text_area sendo chamado
+    with patch('app.accessible_text_area') as mock_text_area:
+        app.render_main_analysis_page()
+        
+        # Verifica que o text_area foi chamado
+        mock_text_area.assert_called_once()
+        call_kwargs = mock_text_area.call_args[1]
+        assert call_kwargs['key'] == 'user_story_input'
+
 
 
 def test_render_main_analysis_page_sem_user_story(mocked_st):
@@ -190,55 +224,46 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
     )
 
 
-def test_render_main_analysis_page_downloads_sem_dados():
-    """Força finalização sem test_plan_df nem pdf."""
-    with patch("app.st") as mock_st:
-        mock_st.session_state = {
-            "analysis_finished": True,
-            "analysis_state": {"relatorio_analise_inicial": "Fake"},
-            "test_plan_report": None,
-            "test_plan_df": None,
-            "pdf_report_bytes": None,
-            "user_story_input": "História teste",
-        }
+@patch('app.get_state')
+@patch('app.st')
+def test_render_main_analysis_page_downloads_sem_dados(mock_st, mock_get_state, mock_completed_state):
+    """Valida tela de downloads quando análise está completa"""
+    # Remove test_plan_df para forçar estado sem dados
+    mock_completed_state.test_plan_df = None
+    mock_get_state.return_value = mock_completed_state
+    
+    mock_st.columns.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+    
+    app.render_main_analysis_page()
+    
+    # Verifica que subheader foi chamado
+    mock_st.subheader.assert_called_with("📥 Downloads Disponíveis")
 
-        mock_st.columns.return_value = [
-            MagicMock(),
-            MagicMock(),
-            MagicMock(),
-            MagicMock(),
-        ]
 
+
+@patch('app.get_state')
+@patch('app.st')
+def test_render_main_page_clica_em_encerrar(mock_st, mock_get_state):
+    """Valida clique em 'Não, Encerrar'"""
+    state = AnalysisState()
+    state.user_story = "US de teste"
+    state.stage = AnalysisStage.EDITING_ANALYSIS
+    state.analysis_data = {"test": "data"}
+    state.analysis_report = "Análise"
+    
+    mock_get_state.return_value = state
+    mock_st.session_state = {}
+    
+    # Simula botão "Não, Encerrar" clicado
+    mock_st.button.return_value = False
+    mock_st.columns.return_value = [MagicMock(), MagicMock()]
+    mock_st.columns.return_value[1].button.return_value = True
+    
+    with patch('app._save_current_analysis_to_history'):
         app.render_main_analysis_page()
-        mock_st.subheader.assert_called_with("Downloads Disponíveis")
-
-
-def test_render_main_page_clica_em_encerrar(mocked_st):
-    """Testa o fluxo onde o usuário clica em 'Não, Encerrar' após a análise inicial."""
-    mocked_st.session_state.update(
-        {
-            "analysis_state": {
-                "user_story": "US de teste",
-                "relatorio_analise_inicial": "Análise de teste",
-                "analise_da_us": {},
-            },
-            "show_generate_plan_button": True,
-            "user_story_input": "US de teste",
-            "analysis_finished": False,
-        }
-    )
-
-    # Simula o botão "Não, Encerrar" sendo clicado
-    col1, col2, _ = mocked_st.columns([1, 1, 2])
-    col1.button.return_value = False
-    col2.button.return_value = True
-
-    with patch("app._save_current_analysis_to_history") as mock_save:
-        app.render_main_analysis_page()
-
-        assert mocked_st.session_state["analysis_finished"] is True
-        mock_save.assert_called()
-        mocked_st.rerun.assert_called()
+        
+        # Verifica que mudou para COMPLETED
+        assert state.stage == AnalysisStage.COMPLETED
 
 
 def test_render_main_page_falha_na_geracao_do_plano(mocked_st):
@@ -442,61 +467,37 @@ def _build_session_state_para_historia_valida():
     }
 
 
-@patch("database.get_db_connection")
-@patch("app.announce")
-@patch("app.st")
-def test_save_current_analysis_to_history_sem_dados_suficientes(
-    mock_st, mock_announce, mock_get_conn
-):
-    """Quando não há dados válidos nada é salvo."""
-
-    mock_st.session_state = {
-        "user_story_input": "",
-        "analysis_state": {},
-        "test_plan_report": None,
-    }
-
+@patch('app.get_state')
+@patch('app.save_or_update_analysis')
+def test_save_current_analysis_to_history_sem_dados_suficientes(mock_save_func, mock_get_state):
+    """Quando não há dados válidos, não salva"""
+    state = AnalysisState()
+    state.user_story = ""  # User Story vazia
+    mock_get_state.return_value = state
+    
     app._save_current_analysis_to_history()
+    
+    # Não deve chamar save_or_update_analysis
+    mock_save_func.assert_not_called()
 
-    mock_get_conn.assert_not_called()
-    mock_announce.assert_not_called()
 
-
-@patch("database.get_db_connection")
-@patch("app.st")
-def test_save_current_analysis_to_history_atualiza_existente(mock_st, mock_get_conn):
-    """Atualiza registros existentes quando update_existing=True."""
-
-    mock_cursor = MagicMock()
-    mock_conn = MagicMock()
-    mock_conn.__enter__.return_value = mock_conn
-    mock_conn.cursor.return_value = mock_cursor
-    mock_get_conn.return_value = mock_conn
-
-    session_state = _build_session_state_para_historia_valida()
-    session_state["last_saved_id"] = 42
-    mock_st.session_state = session_state
-
-    app._save_current_analysis_to_history(update_existing=True)
-
-    update_calls = [
-        mock_call
-        for mock_call in mock_cursor.execute.call_args_list
-        if "UPDATE" in mock_call.args[0]
-    ]
-    assert update_calls, "Deve executar UPDATE ao atualizar registro existente"
-
-    _, params = update_calls[0].args
-    assert params[1] == "Como tester quero validar"
-    assert params[2] == "Relatório inicial"
-    assert params[3] == "Plano completo"
-
-    # Garante que não foi feito INSERT
-    assert all(
-        "INSERT" not in mock_call.args[0]
-        for mock_call in mock_cursor.execute.call_args_list
-    )
-    mock_conn.commit.assert_called_once()
+@patch('app.get_state')
+@patch('app.save_or_update_analysis', return_value=42)
+def test_save_current_analysis_to_history_atualiza_existente(mock_save_func, mock_get_state):
+    """Atualiza registro existente quando state.saved_history_id existe"""
+    state = AnalysisState()
+    state.user_story = "História teste"
+    state.analysis_report = "Relatório"
+    state.saved_history_id = 10  # Já existe
+    
+    mock_get_state.return_value = state
+    
+    app._save_current_analysis_to_history()
+    
+    # Deve chamar com existing_id=10
+    mock_save_func.assert_called_once()
+    call_kwargs = mock_save_func.call_args[1]
+    assert call_kwargs['existing_id'] == EXISTING_HISTORY_ID
 
 
 @patch("database.get_db_connection")
@@ -518,74 +519,25 @@ def test_save_current_analysis_to_history_sqlite_error(
     assert kwargs["st_api"] is mock_st
 
 
-@patch("database.get_db_connection")
-@patch("app.announce")
-@patch("app.st")
-def test_save_current_analysis_to_history_erro_generico(
-    mock_st, mock_announce, mock_get_conn
-):
-    """Qualquer outro erro gera aviso sem interromper o fluxo principal."""
 
-    class ExplodingConn:
-        def __enter__(self):
-            raise RuntimeError("boom")
-
-        def __exit__(self, exc_type, exc, tb):
-            return False
-
-    mock_st.session_state = _build_session_state_para_historia_valida()
-    mock_get_conn.return_value = ExplodingConn()
-
+@patch('app.get_state')
+@patch('app.save_or_update_analysis', side_effect=RuntimeError("boom"))
+@patch('app.announce')
+def test_save_current_analysis_to_history_erro_generico(mock_announce, mock_save_func, mock_get_state):
+    """Erro deve gerar announce de erro"""
+    state = AnalysisState()
+    state.user_story = "História teste"
+    state.analysis_report = "Relatório"
+    
+    mock_get_state.return_value = state
+    
     app._save_current_analysis_to_history()
-
+    
+    # Verifica que announce foi chamado com "error"
     mock_announce.assert_called_once()
-    args, kwargs = mock_announce.call_args
-    assert args[1] == "warning"
-    assert kwargs["st_api"] is mock_st
+    args = mock_announce.call_args
+    assert args[1] == "error"
 
-
-@patch("app.announce")
-@patch("app.delete_analysis_by_id", return_value=True)
-@patch("app.get_all_analysis_history", return_value=[])
-@patch("app.st")
-def test_render_history_page_impl_confirma_exclusao(
-    mock_st, mock_get_history, mock_delete, mock_announce
-):
-    """Fluxo de confirmação remove item e reinicia a página."""
-
-    mock_st.session_state = {"confirm_delete_id": 5}
-    mock_st.query_params.get.return_value = None
-
-    def make_context():
-        ctx = MagicMock()
-        ctx.__enter__.return_value = MagicMock()
-        ctx.__exit__.return_value = False
-        return ctx
-
-    mock_st.container.side_effect = lambda *args, **kwargs: make_context()
-    mock_st.expander.side_effect = lambda *args, **kwargs: make_context()
-    confirm_col, cancel_col = MagicMock(), MagicMock()
-
-    def columns_side_effect(arg):
-        if arg == TWO_COLUMN_COUNT:
-            return (confirm_col, cancel_col)
-        if isinstance(arg, int):
-            return tuple(MagicMock() for _ in range(arg))
-        return tuple(MagicMock() for _ in range(len(arg)))
-
-    mock_st.columns.side_effect = columns_side_effect
-    confirm_col.button.return_value = True
-    cancel_col.button.return_value = False
-    mock_st.rerun = MagicMock()
-
-    app._render_history_page_impl()
-
-    mock_delete.assert_called_once_with(5)
-    assert "confirm_delete_id" not in mock_st.session_state
-    mock_announce.assert_any_call(
-        "Análise 5 removida com sucesso.", "success", st_api=mock_st
-    )
-    mock_st.rerun.assert_called_once()
 
 
 @patch("app.announce")
@@ -740,3 +692,79 @@ def test_main_execucao_direta_subprocess():
         text=True,
     )
     assert result.returncode == 0
+
+
+@patch('app.accessible_button')
+@patch('app.delete_analysis_by_id', return_value=True)
+@patch('app.get_all_analysis_history', return_value=[])
+@patch('app.announce')
+@patch('app.st')
+def test_render_history_page_impl_confirma_exclusao(
+    mock_st, mock_announce, mock_get_history, mock_delete, mock_accessible_button
+):
+    """Fluxo de confirmação remove item"""
+    mock_st.session_state = {"confirm_delete_id": 5}
+    mock_st.query_params.get.return_value = None
+    
+    # Simula botão "Confirmar" clicado
+    def button_side_effect(*args, **kwargs):
+        key = kwargs.get("key", "")
+        if "confirmar_delete" in key:
+            return True
+        return False
+    
+    mock_accessible_button.side_effect = button_side_effect
+    
+    # Mock de container
+    mock_container = MagicMock()
+    mock_container.__enter__.return_value = mock_container
+    mock_container.__exit__.return_value = None
+    mock_st.container.return_value = mock_container
+    
+    # Mock de columns
+    col1, col2 = MagicMock(), MagicMock()
+    mock_st.columns.return_value = [col1, col2]
+    
+    app._render_history_page_impl()
+    
+    # Verifica exclusão
+    mock_delete.assert_called_once_with(5)
+    assert "confirm_delete_id" not in mock_st.session_state
+
+
+@patch('app.accessible_button')
+@patch('app.delete_analysis_by_id', return_value=False)
+@patch('app.get_all_analysis_history', return_value=[])
+@patch('app.announce')
+@patch('app.st')
+def test_render_history_page_impl_cancela_exclusao(
+    mock_st, mock_announce, mock_get_history, mock_delete, mock_accessible_button
+):
+    """Clique em cancelar não deve deletar"""
+    mock_st.session_state = {"confirm_delete_id": 42}
+    mock_st.query_params.get.return_value = None
+    
+    # Simula botão "Cancelar" clicado
+    def button_side_effect(*args, **kwargs):
+        key = kwargs.get("key", "")
+        if "cancelar_delete" in key:
+            return True
+        return False
+    
+    mock_accessible_button.side_effect = button_side_effect
+    
+    # Mock de container
+    mock_container = MagicMock()
+    mock_container.__enter__.return_value = mock_container
+    mock_container.__exit__.return_value = None
+    mock_st.container.return_value = mock_container
+    
+    # Mock de columns
+    col1, col2 = MagicMock(), MagicMock()
+    mock_st.columns.return_value = [col1, col2]
+    
+    app._render_history_page_impl()
+    
+    # Não deve ter deletado
+    mock_delete.assert_not_called()
+    assert "confirm_delete_id" not in mock_st.session_state

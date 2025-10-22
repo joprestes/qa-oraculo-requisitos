@@ -129,7 +129,7 @@ def test_pdf_footer():
     # Cenário 2: Segunda página, deve adicionar o footer
     mock_self.page_no.return_value = 2
     PDF.footer(mock_self)
-    assert mock_self.cell.call_count == 2  # noqa: PLR2004
+    assert mock_self.cell.call_count == 2
     mock_self.set_font.assert_called_once()
 
 

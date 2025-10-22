@@ -1,10 +1,11 @@
-# tests/test_app_main.py
+# tests/test_app_main.py (SUBSTITUIR IMPORTS)
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
 import app
+from state_machine import AnalysisStage, AnalysisState
 
 
 # ----------------------------
@@ -30,9 +31,9 @@ def mock_st():
         def fake_columns(arg):
             if arg == [1, 1, 2]:
                 return [MagicMock(), MagicMock(), MagicMock()]
-            if arg == 4:  # noqa: PLR2004
+            if arg == 4:
                 return [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
-            if arg == 2:  # noqa: PLR2004
+            if arg == 2:
                 return [MagicMock(), MagicMock()]
             return [MagicMock(), MagicMock(), MagicMock()]
 
@@ -215,9 +216,9 @@ def test_render_main_analysis_page_exportadores(mock_st):
     cols_azure = [MagicMock(), MagicMock()]
 
     def columns_side_effect(arg):
-        if arg == 4:  # noqa: PLR2004
+        if arg == 4:
             return cols_downloads
-        if arg == 2:  # noqa: PLR2004
+        if arg == 2:
             return cols_azure
         # Fallback para outros casos, como [1, 1, 2]
         return [MagicMock(), MagicMock(), MagicMock()]
@@ -238,16 +239,95 @@ def test_render_main_analysis_page_exportadores(mock_st):
         col.download_button.called for col in cols_downloads
     ), "Nenhum botão de download principal foi acionado."
 
+@pytest.fixture
+def mock_state():
+    state = AnalysisState()
+    state.user_story = "Como usuário quero testar"
+    return state
 
-# --------------------------------------------------------------------
-# TESTE DESATIVADO
-# --------------------------------------------------------------------
-# def test_exportacao_final_completa(mock_st):
-#     """
-#     Este teste foi desativado pois o mock de st.download_button
-#     não captura corretamente as chamadas internas do Streamlit.
-#
-#     A funcionalidade já foi validada manualmente no app real
-#     e os demais testes garantem o fluxo de exportação.
-#     """
-#     pass
+
+@patch('app.reset_session')
+@patch('app.get_state')
+@patch('app.st')
+def test_nova_analise_button(mock_st, mock_get_state, mock_reset):
+    """Valida reset ao clicar em Nova Análise"""
+    state = AnalysisState()
+    state.stage = AnalysisStage.COMPLETED
+    state.user_story = "História"
+    
+    mock_get_state.return_value = state
+    mock_st.session_state = {}
+    
+    # Simula botão clicado
+    def button_side_effect(*args, **kwargs):
+        if kwargs.get("key") == "nova_analise_button" and kwargs.get("on_click"):
+            kwargs["on_click"]()
+            return True
+        return False
+    
+    with patch('app.accessible_button', side_effect=button_side_effect):
+        app.render_main_analysis_page()
+    
+    # Verifica que reset_session foi chamado
+    mock_reset.assert_called_once()
+
+
+@patch('app.get_state')
+@patch('app.announce')
+@patch('app.st')
+def test_sem_user_story_mostra_warning(mock_st, mock_announce, mock_get_state):
+    """Valida warning quando User Story está vazia"""
+    state = AnalysisState()
+    state.user_story = ""
+    mock_get_state.return_value = state
+    
+    mock_st.session_state = {"user_story_input": ""}
+    
+    # Simula botão clicado
+    with patch('app.accessible_button', return_value=True):
+        app.render_main_analysis_page()
+    
+    # Verifica que announce foi chamado com warning
+    mock_announce.assert_called_once()
+    args = mock_announce.call_args[0]
+    assert "insira uma User Story" in args[0].lower()
+    assert args[1] == "warning"
+
+
+@patch('app.get_state')
+@patch('app.st')
+def test_salvar_edicao_formulario(mock_st, mock_get_state):
+    """Valida salvamento de edições do formulário"""
+    state = AnalysisState()
+    state.user_story = "História"
+    state.stage = AnalysisStage.EDITING_ANALYSIS
+    state.analysis_data = {
+        "avaliacao_geral": "Velha",
+        "pontos_ambiguos": [],
+        "perguntas_para_po": [],
+        "sugestao_criterios_aceite": [],
+        "riscos_e_dependencias": []
+    }
+    
+    mock_get_state.return_value = state
+    
+    # Simula valores editados
+    mock_st.session_state = {
+        "edit_avaliacao": "Nova avaliação",
+        "edit_pontos": "",
+        "edit_perguntas": "",
+        "edit_criterios": "",
+        "edit_riscos": ""
+    }
+    
+    # Simula form submetido
+    mock_form = MagicMock()
+    mock_form.__enter__.return_value = mock_form
+    mock_form.__exit__.return_value = None
+    mock_st.form.return_value = mock_form
+    mock_st.form_submit_button.return_value = True
+    
+    app.render_main_analysis_page()
+    
+    # Verifica que analysis_data foi atualizado
+    assert state.analysis_data["avaliacao_geral"] == "Nova avaliação"

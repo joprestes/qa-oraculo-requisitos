@@ -751,7 +751,7 @@ def render_main_analysis_page():
 # ==========================================================
 # 🗂️ Página de Histórico — Visualização e Exclusão
 # ==========================================================
-def _render_history_page_impl():  # noqa: C901, PLR0912
+def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
     """
     Exibe o histórico de análises realizadas e permite:
       • Visualizar detalhes de cada análise
@@ -1053,7 +1053,7 @@ def _render_history_page_impl():  # noqa: C901, PLR0912
         )
 
 
-def _render_history_page_test_mode(st_api):  # noqa: C901, PLR0911, PLR0912
+def _render_history_page_test_mode(st_api):  # noqa: C901, PLR0911, PLR0912, PLR0915
     """Versão simplificada do histórico para testes unitários legados."""
     
     st_api.title("📖 Histórico de Análises")

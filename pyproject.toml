@@ -15,7 +15,13 @@ select = [
 ignore = [
   "E203",  # compatibilidade Black em slicing
   "E501",  # comprimento de linha já tratado pelo Black
-  "PLC0415" # Adiciona a regra à lista de ignorados
+  "PLC0415", # Adiciona a regra à lista de ignorados
+  "PLR0915",  # Permite funções com muitas statements (UI rendering)
+  "E203",      # compatibilidade Black em slicing
+  "E501",      # comprimento de linha já tratado pelo Black
+  "PLR2004",   # magic values em testes são OK
+  "RUF059",    # variáveis não usadas em unpacking (comum em Streamlit)
+  "F841",      # variáveis locais não usadas (comum em columns)
 ]
 
 # Ignora padrões de diretório gerados automaticamente
