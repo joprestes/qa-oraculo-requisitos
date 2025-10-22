@@ -19,6 +19,7 @@ import pandas as pd
 import pytest
 
 import app
+import state_manager
 from state_machine import AnalysisStage, AnalysisState
 
 # Constantes auxiliares para layouts de colunas nos testes
@@ -147,6 +148,11 @@ def mocked_st():
         mock_st.toast = MagicMock()
 
         yield mock_st
+
+    # Após o patch, restabelece o módulo real para evitar vazamento entre testes
+    import streamlit as real_streamlit
+
+    state_manager.set_streamlit_module(real_streamlit)
 
 
 # ---- Testes de histórico com fixture (versão atualizada) ----
