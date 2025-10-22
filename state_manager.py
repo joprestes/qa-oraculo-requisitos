@@ -15,6 +15,19 @@ from state_machine import AnalysisStage, AnalysisState
 _STATE_KEY = "qa_oraculo_state"
 
 
+def set_streamlit_module(st_module):
+    """Permite injetar um módulo/objeto compatível com streamlit.
+
+    Essa função mantém compatibilidade com os testes que patcham ``app.st``
+    diretamente. Sem esse ajuste, o ``state_manager`` continuaria utilizando o
+    módulo original do Streamlit, ignorando o mock e causando inconsistências
+    entre o estado da aplicação e o que os testes esperam observar.
+    """
+
+    global st
+    st = st_module
+
+
 # ==========================================================
 # 🚀 Funções Públicas de Acesso ao Estado
 # ==========================================================
@@ -29,12 +42,24 @@ def initialize_state():
 
     Se o estado já existe, não faz nada (idempotente).
     """
+    legacy_keys = {
+        "analysis_state",
+        "test_plan_report",
+        "test_plan_df",
+        "pdf_report_bytes",
+        "analysis_finished",
+        "user_story_input",
+    }
+
+    should_migrate = any(key in st.session_state for key in legacy_keys)
+
     if _STATE_KEY not in st.session_state:
         st.session_state[_STATE_KEY] = AnalysisState()
         print("🆕 Estado inicializado com valores padrão")
 
-    # Migração de estados legados (compatibilidade retroativa)
-    _migrate_legacy_state()
+    if should_migrate:
+        # Migração de estados legados (compatibilidade retroativa)
+        _migrate_legacy_state()
 
 
 def get_state() -> AnalysisState:
@@ -117,15 +142,26 @@ def _migrate_legacy_state():
 
     Pode ser removida após 100% dos usuários migrarem.
     """
-    # Se já tem estado novo, não precisa migrar
-    if _STATE_KEY in st.session_state:
-        return
 
     # Detecta flags legadas
+    analysis_state = st.session_state.get("analysis_state")
+    if isinstance(analysis_state, dict):
+        meaningful_analysis = any(
+            bool(analysis_state.get(field))
+            for field in ("relatorio_analise_inicial", "analise_da_us")
+        )
+        if not meaningful_analysis:
+            analysis_state = None
+
+    user_story = st.session_state.get("user_story_input", "").strip()
+    test_plan_report = st.session_state.get("test_plan_report")
+    if isinstance(test_plan_report, str) and not test_plan_report.strip():
+        test_plan_report = None
+
     legacy_data = {
-        "user_story": st.session_state.get("user_story_input", ""),
-        "analysis_state": st.session_state.get("analysis_state"),
-        "test_plan_report": st.session_state.get("test_plan_report"),
+        "user_story": user_story,
+        "analysis_state": analysis_state,
+        "test_plan_report": test_plan_report,
         "test_plan_df": st.session_state.get("test_plan_df"),
         "pdf_report_bytes": st.session_state.get("pdf_report_bytes"),
         "analysis_finished": st.session_state.get("analysis_finished", False),
@@ -137,25 +173,53 @@ def _migrate_legacy_state():
 
     print("🔄 Migrando estado legado para novo formato...")
 
-    # Cria novo estado a partir dos dados antigos
-    new_state = AnalysisState()
-    new_state.user_story = legacy_data["user_story"]
+    state = st.session_state.get(_STATE_KEY, AnalysisState())
+
+    if legacy_data["user_story"]:
+        state.user_story = legacy_data["user_story"].strip()
 
     if legacy_data["analysis_state"]:
-        new_state.analysis_data = legacy_data["analysis_state"].get("analise_da_us")
-        new_state.analysis_report = legacy_data["analysis_state"].get(
-            "relatorio_analise_inicial", ""
-        )
-        new_state.stage = AnalysisStage.EDITING_ANALYSIS
+        analysis_state = legacy_data["analysis_state"]
 
-    if legacy_data["test_plan_df"] is not None:
-        new_state.test_plan_report = legacy_data["test_plan_report"] or ""
-        new_state.test_plan_df = legacy_data["test_plan_df"]
-        new_state.pdf_bytes = legacy_data["pdf_report_bytes"]
-        new_state.stage = AnalysisStage.COMPLETED
+        raw_analysis_data = analysis_state.get("analise_da_us")
+        if raw_analysis_data is None:
+            raw_analysis_data = {}
 
-    st.session_state[_STATE_KEY] = new_state
+        state.analysis_data = raw_analysis_data
+        state.analysis_report = analysis_state.get("relatorio_analise_inicial", "") or ""
+
+        # Mesmo que a análise ainda não tenha sido refinada, manter o
+        # estágio em EDITING_ANALYSIS garante compatibilidade com o fluxo
+        # legado, que permitia acionar a geração do plano imediatamente
+        # após a migração. Sem esse ajuste, ``start_plan_generation``
+        # dispararia ValueError por entender que ainda estamos em INITIAL.
+        if state.stage == AnalysisStage.INITIAL:
+            state.stage = AnalysisStage.EDITING_ANALYSIS
+
+    has_test_plan = legacy_data["test_plan_df"] is not None
+
+    if has_test_plan:
+        state.test_plan_report = legacy_data["test_plan_report"] or ""
+        state.test_plan_df = legacy_data["test_plan_df"]
+        state.pdf_bytes = legacy_data["pdf_report_bytes"]
+        state.stage = AnalysisStage.COMPLETED
+
+    if legacy_data["analysis_finished"] and has_test_plan:
+        state.stage = AnalysisStage.COMPLETED
+
+    # Se chegamos aqui sem plano de testes, mas com análise disponível,
+    # garantimos que o estágio reflita o fluxo de edição.
+    if (
+        state.stage in (AnalysisStage.INITIAL, AnalysisStage.ANALYZING)
+        and (state.analysis_report or state.analysis_data)
+    ):
+        state.stage = AnalysisStage.EDITING_ANALYSIS
+
+    st.session_state[_STATE_KEY] = state
     print("✅ Migração concluída!")
+
+    if (not state.analysis_data or state.analysis_data == {}) and state.test_plan_df is None:
+        state.stage = AnalysisStage.INITIAL
 
 
 def debug_state():

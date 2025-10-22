@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 import app
+import state_manager
 from state_machine import AnalysisStage, AnalysisState
 
 
@@ -39,6 +40,10 @@ def mock_st():
 
         mock_st.columns.side_effect = fake_columns
         yield mock_st
+
+    import streamlit as real_streamlit
+
+    state_manager.set_streamlit_module(real_streamlit)
 
 
 # ----------------------------
