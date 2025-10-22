@@ -4,12 +4,13 @@ import unittest
 import streamlit as st
 
 from state_machine import AnalysisStage
-from state_manager import get_state, initialize_state, reset_session
+from state_manager import get_state, initialize_state, reset_session, set_streamlit_module
 
 
 class TestStateManager(unittest.TestCase):
     def setUp(self):
         """Limpa session_state antes de cada teste"""
+        set_streamlit_module(st)
         st.session_state.clear()
     
     def test_initialize_state_cria_state_machine(self):
