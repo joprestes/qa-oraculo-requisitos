@@ -540,140 +540,6 @@ def test_save_current_analysis_to_history_erro_generico(mock_announce, mock_save
 
 
 
-@patch("app.announce")
-@patch("app.delete_analysis_by_id", return_value=False)
-@patch("app.get_all_analysis_history", return_value=[])
-@patch("app.st")
-def test_render_history_page_impl_cancela_exclusao(
-    mock_st, mock_get_history, mock_delete, mock_announce
-):
-    """Clique em cancelar deve apenas limpar o estado."""
-
-    mock_st.session_state = {"confirm_delete_id": 42}
-    mock_st.query_params.get.return_value = None
-
-    def make_context():
-        ctx = MagicMock()
-        ctx.__enter__.return_value = MagicMock()
-        ctx.__exit__.return_value = False
-        return ctx
-
-    mock_st.container.side_effect = lambda *args, **kwargs: make_context()
-    mock_st.expander.side_effect = lambda *args, **kwargs: make_context()
-    confirm_col, cancel_col = MagicMock(), MagicMock()
-
-    def columns_side_effect(arg):
-        if arg == TWO_COLUMN_COUNT:
-            return (confirm_col, cancel_col)
-        if isinstance(arg, int):
-            return tuple(MagicMock() for _ in range(arg))
-        return tuple(MagicMock() for _ in range(len(arg)))
-
-    mock_st.columns.side_effect = columns_side_effect
-    confirm_col.button.return_value = False
-    cancel_col.button.return_value = True
-    mock_st.rerun = MagicMock()
-
-    app._render_history_page_impl()
-
-    mock_delete.assert_not_called()
-    assert "confirm_delete_id" not in mock_st.session_state
-    mock_announce.assert_any_call(
-        "Nenhuma exclusão foi realizada.", "info", st_api=mock_st
-    )
-    mock_st.rerun.assert_called_once()
-
-
-@patch("app.announce")
-@patch("app.clear_history", return_value=3)
-@patch("app.get_all_analysis_history", return_value=[])
-@patch("app.st")
-def test_render_history_page_impl_confirma_limpeza_total(
-    mock_st, mock_get_history, mock_clear_history, mock_announce
-):
-    """Valida a confirmação da limpeza completa do histórico."""
-
-    mock_st.session_state = {"confirm_clear_all": True}
-    mock_st.query_params.get.return_value = None
-
-    def make_context():
-        ctx = MagicMock()
-        ctx.__enter__.return_value = MagicMock()
-        ctx.__exit__.return_value = False
-        return ctx
-
-    mock_st.container.side_effect = lambda *args, **kwargs: make_context()
-    mock_st.expander.side_effect = lambda *args, **kwargs: make_context()
-    confirm_col, cancel_col = MagicMock(), MagicMock()
-
-    def columns_side_effect(arg):
-        if arg == TWO_COLUMN_COUNT:
-            return (confirm_col, cancel_col)
-        if isinstance(arg, int):
-            return tuple(MagicMock() for _ in range(arg))
-        return tuple(MagicMock() for _ in range(len(arg)))
-
-    mock_st.columns.side_effect = columns_side_effect
-    confirm_col.button.return_value = True
-    cancel_col.button.return_value = False
-    mock_st.rerun = MagicMock()
-
-    app._render_history_page_impl()
-
-    mock_clear_history.assert_called_once()
-    assert "confirm_clear_all" not in mock_st.session_state
-    mock_announce.assert_any_call(
-        "3 análises foram removidas.", "success", st_api=mock_st
-    )
-    mock_st.rerun.assert_called_once()
-
-
-@patch("app.accessible_button")
-@patch("app.get_all_analysis_history")
-@patch("app.st")
-def test_render_history_page_impl_lista_dispara_confirm_clear_all(
-    mock_st, mock_get_history, mock_accessible_button
-):
-    """O botão para limpar histórico deve sinalizar confirm_clear_all."""
-
-    mock_st.session_state = {}
-    mock_st.query_params.get.return_value = None
-
-    def make_context():
-        ctx = MagicMock()
-        ctx.__enter__.return_value = MagicMock()
-        ctx.__exit__.return_value = False
-        return ctx
-
-    mock_st.container.side_effect = lambda *args, **kwargs: make_context()
-    mock_st.expander.side_effect = lambda *args, **kwargs: make_context()
-
-    def columns_side_effect(arg):
-        if isinstance(arg, int):
-            return tuple(MagicMock() for _ in range(arg))
-        if isinstance(arg, (list | tuple)):
-            return tuple(MagicMock() for _ in arg)
-        return (MagicMock(), MagicMock())
-
-    mock_st.columns.side_effect = columns_side_effect
-
-    mock_get_history.return_value = [
-        {"id": 1, "created_at": "2024-01-01", "user_story": "Como usuário..."}
-    ]
-
-    def accessible_button_side_effect(*args, **kwargs):
-        label = kwargs.get("label") or (args[0] if args else "")
-        return label == "🗑️ Excluir TODO o Histórico"
-
-    mock_accessible_button.side_effect = accessible_button_side_effect
-    mock_st.rerun = MagicMock()
-
-    app._render_history_page_impl()
-
-    assert mock_st.session_state["confirm_clear_all"] is True
-    mock_st.rerun.assert_called_once()
-
-
 # --- TESTES DE EXECUÇÃO DIRETA DO SCRIPT ---
 def test_main_execucao_direta_reload(monkeypatch):
     """Simula execução direta do app (cobre o if __main__)."""
@@ -732,6 +598,40 @@ def test_render_history_page_impl_confirma_exclusao(
     assert "confirm_delete_id" not in mock_st.session_state
 
 
+@patch('app.announce')
+@patch('app.clear_history', return_value=3)
+@patch('app.get_all_analysis_history', return_value=[])
+@patch('app.st')
+def test_render_history_page_impl_confirma_limpeza_total(
+    mock_st, mock_get_history, mock_clear_history, mock_announce
+):
+    """Clique em confirmar deve limpar todo o histórico."""
+
+    mock_st.session_state = {"confirm_clear_all": True}
+    mock_st.query_params.get.return_value = None
+
+    mock_container = MagicMock()
+    mock_container.__enter__.return_value = mock_container
+    mock_container.__exit__.return_value = None
+    mock_st.container.return_value = mock_container
+
+    col_confirm, col_cancel = MagicMock(), MagicMock()
+    col_confirm.accessible_button.return_value = True
+    col_cancel.accessible_button.return_value = False
+    mock_st.columns.return_value = [col_confirm, col_cancel]
+
+    mock_st.rerun = MagicMock()
+
+    app._render_history_page_impl()
+
+    mock_clear_history.assert_called_once()
+    assert "confirm_clear_all" not in mock_st.session_state
+    mock_announce.assert_any_call(
+        "3 análises foram removidas.", "success", st_api=mock_st
+    )
+    mock_st.rerun.assert_called_once()
+
+
 @patch('app.accessible_button')
 @patch('app.delete_analysis_by_id', return_value=False)
 @patch('app.get_all_analysis_history', return_value=[])
@@ -764,7 +664,69 @@ def test_render_history_page_impl_cancela_exclusao(
     mock_st.columns.return_value = [col1, col2]
     
     app._render_history_page_impl()
-    
+
     # Não deve ter deletado
     mock_delete.assert_not_called()
     assert "confirm_delete_id" not in mock_st.session_state
+
+
+@patch('app.accessible_button')
+@patch('app.get_all_analysis_history')
+@patch('app.st')
+def test_render_history_page_impl_lista_dispara_confirm_clear_all(
+    mock_st, mock_get_history, mock_accessible_button
+):
+    """Botão principal deve sinalizar confirmação de limpeza total."""
+
+    mock_st.session_state = {}
+    mock_st.query_params.get.return_value = None
+
+    mock_get_history.return_value = [
+        {"id": 1, "created_at": "2024-01-01", "user_story": "Como usuário..."}
+    ]
+
+    def make_context():
+        ctx = MagicMock()
+        ctx.__enter__.return_value = MagicMock()
+        ctx.__exit__.return_value = False
+        return ctx
+
+    mock_st.container.side_effect = lambda *args, **kwargs: make_context()
+    mock_st.expander.side_effect = lambda *args, **kwargs: make_context()
+
+    confirm_col, cancel_col = MagicMock(), MagicMock()
+    confirm_col.accessible_button.return_value = False
+    cancel_col.accessible_button.return_value = False
+
+    column_calls = [
+        [confirm_col, cancel_col],  # Para o bloco de confirmação
+    ]
+
+    def columns_side_effect(arg):
+        if isinstance(arg, int) and arg == 2 and column_calls:
+            return column_calls.pop(0)
+        if isinstance(arg, int):
+            cols = [MagicMock() for _ in range(arg)]
+        elif isinstance(arg, list | tuple):
+            cols = [MagicMock() for _ in arg]
+        else:
+            cols = [MagicMock(), MagicMock()]
+
+        for col in cols:
+            col.accessible_button.return_value = False
+            col.button.return_value = False
+        return cols
+
+    mock_st.columns.side_effect = columns_side_effect
+
+    def accessible_button_side_effect(*args, **kwargs):
+        label = kwargs.get("label") or (args[0] if args else "")
+        return label == "🗑️ Excluir TODO o Histórico"
+
+    mock_accessible_button.side_effect = accessible_button_side_effect
+    mock_st.rerun = MagicMock()
+
+    app._render_history_page_impl()
+
+    assert mock_st.session_state["confirm_clear_all"] is True
+    mock_st.rerun.assert_called_once()
