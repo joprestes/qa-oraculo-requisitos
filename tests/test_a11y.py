@@ -241,20 +241,31 @@ def test_apply_accessible_styles_contem_seletores_importantes():
 # ==========================================================
 # TESTES DE RENDERIZAÇÃO DO SIDEBAR
 # ==========================================================
+
 def test_render_keyboard_shortcuts_guide():
-    """Valida que o guia de atalhos é renderizado no sidebar."""
+    """Valida que o guia de atalhos é renderizado dentro de um expander no sidebar."""
     with patch("a11y.st") as mock_st:
+        # Configura o mock para simular o comportamento de um context manager ('with')
+        mock_expander = MagicMock()
+        mock_st.sidebar.expander.return_value.__enter__.return_value = mock_expander
+
         a11y.render_keyboard_shortcuts_guide()
 
-        # Deve chamar sidebar.markdown pelo menos para título e conteúdo
-        assert mock_st.sidebar.markdown.call_count >= MIN_SIDEBAR_MARKDOWN_CALLS
+        # 1. Valida que o expander foi criado no sidebar com o título correto
+        mock_st.sidebar.expander.assert_called_once_with("⌨️ Navegação por Teclado")
 
-        # Valida conteúdo
-        calls = [str(call) for call in mock_st.sidebar.markdown.call_args_list]
-        content = " ".join(calls)
+        # 2. Valida que, dentro do expander, st.markdown foi chamado para renderizar o conteúdo
+        # A chamada agora é feita em `st.markdown`, não em `st.sidebar.markdown`
+        mock_st.markdown.assert_called_once()
+        
+        # 3. (Opcional, mas recomendado) Valida o conteúdo do markdown
+        call_args, call_kwargs = mock_st.markdown.call_args
+        content = call_args[0]
+        
         assert "Tab" in content
         assert "Enter" in content
         assert "teclado" in content.lower()
+        assert call_kwargs["unsafe_allow_html"] is True
 
 
 def test_render_accessibility_info():

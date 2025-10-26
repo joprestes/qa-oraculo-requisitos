@@ -12,7 +12,7 @@ echo "=================================================================="
 echo "🚀 Iniciando o setup e revisão do ambiente QA Oráculo..."
 echo "=================================================================="
 
-# 1️⃣ Criação do ambiente virtual
+# 1️ Criação do ambiente virtual
 if [ ! -d ".venv" ]; then
   echo "📦 Criando ambiente virtual (.venv)..."
   python3 -m venv .venv
@@ -20,7 +20,7 @@ else
   echo "📦 Ambiente virtual (.venv) já existe. Pulando criação."
 fi
 
-# 2️⃣ Ativação do ambiente e instalação de dependências
+# 2️Ativação do ambiente e instalação de dependências
 echo "🔧 Ativando ambiente virtual..."
 source .venv/bin/activate
 
@@ -30,20 +30,20 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 pip install black ruff pytest pytest-cov
 
-# 3️⃣ Validação do pyproject.toml
+# 3️ Validação do pyproject.toml
 echo "🧩 Validando pyproject.toml..."
 python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"
 
-# 4️⃣ Lint e formatação
+# 4️ Lint e formatação
 echo "🎯 Rodando verificações de qualidade (Ruff + Black)..."
 ruff check .
 black --check .
 
-# 5️⃣ Testes com cobertura
+# 5️ Testes com cobertura
 echo "🧪 Executando testes unitários e cobertura..."
 pytest --cov --cov-report=term-missing
 
-# 6️⃣ Revisão final de pré-push
+# 6️ Revisão final de pré-push
 echo "🧱 Revisão QA Oráculo antes do push..."
 echo "--------------------------------------------------"
 python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"
@@ -53,7 +53,7 @@ pytest --cov --cov-report=term-missing
 echo "--------------------------------------------------"
 echo "✅ Tudo validado! Pronto para commit e push 🚀"
 
-# 7️⃣ Desativa ambiente virtual
+# 7️ Desativa ambiente virtual
 deactivate
 
 echo "=================================================================="

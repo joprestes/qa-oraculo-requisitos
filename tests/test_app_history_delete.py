@@ -1,3 +1,7 @@
+# =========================================================
+# test_app_history_delete.py
+# =========================================================
+
 """Testes do módulo de histórico — exclusão de análises e limpeza total."""
 
 from unittest.mock import MagicMock, patch

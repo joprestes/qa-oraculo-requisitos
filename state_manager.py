@@ -1,5 +1,8 @@
+# ====================
+# state_manager.py
 # state_manager.py
 # Gerenciamento do estado da aplicação Streamlit
+# ====================
 
 
 import streamlit as st

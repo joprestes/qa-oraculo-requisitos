@@ -1,4 +1,6 @@
+# =========================================================
 # tests/test_app.py
+# =========================================================
 """
 Testes de alto nível para o módulo principal do QA Oráculo (app.py).
 
@@ -276,7 +278,7 @@ def test_render_main_page_falha_na_geracao_do_plano(mocked_st):
 
 def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
     """
-    💡 Valida que ao editar um cenário Gherkin, o relatório de plano é atualizado
+    Valida que ao editar um cenário Gherkin, o relatório de plano é atualizado
     e o histórico é salvo automaticamente com o novo conteúdo.
     """
     # --- Prepara estado inicial ---

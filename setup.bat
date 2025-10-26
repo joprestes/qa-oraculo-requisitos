@@ -10,7 +10,7 @@ ECHO ================================================================
 ECHO 🚀 Iniciando o setup e revisão do ambiente QA Oráculo...
 ECHO ================================================================
 
-:: 1️⃣ Criação do ambiente virtual
+:: 1️Criação do ambiente virtual
 IF NOT EXIST .venv (
     ECHO 📦 Criando ambiente virtual (.venv)...
     python -m venv .venv
@@ -18,7 +18,7 @@ IF NOT EXIST .venv (
     ECHO 📦 Ambiente virtual (.venv) já existe. Pulando criação.
 )
 
-:: 2️⃣ Ativação do ambiente e instalação de dependências
+:: 2️Ativação do ambiente e instalação de dependências
 ECHO 🔧 Ativando ambiente virtual...
 CALL .\.venv\Scripts\activate
 
@@ -28,20 +28,20 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 pip install black ruff pytest pytest-cov
 
-:: 3️⃣ Validação do pyproject.toml
+:: 3️Validação do pyproject.toml
 ECHO 🧩 Validando pyproject.toml...
 python -c "import tomllib; tomllib.load(open('pyproject.toml','rb')); print('✅ TOML válido!')"
 
-:: 4️⃣ Lint e formatação
+:: 4️Lint e formatação
 ECHO 🎯 Rodando verificações de qualidade (Ruff + Black)...
 ruff check .
 black --check .
 
-:: 5️⃣ Testes com cobertura
+:: 5️ Testes com cobertura
 ECHO 🧪 Executando testes unitários e cobertura...
 pytest --cov --cov-report=term-missing
 
-:: 6️⃣ Revisão final de pré-push
+:: 6️ Revisão final de pré-push
 ECHO ================================================================
 ECHO 🧱 Revisão QA Oráculo antes do push...
 ECHO --------------------------------------------------
@@ -53,7 +53,7 @@ ECHO --------------------------------------------------
 ECHO ✅ Tudo validado! Pronto para commit e push 🚀
 ECHO ================================================================
 
-:: 7️⃣ Desativar ambiente virtual
+:: 7️ Desativar ambiente virtual
 CALL .\.venv\Scripts\deactivate.bat
 
 ECHO ================================================================

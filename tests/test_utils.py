@@ -37,11 +37,14 @@ from utils import (
     to_excel,
 )
 
-# 🔢 Limite máximo do nome base de arquivos gerados
+#  Variáveis globais para testes de CSV Azure
+
+EXPECTED_COLUMNS_COUNT = 10
+EXPECTED_TEST_CASES_COUNT = 2
 MAX_FILENAME_BASE = 50
 
 # ============================================================
-# 🔧 Testes gerais de funções utilitárias
+#  Testes gerais de funções utilitárias
 # ============================================================
 # Esta classe agrupa os testes principais das funções utilitárias.
 # Ela cobre os comportamentos de transformação de dados,
@@ -50,11 +53,11 @@ MAX_FILENAME_BASE = 50
 
 
 class TestUtilsFunctions(unittest.TestCase):
-    """🧩 Classe que testa as principais funções do módulo utils."""
+    """Classe que testa as principais funções do módulo utils."""
 
     def setUp(self):
         """
-        💡 Executa antes de cada teste.
+         Executa antes de cada teste.
         Cria um DataFrame de exemplo que simula dois casos de teste:
         - Um cenário “feliz” (fluxo principal)
         - Um cenário “infeliz” (erro ou exceção esperada)
@@ -76,7 +79,7 @@ class TestUtilsFunctions(unittest.TestCase):
 
     def test_normalizar_string(self):
         """
-        💡 Verifica se caracteres acentuados e cedilhas são convertidos
+         Verifica se caracteres acentuados e cedilhas são convertidos
         para suas versões sem acentuação.
         Exemplo: 'usuário' → 'usuario', 'ç' → 'c'
         """
@@ -87,34 +90,34 @@ class TestUtilsFunctions(unittest.TestCase):
 
     def test_get_flexible(self):
         """
-        💡 Garante que a função `get_flexible` consegue encontrar
+         Garante que a função `get_flexible` consegue encontrar
         chaves alternativas em dicionários com diferentes nomes de campos.
         Inclui validação de fallback e tipos inválidos.
         """
         data = {"avaliacao_geral": "Bom", "riscos": ["Risco 1"]}
 
-        # 🧠 Caso 1 — Encontra a chave primária
+        #  Caso 1 — Encontra a chave primária
         self.assertEqual(
             get_flexible(data, ["avaliacao_geral", "avaliacao"], "Padrão"), "Bom"
         )
 
-        # 🔄 Caso 2 — Encontra a chave alternativa
+        #  Caso 2 — Encontra a chave alternativa
         self.assertEqual(
             get_flexible(data, ["riscos_e_dependencias", "riscos"], []), ["Risco 1"]
         )
 
-        # 🚫 Caso 3 — Nenhuma chave encontrada (retorna valor padrão)
+        #  Caso 3 — Nenhuma chave encontrada (retorna valor padrão)
         self.assertEqual(
             get_flexible(data, ["pontos_ambiguos", "ambiguidades"], []), []
         )
 
-        # ⚙️ Caso 4 — Entrada inválida (não é dict)
+        #  Caso 4 — Entrada inválida (não é dict)
         self.assertEqual(get_flexible(None, ["chave"], "Padrão"), "Padrão")
         self.assertEqual(get_flexible([], ["chave"], "Padrão"), "Padrão")
 
     def test_preparar_df_para_zephyr_xlsx(self):
         """
-        💡 Testa se a função converte corretamente um DataFrame de cenários
+         Testa se a função converte corretamente um DataFrame de cenários
         para o formato esperado pelo Jira Zephyr (planilha de importação).
         Espera-se que o número de linhas exportadas seja igual ao número
         de casos de teste + cabeçalho.
@@ -125,49 +128,46 @@ class TestUtilsFunctions(unittest.TestCase):
     @patch("utils.datetime")
     def test_gerar_nome_arquivo_seguro(self, mock_datetime):
         """
-        💡 Garante que o nome de arquivo gerado:
-           - Remove caracteres especiais
-           - Inclui timestamp de data/hora
-           - Usa o padrão `relatorio_qa_oraculo` quando o nome estiver vazio
+        Garante que o nome de arquivo gerado:
+          - Remove caracteres especiais
+          - Inclui timestamp de data/hora
+          - Usa o padrão `relatorio_qa_oraculo` quando o nome estiver vazio
         """
-        # 🕒 Define uma data fixa para prever o resultado
+        #  Define uma data fixa para prever o resultado
         mock_now = datetime.datetime(2024, 1, 1, 12, 0, 0)
         mock_datetime.datetime.now.return_value = mock_now
 
-        # ✅ Testa geração com nome customizado
+        # Testa geração com nome customizado
         self.assertEqual(
             gerar_nome_arquivo_seguro("usuário", "txt"), "usuario_20240101_120000.txt"
         )
 
-        # ✅ Testa fallback padrão (sem nome)
+        # Testa fallback padrão (sem nome)
         self.assertEqual(gerar_nome_arquivo_seguro("", "md"), "relatorio_qa_oraculo.md")
 
     def test_to_excel_conversion(self):
         """
-        💡 Garante a integridade da função `to_excel`, verificando se:
-           1️⃣ O DataFrame é convertido para bytes.
-           2️⃣ O arquivo pode ser reaberto e contém os mesmos dados originais.
+        Garante a integridade da função `to_excel`, verificando se:
+          1️ O DataFrame é convertido para bytes.
+          2️O arquivo pode ser reaberto e contém os mesmos dados originais.
         """
         source_df = pd.DataFrame({"ID": [1, 2], "Nome": ["Teste A", "Teste B"]})
         sheet_name = "MinhaPlanilha"
 
-        # 🧾 Converte DataFrame → Excel (em bytes)
+        #  Converte DataFrame → Excel (em bytes)
         excel_bytes = to_excel(source_df, sheet_name)
 
-        # ✅ Deve retornar bytes válidos
+        #  Deve retornar bytes válidos
         self.assertIsInstance(excel_bytes, bytes)
         self.assertTrue(len(excel_bytes) > 0)
 
-        # 🔁 Converte de volta para DataFrame e compara os dados
+        #  Converte de volta para DataFrame e compara os dados
         result_df = pd.read_excel(io.BytesIO(excel_bytes), sheet_name=sheet_name)
         pd.testing.assert_frame_equal(source_df, result_df)
 
 
 # ============================================================
-# 🧪 Testes extras (Markdown, JSON, ensure_bytes)
-# ============================================================
-# ============================================================
-# 🧪 Testes extras — Markdown, JSON e _ensure_bytes
+#  Testes extras — Markdown, JSON e _ensure_bytes
 # ============================================================
 # Esta seção valida funções auxiliares do módulo utils,
 # responsáveis por:
@@ -181,11 +181,11 @@ class TestUtilsFunctions(unittest.TestCase):
 
 
 class TestUtilsExtras(unittest.TestCase):
-    """🧩 Testa funções auxiliares de limpeza e parsing do módulo utils."""
+    """Testa funções auxiliares de limpeza e parsing do módulo utils."""
 
     def test_clean_markdown_report_completo(self):
         """
-        💡 Garante que o texto entre cercas ```markdown e ``` seja extraído corretamente.
+        Garante que o texto entre cercas ```markdown e ``` seja extraído corretamente.
         O conteúdo fora dessas marcações deve ser removido.
         """
         texto = "```markdown\n# Título\n```"
@@ -194,7 +194,7 @@ class TestUtilsExtras(unittest.TestCase):
 
     def test_clean_markdown_report_sem_cercas(self):
         """
-        💡 Verifica o comportamento quando o texto não contém cercas de markdown.
+         Verifica o comportamento quando o texto não contém cercas de markdown.
         Nesse caso, o conteúdo deve ser retornado inalterado.
         """
         texto = "# Apenas texto normal"
@@ -202,14 +202,14 @@ class TestUtilsExtras(unittest.TestCase):
 
     def test_clean_markdown_report_nao_string(self):
         """
-        💡 Se o valor passado não for uma string (ex: None),
+        Se o valor passado não for uma string (ex: None),
         a função deve retornar uma string vazia, evitando exceções.
         """
         self.assertEqual(clean_markdown_report(None), "")
 
     def test_parse_json_strict_valido(self):
         """
-        💡 Testa o parsing de um JSON puro, sem formatação adicional.
+         Testa o parsing de um JSON puro, sem formatação adicional.
         O resultado deve ser um dicionário Python equivalente.
         """
         texto = '{"key": "value"}'
@@ -217,7 +217,7 @@ class TestUtilsExtras(unittest.TestCase):
 
     def test_parse_json_strict_com_cercas(self):
         """
-        💡 Valida o comportamento com JSONs delimitados por ```json ... ```.
+         Valida o comportamento com JSONs delimitados por ```json ... ```.
         A função deve ignorar as cercas e decodificar o conteúdo corretamente.
         """
         texto = '```json\n{"key": "value"}\n```'
@@ -225,7 +225,7 @@ class TestUtilsExtras(unittest.TestCase):
 
     def test_parse_json_strict_invalido(self):
         """
-        💡 Quando o texto não é JSON válido, a função deve lançar ValueError,
+         Quando o texto não é JSON válido, a função deve lançar ValueError,
         mantendo a robustez contra entradas inesperadas.
         """
         with self.assertRaises(ValueError):
@@ -234,10 +234,10 @@ class TestUtilsExtras(unittest.TestCase):
 
 def test_gerar_relatorio_md_dos_cenarios_completo():
     """
-    💡 Valida a função `gerar_relatorio_md_dos_cenarios`, garantindo que:
-       - Gere texto Markdown com blocos Gherkin
-       - Inclua os campos principais de cada caso de teste
-       - Trate corretamente DataFrames vazios
+    Valida a função `gerar_relatorio_md_dos_cenarios`, garantindo que:
+      - Gere texto Markdown com blocos Gherkin
+      - Inclua os campos principais de cada caso de teste
+      - Trate corretamente DataFrames vazios
     """
     df = pd.DataFrame(
         [
@@ -271,7 +271,7 @@ def test_gerar_relatorio_md_dos_cenarios_completo():
 
 
 # ============================================================
-# 🧠 Testes complementares independentes
+#  Testes complementares independentes
 # ============================================================
 # Estes testes não fazem parte da classe acima, mas cobrem
 # variações e exceções adicionais, garantindo cobertura total
@@ -281,7 +281,7 @@ def test_gerar_relatorio_md_dos_cenarios_completo():
 
 def test_parse_json_strict_com_cercas_incompletas():
     """
-    💡 Cobre o caso em que há apenas a abertura das cercas ```json,
+     Cobre o caso em que há apenas a abertura das cercas ```json,
     mas sem o fechamento final. A função deve conseguir parsear o conteúdo.
     """
     texto = '```json\n{"key": "value"}'
@@ -290,7 +290,7 @@ def test_parse_json_strict_com_cercas_incompletas():
 
 def test_parse_json_strict_invalido_levanta():
     """
-    💡 Caso o conteúdo seja ilegível como JSON, o método
+     Caso o conteúdo seja ilegível como JSON, o método
     deve lançar uma exceção ValueError, indicando falha no parsing.
     """
     with pytest.raises(ValueError):
@@ -299,7 +299,7 @@ def test_parse_json_strict_invalido_levanta():
 
 def test_gerar_nome_arquivo_seguro_caracteres_invalidos():
     """
-    💡 Garante que caracteres inválidos em nomes de arquivo
+     Garante que caracteres inválidos em nomes de arquivo
     (como /, :, *, ?) sejam removidos e que a extensão final seja mantida.
     """
     nome = gerar_nome_arquivo_seguro("História/Inválida:*?", "txt")
@@ -309,7 +309,7 @@ def test_gerar_nome_arquivo_seguro_caracteres_invalidos():
 
 def test_to_excel_dataframe_vazio():
     """
-    💡 Mesmo um DataFrame vazio deve gerar um arquivo Excel válido.
+     Mesmo um DataFrame vazio deve gerar um arquivo Excel válido.
     A função deve retornar um buffer de bytes, não lançar exceção.
     """
     df = pd.DataFrame()
@@ -319,7 +319,7 @@ def test_to_excel_dataframe_vazio():
 
 def test_ensure_bytes_com_getvalue():
     """
-    💡 Testa a função `_ensure_bytes` com objetos que possuem
+     Testa a função `_ensure_bytes` com objetos que possuem
     o método `getvalue()`, como `BytesIO`.
     O retorno deve ser exatamente o conteúdo em bytes.
     """
@@ -329,7 +329,7 @@ def test_ensure_bytes_com_getvalue():
 
 def test_ensure_bytes_com_bytes_diretos():
     """
-    💡 Verifica o comportamento de `_ensure_bytes` quando recebe
+     Verifica o comportamento de `_ensure_bytes` quando recebe
     diretamente valores já em bytes ou bytearray.
     A função deve apenas retorná-los sem modificações.
     """
@@ -338,11 +338,8 @@ def test_ensure_bytes_com_bytes_diretos():
 
 
 # ============================================================
-# 🧪 NOVOS TESTES — gerar_csv_azure_from_df
+#  TESTES — gerar_csv_azure_from_df
 # ============================================================
-
-EXPECTED_COLUMNS_COUNT = 10
-EXPECTED_TEST_CASES_COUNT = 2
 
 
 def test_gerar_csv_azure_from_df_basico(monkeypatch):
@@ -478,7 +475,7 @@ def test_gerar_csv_azure_df_vazio_e_prioridade_invalida():
 
 
 # ============================================================
-# 🧩 Testes complementares — Cobertura total (100%)
+#  Testes complementares —
 # ============================================================
 # Esta seção garante a cobertura completa do módulo utils.
 # São incluídos testes de exceções, fluxos alternativos e
@@ -489,7 +486,7 @@ def test_gerar_csv_azure_df_vazio_e_prioridade_invalida():
 
 def test_ensure_bytes_tipo_invalido():
     """
-    💡 Força `_ensure_bytes` a lidar com tipos inesperados (int, dict).
+     Força `_ensure_bytes` a lidar com tipos inesperados (int, dict).
     A função deve converter qualquer tipo não suportado em bytes
     chamando `str()` internamente.
     """
@@ -500,7 +497,7 @@ def test_ensure_bytes_tipo_invalido():
 
 def test_clean_markdown_report_com_fechamento_de_cercas():
     """
-    💡 Verifica se a função `clean_markdown_report` remove corretamente
+     Verifica se a função `clean_markdown_report` remove corretamente
     o fechamento de cercas de código (```), mantendo apenas o conteúdo.
     """
     texto = "# Título\n```"
@@ -510,7 +507,7 @@ def test_clean_markdown_report_com_fechamento_de_cercas():
 
 def test_parse_json_strict_apenas_inicio_com_cercas():
     """
-    💡 Garante a cobertura do caso em que o JSON contém apenas
+     Garante a cobertura do caso em que o JSON contém apenas
     a abertura das cercas (` ```json `) mas sem o fechamento final.
     O conteúdo interno ainda deve ser interpretado corretamente.
     """
@@ -521,7 +518,7 @@ def test_parse_json_strict_apenas_inicio_com_cercas():
 
 def test_parse_json_strict_apenas_fim_com_cercas():
     """
-    💡 Garante a cobertura do caso inverso: o JSON termina com as cercas
+     Garante a cobertura do caso inverso: o JSON termina com as cercas
     de fechamento ``` mas não tem abertura. A função deve conseguir
     decodificar normalmente o conteúdo.
     """
@@ -532,7 +529,7 @@ def test_parse_json_strict_apenas_fim_com_cercas():
 
 def test_gerar_csv_azure_locale_invalido(monkeypatch):
     """
-    💡 Força uma exceção na detecção do locale para garantir que
+     Força uma exceção na detecção do locale para garantir que
     a função `gerar_csv_azure_from_df` utilize o fallback padrão.
     Mesmo sem locale válido, o CSV deve ser gerado corretamente.
     """
@@ -543,14 +540,14 @@ def test_gerar_csv_azure_locale_invalido(monkeypatch):
 
     csv_bytes = utils.gerar_csv_azure_from_df(df, "Area", "QA")
 
-    # ✅ Ainda deve retornar um arquivo válido
+    #  Ainda deve retornar um arquivo válido
     assert isinstance(csv_bytes, (bytes | bytearray))
     assert b"Test Case" in csv_bytes
 
 
 def test_to_excel_erro_salvar(monkeypatch):
     """
-    💡 Força um erro interno no salvamento do Excel para cobrir o bloco `except`.
+     Força um erro interno no salvamento do Excel para cobrir o bloco `except`.
     Garante que o erro seja propagado corretamente como ValueError.
     """
 
@@ -576,7 +573,7 @@ def test_to_excel_erro_salvar(monkeypatch):
 
 def test_clean_markdown_report_final_com_cercas():
     """
-    💡 Cobre o uso do `re.sub` interno que remove as cercas finais.
+     Cobre o uso do `re.sub` interno que remove as cercas finais.
     O conteúdo deve permanecer limpo e sem marcas de ``` no final.
     """
     texto = "# Título\n```"
@@ -587,7 +584,7 @@ def test_clean_markdown_report_final_com_cercas():
 
 def test_gerar_csv_azure_quando_sem_entao():
     """
-    💡 Cobre o cenário em que existe um passo 'Quando' mas não há
+     Cobre o cenário em que existe um passo 'Quando' mas não há
     passo 'Então'. O CSV ainda deve ser gerado e conter o passo único.
     """
     df = pd.DataFrame(
@@ -597,13 +594,13 @@ def test_gerar_csv_azure_quando_sem_entao():
     csv_bytes = utils.gerar_csv_azure_from_df(df, "Area", "QA")
     text = csv_bytes.decode("utf-8-sig")
 
-    # ✅ Deve conter o passo 'Quando' no conteúdo final
+    #  Deve conter o passo 'Quando' no conteúdo final
     assert "Quando clico no botão" in text
 
 
 def test_preparar_df_para_zephyr_cenario_vazio_cobre_continue():
     """
-    💡 Cobre o ramo da linha 96 em `preparar_df_para_zephyr_xlsx`:
+     Cobre o ramo da linha 96 em `preparar_df_para_zephyr_xlsx`:
     `if not cenario_steps: continue`
     Garante que cenários vazios (string vazia ou None) sejam ignorados
     sem gerar erro ou linha indevida no resultado.
@@ -617,13 +614,13 @@ def test_preparar_df_para_zephyr_cenario_vazio_cobre_continue():
 
     result = utils.preparar_df_para_zephyr_xlsx(df, "High", "QA", "Desc")
 
-    # ✅ Nenhum cenário válido → resultado vazio
+    #  Nenhum cenário válido → resultado vazio
     assert result.empty
 
 
 def test_gerar_csv_azure_cenario_tipo_invalido_cobre_linha_227():
     """
-    💡 Cobre o trecho da linha 227 de `gerar_csv_azure_from_df`:
+     Cobre o trecho da linha 227 de `gerar_csv_azure_from_df`:
     `if not isinstance(cenario_steps, list)`
     Garante que valores de cenário não-lista (como inteiros) sejam
     tratados de forma segura, sem lançar erro.
@@ -635,14 +632,14 @@ def test_gerar_csv_azure_cenario_tipo_invalido_cobre_linha_227():
     csv_bytes = utils.gerar_csv_azure_from_df(df, "Area/Teste", "QA")
     text = csv_bytes.decode("utf-8-sig")
 
-    # ✅ O título deve existir, mas sem passos (cenário ignorado)
+    #  O título deve existir, mas sem passos (cenário ignorado)
     assert "CT tipo inválido" in text
     assert "Dado" not in text and "Quando" not in text
 
 
 def test_gerar_csv_azure_com_passos_com_e_cobre_279_288():
     """
-    💡 Cobre o bloco das linhas 279-288 em `gerar_csv_azure_from_df`,
+     Cobre o bloco das linhas 279-288 em `gerar_csv_azure_from_df`,
     que trata passos começando com 'E ' (continuação de ações anteriores).
     O teste garante cobertura para:
       - 'E' após um passo 'Quando'
@@ -671,6 +668,6 @@ def test_gerar_csv_azure_com_passos_com_e_cobre_279_288():
     csv_bytes = utils.gerar_csv_azure_from_df(df, "Area/Teste", "QA")
     text = csv_bytes.decode("utf-8-sig")
 
-    # ✅ Ambos os passos com 'E' devem estar presentes
+    #  Ambos os passos com 'E' devem estar presentes
     assert "E vê a tela inicial" in text
     assert "E outro passo" in text

@@ -1,16 +1,16 @@
 # ==========================================================
 # a11y.py — Módulo de Acessibilidade do QA Oráculo
 # ==========================================================
-# 📘 Este módulo fornece melhorias de acessibilidade REAIS
+#  Este módulo fornece melhorias de acessibilidade REAIS
 #    que funcionam dentro das limitações do Streamlit.
 #
-# 🎯 Baseado em:
+#  Baseado em:
 #   - WCAG 2.1 Level AA
 #   - Testes com NVDA, JAWS e VoiceOver
 #   - Limitações técnicas do Streamlit validadas
 #
-# ⚠️ IMPORTANTE: Este módulo NÃO promete acessibilidade 100%.
-#    Ele implementa o MÁXIMO possível dentro do Streamlit.
+# IMPORTANTE: Este módulo NÃO promete acessibilidade 100%.
+#   Ele implementa o MÁXIMO possível dentro do Streamlit.
 # ==========================================================
 
 
@@ -419,37 +419,39 @@ def announce(message: str, level: str = "info", st_api=None):
 
 def render_keyboard_shortcuts_guide():
     """
-    Exibe guia permanente de atalhos de teclado no sidebar.
+    Exibe guia de atalhos de teclado no sidebar como dropdown.
 
-    Esta função documenta a navegação por teclado disponível
-    no Streamlit, ajudando usuários que não podem usar mouse.
+    A seção agora utiliza um elemento `<details>` renderizado via
+    `st.sidebar.markdown`, permitindo recolher o conteúdo quando
+    não estiver em uso. Isso reduz poluição visual sem remover a
+    documentação acessível para quem depende de navegação por teclado.
 
     IMPORTANTE: O Streamlit não permite atalhos customizados via JS.
     Esta função apenas DOCUMENTA os atalhos nativos existentes.
     """
-    st.sidebar.markdown("---")
-    st.sidebar.markdown(
-        """
-    ### ⌨️ Navegação por Teclado
+    with st.sidebar.expander("⌨️ Navegação por Teclado"):
+        st.markdown(
+            """
+        **Básico:**
+        - `Tab` — Próximo elemento
+        - `Shift+Tab` — Elemento anterior
+        - `Enter` — Ativar botão/link focado
+        - `Espaço` — Ativar botão focado
+        
+        **Em campos de texto:**
+        - `Ctrl+A` — Selecionar tudo
+        - `Ctrl+C` — Copiar
+        - `Ctrl+V` — Colar
+        
+        **Expanders:**
+        - `Enter/Espaço` — Expandir/colapsar
+        
+        💡 **Dica:** Use apenas o teclado!  
+        Todo o app é navegável sem mouse.
     
-    **Básico:**
-    - `Tab` — Próximo elemento
-    - `Shift+Tab` — Elemento anterior
-    - `Enter` — Ativar botão/link focado
-    - `Espaço` — Ativar botão focado
-    
-    **Em campos de texto:**
-    - `Ctrl+A` — Selecionar tudo
-    - `Ctrl+C` — Copiar
-    - `Ctrl+V` — Colar
-    
-    **Expanders:**
-    - `Enter/Espaço` — Expandir/colapsar
-    
-    💡 **Dica:** Use apenas o teclado!  
-    Todo o app é navegável sem mouse.
-    """
-    )
+        """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_accessibility_info():
@@ -527,7 +529,7 @@ def check_accessibility_preferences():
 
 
 # ==========================================================
-# 🧪 Função de teste (executar com: python -m utils.a11y)
+#  Função de teste
 # ==========================================================
 
 if __name__ == "__main__":

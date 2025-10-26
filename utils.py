@@ -24,7 +24,7 @@ import unicodedata
 import pandas as pd
 
 # ==========================================================
-# 🔤 NORMALIZAÇÃO E NOMES DE ARQUIVOS
+# NORMALIZAÇÃO E NOMES DE ARQUIVOS
 # ==========================================================
 
 
@@ -51,7 +51,7 @@ def gerar_nome_arquivo_seguro(user_story: str, extension: str) -> str:
 
 
 # ==========================================================
-# 📊 EXPORTAÇÃO PARA EXCEL
+#  EXPORTAÇÃO PARA EXCEL
 # ==========================================================
 
 
@@ -64,7 +64,7 @@ def to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
 
 
 # ==========================================================
-# 🧩 EXPORTAÇÃO PARA JIRA ZEPHYR
+#  EXPORTAÇÃO PARA JIRA ZEPHYR
 # ==========================================================
 
 
@@ -112,7 +112,7 @@ def preparar_df_para_zephyr_xlsx(
 
 
 # ==========================================================
-# 🔍 FUNÇÕES DE SUPORTE E LIMPEZA
+#  FUNÇÕES DE SUPORTE E LIMPEZA
 # ==========================================================
 
 
@@ -152,7 +152,7 @@ def parse_json_strict(s: str):
 
 
 # ==========================================================
-# 🚀 EXPORTAÇÃO PARA AZURE TEST PLANS (CSV)
+#  EXPORTAÇÃO PARA AZURE TEST PLANS (CSV)
 # ==========================================================
 
 
@@ -226,7 +226,7 @@ def gerar_csv_azure_from_df(  # noqa: C901
         if not isinstance(cenario_steps, list):
             cenario_steps = []
 
-        # 1️⃣ Cabeçalho do Test Case
+        # 1️Cabeçalho do Test Case
         writer.writerow(
             [
                 "",  # ID vazio
@@ -245,7 +245,7 @@ def gerar_csv_azure_from_df(  # noqa: C901
         step_counter = 2
         pending_quando = None
 
-        # 2️⃣ Passos Gherkin
+        # 2️ Passos Gherkin
         for step in cenario_steps:
             step_lower = step.lower().strip()
 
@@ -287,14 +287,14 @@ def gerar_csv_azure_from_df(  # noqa: C901
                     )
                 step_counter += 1
 
-        # 3️⃣ Caso tenha um 'Quando' sem 'Então'
+        # 3️Caso tenha um 'Quando' sem 'Então'
         if pending_quando:
             writer.writerow(
                 ["", "", "", str(step_counter), pending_quando, "", "", "", "", ""]
             )
             step_counter += 1
 
-        # 4️⃣ Linha em branco para separar Test Cases
+        # 4️ Linha em branco para separar Test Cases
         writer.writerow([])
 
     csv_bytes = buffer.getvalue().encode("utf-8-sig")
@@ -303,7 +303,7 @@ def gerar_csv_azure_from_df(  # noqa: C901
 
 
 # ==========================================================
-# 🚀 Salva Gherkin após edição do usuário
+#  Salva Gherkin após edição do usuário
 # ==========================================================
 
 
