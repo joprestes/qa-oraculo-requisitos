@@ -860,7 +860,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
 
 # ==========================================================
-# 🗂️ Página de Histórico
+#  Página de Histórico
 # ==========================================================
 def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
     """
@@ -1288,8 +1288,6 @@ def main():
     # ♿ Acessibilidade global
     # ------------------------------------------------------
     apply_accessible_styles()
-    render_keyboard_shortcuts_guide()
-    render_accessibility_info()
 
     # ------------------------------------------------------
     #  Mapa de páginas (sidebar)
@@ -1300,6 +1298,8 @@ def main():
     }
 
     selected_page = st.sidebar.radio("Navegação", list(pages.keys()))
+    render_keyboard_shortcuts_guide()
+    render_accessibility_info()
     pages[selected_page]()
 
 
