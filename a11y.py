@@ -448,7 +448,7 @@ def render_keyboard_shortcuts_guide():
         
         💡 **Dica:** Use apenas o teclado!  
         Todo o app é navegável sem mouse.
-            </details>
+    
         """,
             unsafe_allow_html=True,
         )
