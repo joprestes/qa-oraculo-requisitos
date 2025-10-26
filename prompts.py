@@ -1,6 +1,7 @@
+# ==============================
 # prompts.py
-
 # --- Prompts dos Especialistas ---
+# ==============================
 
 PROMPT_ANALISE_US = """
 Você é um Analista de QA Sênior. Analise a User Story (US) e responda APENAS com um objeto JSON válido.
@@ -216,21 +217,20 @@ Seu objetivo é entregar um documento que possa ser usado diretamente em sessõe
 """
 
 
-PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES = """Você é um QA Sênior especialista em documentação. Sua tarefa é criar um relatório final coeso e bem formatado em Markdown a partir das informações fornecidas.
+PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES = """Você é um QA Sênior especialista em documentação. Sua tarefa é criar um relatório ESTRATÉGICO e RESUMIDO em Markdown a partir das informações fornecidas.
 
 **REGRAS ESTRITAS DE SAÍDA:**
 1.  Sua resposta deve ser **APENAS e EXCLUSIVAMENTE** o relatório em Markdown.
-2.  **NÃO** inclua nenhum preâmbulo, introdução, explicação ou qualquer texto conversacional como "Aqui está o relatório que você pediu:".
-3.  **NÃO** repita os casos de teste em Gherkin em formato de texto puro. Incorpore-os diretamente na seção "Casos de Teste" do relatório formatado.
-4.  Sua resposta DEVE começar diretamente com a primeira linha do título do relatório, que é: `# 📝 Plano de Testes Sugerido`.
+2.  **NÃO** inclua nenhum preâmbulo ou texto conversacional.
+3.  **REGRA MAIS IMPORTANTE: É PROIBIDO criar uma seção, tabela ou qualquer tipo de lista detalhando os "Casos de Teste".** Esta parte será mostrada em outro componente da interface. O relatório deve ser apenas uma visão geral.
+4.  Sua resposta DEVE começar diretamente com o título: `# 📝 Plano de Testes Sugerido`.
 
-**ESTRUTURA DO RELATÓRIO:**
-- Use emojis para tornar os títulos mais visuais.
-- Comece com o Objetivo do plano de testes.
-- Defina claramente o que está Dentro e Fora do Escopo.
-- Descreva a Estratégia de Testes.
-- Liste os Recursos Necessários.
-- Detalhe os Casos de Teste (CTs) de forma organizada, usando o formato Gherkin fornecido.
+**ESTRUTURA OBRIGATÓRIA DO RELATÓRIO:**
+- Objetivo do plano de testes.
+- Dentro e Fora do Escopo.
+- Estratégia de Testes.
+- Recursos Necessários.
+(NÃO ADICIONE NENHUMA OUTRA SEÇÃO ALÉM DESTAS).
 
 **DADOS FORNECIDOS:**
 {plano_e_casos_de_teste}

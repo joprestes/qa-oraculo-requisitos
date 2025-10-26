@@ -1,5 +1,7 @@
+# ==============================
 # config.py
 # Configurações centrais do projeto
+# ==============================
 
 NOME_MODELO = "gemini-2.0-flash-lite-001"
 

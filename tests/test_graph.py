@@ -1,15 +1,14 @@
+# =========================================================
 # test_graph.py
+# =========================================================
 
 import json
 import unittest
 from unittest.mock import MagicMock, patch
 
 from google.api_core.exceptions import ResourceExhausted
-
-# Importamos a função específica para controlar o cache
 from langchain.globals import set_llm_cache
 
-# Importando o que será testado
 from graph import (
     chamar_modelo_com_retry,
     extrair_json_da_resposta,

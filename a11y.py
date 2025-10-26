@@ -1,16 +1,16 @@
 # ==========================================================
 # a11y.py — Módulo de Acessibilidade do QA Oráculo
 # ==========================================================
-# 📘 Este módulo fornece melhorias de acessibilidade REAIS
+#  Este módulo fornece melhorias de acessibilidade REAIS
 #    que funcionam dentro das limitações do Streamlit.
 #
-# 🎯 Baseado em:
+#  Baseado em:
 #   - WCAG 2.1 Level AA
 #   - Testes com NVDA, JAWS e VoiceOver
 #   - Limitações técnicas do Streamlit validadas
 #
-# ⚠️ IMPORTANTE: Este módulo NÃO promete acessibilidade 100%.
-#    Ele implementa o MÁXIMO possível dentro do Streamlit.
+# IMPORTANTE: Este módulo NÃO promete acessibilidade 100%.
+#   Ele implementa o MÁXIMO possível dentro do Streamlit.
 # ==========================================================
 
 
@@ -527,7 +527,7 @@ def check_accessibility_preferences():
 
 
 # ==========================================================
-# 🧪 Função de teste (executar com: python -m utils.a11y)
+#  Função de teste
 # ==========================================================
 
 if __name__ == "__main__":

@@ -71,10 +71,7 @@ def save_analysis_to_history(
 ):
     """
     Salva uma nova análise no histórico.
-    🔒 Correção QA Oráculo:
-        - Evita NoneType nos campos.
-        - Garante fallback textual caso o Gemini falhe.
-        - Mantém compatibilidade total com a estrutura original.
+
     """
     try:
         # Sanitiza os campos para evitar valores nulos

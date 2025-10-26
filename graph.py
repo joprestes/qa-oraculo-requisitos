@@ -1,5 +1,7 @@
+# ==============================
 # graph.py
 # Implementação dos grafos de estados usando LangGraph e Google Gemini
+# ==============================
 
 import json
 import os

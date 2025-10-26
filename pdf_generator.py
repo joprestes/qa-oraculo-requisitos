@@ -1,7 +1,7 @@
 # ==========================================================
 # pdf_generator.py — Gerador de Relatórios PDF Acessíveis
 # ==========================================================
-# 📘 Responsável por criar relatórios em PDF a partir das análises
+#   Responsável por criar relatórios em PDF a partir das análises
 #    e planos de teste gerados pela IA.
 # ----------------------------------------------------------
 #  • Compatível com Unicode (fonte DejaVu)
@@ -152,7 +152,7 @@ def add_test_case_table(pdf: FPDF, df: pd.DataFrame):
     if df.empty:
         return
 
-    # 🔹 Remove possíveis duplicatas ou cabeçalhos residuais vindos do Markdown da IA
+    #  Remove possíveis duplicatas ou cabeçalhos residuais vindos do Markdown da IA
     df = df.loc[:, ~df.columns.duplicated()].copy()
 
     add_section_title(pdf, "2. Casos de Teste")

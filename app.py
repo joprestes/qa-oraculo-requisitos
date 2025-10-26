@@ -1,13 +1,13 @@
 # ==========================================================
 # app.py — Aplicação principal do QA Oráculo
 # ==========================================================
-# 📘 Este arquivo define toda a interface Streamlit do projeto:
+#  Este arquivo define toda a interface Streamlit do projeto:
 #   - Página principal de análise de User Stories
 #   - Geração de plano de testes (IA)
 #   - Exportações (Markdown, PDF, CSV Azure, XLSX Zephyr)
 #   - Histórico de análises (visualização e exclusão)
 #
-# 🎯 Princípios (QA Oráculo):
+# Princípios (QA Oráculo):
 #   • Código modular (funções separadas por responsabilidade)
 #   • Acessibilidade + automação de testes (data-testid / navegação teclado)
 #   • Preparado para testes unitários e E2E
@@ -64,7 +64,7 @@ from utils import (
 
 
 # ==========================================================
-# 🕒 Formatação segura de datas (compatível com testes)
+#  Formatação segura de datas (compatível com testes)
 # ==========================================================
 def format_datetime(value):
     """Aceita datetime ou string ISO e retorna formato dd/mm/yyyy hh:mm."""
@@ -81,7 +81,7 @@ def format_datetime(value):
 
 
 # ==========================================================
-# 🔒 Auxiliar: garante bytes no download_button
+#  Auxiliar: garante bytes no download_button
 # ==========================================================
 def _ensure_bytes(data):
     """
@@ -110,7 +110,7 @@ def _ensure_bytes(data):
 
 
 # ==========================================================
-# 헬 Auxiliar: Salva a análise atual no histórico (CORRIGIDO)
+#  Auxiliar: Salva a análise atual no histórico (CORRIGIDO)
 # ==========================================================
 def _save_current_analysis_to_history(update_existing: bool = False):
     """
@@ -224,7 +224,7 @@ def save_analysis_to_history(update_existing: bool = False):
 
 
 # ==========================================================
-# 🚀 Funções cacheadas (IA via LangGraph)
+#  Funções cacheadas (IA via LangGraph)
 # ==========================================================
 @st.cache_data(show_spinner=False)
 def run_analysis_graph(user_story: str):
@@ -250,7 +250,7 @@ def run_test_plan_graph(analysis_state: dict):
 
 
 # ==========================================================
-# 🧠 Página Principal — Análise de User Story
+#  Página Principal — Análise de User Story
 # ==========================================================
 def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     """
@@ -501,7 +501,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     "🔮 Elaborando o Plano de Testes com base na análise refinada..."
                 ):
                     try:
-                        # ===== INÍCIO DO BLOCO DE RISCO =====
+
                         resultado_plano = run_test_plan_graph(
                             st.session_state.get("analysis_state", {})
                         )
@@ -538,7 +538,6 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                         )
                         st.session_state["pdf_report_bytes"] = pdf_bytes
 
-                        # --- NOVO: Salva e encerra o fluxo imediatamente ---
                         if not st.session_state.get("history_saved"):
                             _save_current_analysis_to_history()
                             st.session_state["history_saved"] = True  # evita duplicação
@@ -548,7 +547,6 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                             "Plano de Testes gerado com sucesso!", "success", st_api=st
                         )
                         st.rerun()
-                        # ===== FIM DO BLOCO DE RISCO =====
 
                     except Exception as e:
                         # Em caso de falha, informa o usuário, mas não perde o progresso
@@ -579,7 +577,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
         announce("Análise concluída com sucesso!", "success", st_api=st)
 
         # ==================================================
-        # 📘 ANÁLISE REFINADA DA USER STORY
+        #  ANÁLISE REFINADA DA USER STORY
         # ==================================================
         if st.session_state.get("analysis_state"):
             with st.expander("📘 Análise Refinada da User Story", expanded=False):
@@ -591,11 +589,11 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 )
 
             # ==================================================
-            # 🧪 RELATÓRIO DO PLANO DE TESTES (VISÃO GERAL)
+            #  RELATÓRIO DO PLANO DE TESTES (VISÃO GERAL)
             # ==================================================
             if st.session_state.get("test_plan_report"):
                 with st.expander(
-                    "🧪 Plano de Testes Gerado (Resumo em Markdown)", expanded=True
+                    "🧪 Plano de Testes Gerado (Resumo em Markdown)", expanded=False
                 ):
                     st.markdown(
                         clean_markdown_report(
@@ -613,7 +611,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
             ):
                 df = st.session_state["test_plan_df"].copy()
 
-                # 🔹 Define as colunas completas para o resumo
+                #  Define as colunas completas para o resumo
                 colunas_resumo = [
                     "id",
                     "titulo",
@@ -622,7 +620,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     "justificativa_acessibilidade",
                 ]
 
-                # 🔹 Filtra e renomeia para nomes amigáveis
+                #  Filtra e renomeia para nomes amigáveis
                 df_resumo = (
                     df[[c for c in colunas_resumo if c in df.columns]]
                     .rename(
@@ -644,7 +642,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     unsafe_allow_html=True,
                 )
 
-                # 🔹 Dropdowns individuais (detalhes)
+                #  Dropdowns individuais (detalhes)
                 with st.expander(
                     "📁 Casos de Teste (Expandir para ver todos)", expanded=False
                 ):
@@ -688,7 +686,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                                         index, "cenario"
                                     ] = cenario_editado
 
-                                    # 🔁 Regera o relatório de plano de testes (Markdown consolidado)
+                                    #  Regera o relatório de plano de testes (Markdown consolidado)
                                     from utils import gerar_relatorio_md_dos_cenarios
 
                                     novo_relatorio = gerar_relatorio_md_dos_cenarios(
@@ -698,7 +696,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                                         novo_relatorio
                                     )
 
-                                    # 💾 Atualiza histórico com a versão revisada (atualização em linha)
+                                    #  Atualiza histórico com a versão revisada (atualização em linha)
                                     _save_current_analysis_to_history(
                                         update_existing=True
                                     )
@@ -713,7 +711,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                                 )
 
         # ==================================================
-        # 📥 SEÇÃO DE DOWNLOADS
+        #  SEÇÃO DE DOWNLOADS
         # ==================================================
         st.divider()
         st.subheader("Downloads Disponíveis")
@@ -749,7 +747,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
             )
 
         # ==================================================
-        # ⚙️ OPÇÕES DE EXPORTAÇÃO (AZURE / ZEPHYR)
+        #  OPÇÕES DE EXPORTAÇÃO (AZURE / ZEPHYR)
         # ==================================================
         if (
             st.session_state.get("test_plan_df") is not None
@@ -801,7 +799,6 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 and st.session_state.get("assigned_to_input", "").strip()
             )
 
-            # ✅ NOVO BLOCO: Exportação CSV Azure (formato compatível)
             csv_azure = gerar_csv_azure_from_df(
                 df_para_ferramentas,
                 st.session_state.get("area_path_input", ""),
@@ -820,7 +817,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 help="Preencha os campos no expander acima para habilitar.",
             )
 
-            # Zephyr (mantido em XLSX)
+            # Zephyr
             df_zephyr = preparar_df_para_zephyr_xlsx(
                 df_para_ferramentas,
                 st.session_state.get("jira_priority", "Medium"),
@@ -863,10 +860,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
 
 # ==========================================================
-# 🗂️ Página de Histórico — Visualização e Exclusão
-# ==========================================================
-# ==========================================================
-# 🗂️ Página de Histórico — VERSÃO CORRIGIDA COMPLETA
+# 🗂️ Página de Histórico
 # ==========================================================
 def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
     """
@@ -888,10 +882,10 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
     )
 
     # ==========================================================
-    # 🔥 BLOCO DE EXCLUSÃO (individual e total)
+    #  BLOCO DE EXCLUSÃO (individual e total)
     # ==========================================================
 
-    # 🗑️ EXCLUSÃO INDIVIDUAL (um único registro)
+    #  EXCLUSÃO INDIVIDUAL (um único registro)
     if st.session_state.get("confirm_delete_id"):
         with st.container(border=True):
             announce(
@@ -933,7 +927,7 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
                 announce("Nenhuma exclusão foi realizada.", "info", st_api=st)
                 st.rerun()
 
-    # 🧹 EXCLUSÃO TOTAL DO HISTÓRICO
+    #  EXCLUSÃO TOTAL DO HISTÓRICO
     if st.session_state.get("confirm_clear_all"):
         with st.container(border=True):
             announce(
@@ -972,10 +966,9 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
                 st.rerun()
 
     # ==========================================================
-    # 🔍 BUSCA E CONVERSÃO DO ID SELECIONADO (CORRIGIDO)
+    #  BUSCA E CONVERSÃO DO ID SELECIONADO (CORRIGIDO)
     # ==========================================================
 
-    # ✅ CORREÇÃO 1: Tratamento robusto de query_params
     history_entries = get_all_analysis_history()
 
     # Debug logs
@@ -985,7 +978,6 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
 
     selected_id = None
 
-    # ✅ CORREÇÃO 2: Conversão mais robusta
     if raw_id:
         # query_params pode retornar lista, string ou None
         if isinstance(raw_id, list):
@@ -1002,14 +994,13 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
         pass
 
     # ----------------------------------------------------------
-    # 🔎 Modo de visualização detalhada
+    #  Modo de visualização detalhada
     # ----------------------------------------------------------
     if selected_id:
 
         try:
             analysis_entry = get_analysis_by_id(selected_id)
 
-            # ✅ CORREÇÃO 3: Garante conversão para dict
             if analysis_entry and not isinstance(analysis_entry, dict):
                 analysis_entry = dict(analysis_entry)
 
@@ -1028,9 +1019,8 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
 
             created = analysis_entry.get("created_at")
 
-            # ✅ CORREÇÃO 4: Formatação segura de datas
             if isinstance(created, str):
-                titulo_data = created.split()[0]  # Pega só a data (YYYY-MM-DD)
+                titulo_data = created.split()[0]
             elif hasattr(created, "strftime"):
                 titulo_data = created.strftime("%Y-%m-%d")
             else:
@@ -1038,14 +1028,14 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
 
             st.markdown(f"### Análise de {titulo_data}")
 
-            # 🧩 User Story
+            #  User Story
             with st.expander("📄 User Story Analisada", expanded=True):
                 user_story = (
                     analysis_entry.get("user_story") or "⚠️ User Story não disponível."
                 )
                 st.code(user_story, language="gherkin")
 
-            # 🧠 Relatório de Análise
+            #  Relatório de Análise
             with st.expander("📘 Relatório de Análise da IA", expanded=False):
                 relatorio_analise = (
                     analysis_entry.get("analysis_report")
@@ -1056,7 +1046,7 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
                     unsafe_allow_html=True,
                 )
 
-            # 🧪 Plano de Testes
+            #  Plano de Testes
             plano_report = analysis_entry.get("test_plan_report", "")
             with st.expander("🧪 Plano de Testes Gerado", expanded=False):
                 if plano_report:
@@ -1269,7 +1259,7 @@ def render_history_page(st_api=None):
 
 
 # ==========================================================
-# 🚪 Função principal — inicializa o app QA Oráculo
+#  Função principal — inicializa o app QA Oráculo
 # ==========================================================
 def main():
     """
@@ -1285,12 +1275,12 @@ def main():
     • Carrega dinamicamente a página selecionada.
     """
     # ------------------------------------------------------
-    # ⚙️ Configuração inicial da interface
+    #  Configuração inicial da interface
     # ------------------------------------------------------
     st.set_page_config(page_title="QA Oráculo", layout="wide")
 
     # ------------------------------------------------------
-    # 🧱 Inicialização de banco e estado
+    #  Inicialização de banco e estado
     # ------------------------------------------------------
     init_db()
     initialize_state()
@@ -1302,7 +1292,7 @@ def main():
     render_accessibility_info()
 
     # ------------------------------------------------------
-    # 🧭 Mapa de páginas (sidebar)
+    #  Mapa de páginas (sidebar)
     # ------------------------------------------------------
     pages = {
         "Analisar User Story": render_main_analysis_page,
@@ -1314,7 +1304,7 @@ def main():
 
 
 # ==========================================================
-# 🧭 Ponto de entrada do aplicativo
+# Ponto de entrada do aplicativo
 # ==========================================================
 if __name__ == "__main__":
     # Quando o arquivo é executado diretamente (ex.: `streamlit run app.py`),
