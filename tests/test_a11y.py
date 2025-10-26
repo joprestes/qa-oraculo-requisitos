@@ -242,6 +242,7 @@ def test_apply_accessible_styles_contem_seletores_importantes():
 # TESTES DE RENDERIZAÇÃO DO SIDEBAR
 # ==========================================================
 
+
 def test_render_keyboard_shortcuts_guide():
     """Valida que o guia de atalhos é renderizado dentro de um expander no sidebar."""
     with patch("a11y.st") as mock_st:
@@ -257,11 +258,11 @@ def test_render_keyboard_shortcuts_guide():
         # 2. Valida que, dentro do expander, st.markdown foi chamado para renderizar o conteúdo
         # A chamada agora é feita em `st.markdown`, não em `st.sidebar.markdown`
         mock_st.markdown.assert_called_once()
-        
+
         # 3. (Opcional, mas recomendado) Valida o conteúdo do markdown
         call_args, call_kwargs = mock_st.markdown.call_args
         content = call_args[0]
-        
+
         assert "Tab" in content
         assert "Enter" in content
         assert "teclado" in content.lower()
