@@ -6,7 +6,7 @@ import importlib
 import pytest
 from pydantic import ValidationError
 
-import schemas
+from qa_core import schemas
 
 
 def test_import_module_executes():

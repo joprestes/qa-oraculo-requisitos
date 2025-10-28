@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import app
+from qa_core import app
 
 
 def make_button_side_effect(expected_buttons):
@@ -35,7 +35,7 @@ def mock_st():
 # ============================================================
 
 
-@patch("app.delete_analysis_by_id", return_value=True)
+@patch("qa_core.app.delete_analysis_by_id", return_value=True)
 def test_excluir_individual_sucesso(mock_delete, mock_st):
     """Valida exclusão bem-sucedida de uma análise específica."""
     mock_st.session_state["confirm_delete_id"] = 42
@@ -47,7 +47,7 @@ def test_excluir_individual_sucesso(mock_delete, mock_st):
     mock_st.success.assert_called_once_with("Análise 42 removida com sucesso.")
 
 
-@patch("app.delete_analysis_by_id", return_value=False)
+@patch("qa_core.app.delete_analysis_by_id", return_value=False)
 def test_excluir_individual_falha(mock_delete, mock_st):
     """Valida feedback de erro quando a exclusão individual falha."""
     mock_st.session_state["confirm_delete_id"] = 42
@@ -66,7 +66,7 @@ def test_excluir_individual_falha(mock_delete, mock_st):
 # ============================================================
 
 
-@patch("app.clear_history", return_value=3)
+@patch("qa_core.app.clear_history", return_value=3)
 def test_excluir_todo_confirmado(mock_clear, mock_st):
     """Valida exclusão total confirmada com sucesso."""
     mock_st.session_state["confirm_clear_all"] = True
@@ -78,7 +78,7 @@ def test_excluir_todo_confirmado(mock_clear, mock_st):
     mock_st.success.assert_called_once_with("3 análises foram removidas.")
 
 
-@patch("app.clear_history", return_value=0)
+@patch("qa_core.app.clear_history", return_value=0)
 def test_excluir_todo_falha(mock_clear, mock_st):
     """Valida feedback quando a limpeza total não remove nenhuma análise."""
     mock_st.session_state["confirm_clear_all"] = True
@@ -100,7 +100,7 @@ def test_cancelar_exclusao_individual_botao(mock_st):
         }
     )
 
-    with patch("app.delete_analysis_by_id") as mock_delete:
+    with patch("qa_core.app.delete_analysis_by_id") as mock_delete:
         app.render_history_page(st_api=mock_st)
 
         mock_delete.assert_not_called()
@@ -118,7 +118,7 @@ def test_cancelar_limpeza_total_botao(mock_st):
         }
     )
 
-    with patch("app.clear_history") as mock_clear:
+    with patch("qa_core.app.clear_history") as mock_clear:
         app.render_history_page(st_api=mock_st)
 
         mock_clear.assert_not_called()
@@ -143,8 +143,8 @@ def test_cancelar_exclusao(mock_st):
     )
 
     with (
-        patch("app.delete_analysis_by_id") as mock_delete,
-        patch("app.clear_history") as mock_clear,
+        patch("qa_core.app.delete_analysis_by_id") as mock_delete,
+        patch("qa_core.app.clear_history") as mock_clear,
     ):
         app.render_history_page(st_api=mock_st)
 
@@ -158,8 +158,8 @@ def test_cancelar_exclusao(mock_st):
 # ============================================================
 
 
-@patch("app.get_analysis_by_id")
-@patch("app.get_all_analysis_history")
+@patch("qa_core.app.get_analysis_by_id")
+@patch("qa_core.app.get_all_analysis_history")
 def test_visualizar_analise_por_query_param(mock_get_all, mock_get_by_id, mock_st):
     """Garante que uma análise específica seja mostrada via query param."""
 
@@ -191,8 +191,8 @@ def test_visualizar_analise_por_query_param(mock_get_all, mock_get_by_id, mock_s
     )
 
 
-@patch("app.get_analysis_by_id", return_value=None)
-@patch("app.get_all_analysis_history", return_value=[{"id": 10}])
+@patch("qa_core.app.get_analysis_by_id", return_value=None)
+@patch("qa_core.app.get_all_analysis_history", return_value=[{"id": 10}])
 def test_visualizar_analise_inexistente_exibe_erro(
     mock_get_all, mock_get_by_id, mock_st
 ):
@@ -207,7 +207,7 @@ def test_visualizar_analise_inexistente_exibe_erro(
     mock_st.error.assert_called_once_with("Análise não encontrada.")
 
 
-@patch("app.get_all_analysis_history", return_value=[])
+@patch("qa_core.app.get_all_analysis_history", return_value=[])
 def test_visualizar_historico_vazio_query_param_invalido(mock_get_all, mock_st):
     """Força fallback para histórico vazio quando o parâmetro é inválido."""
 
@@ -233,14 +233,14 @@ def test_wrapper_usa_modo_teste_em_cancelamento(mock_st):
     )
 
     original = app._render_history_page_test_mode
-    with patch("app._render_history_page_test_mode", wraps=original) as spy_test_mode:
+    with patch("qa_core.app._render_history_page_test_mode", wraps=original) as spy_test_mode:
         app.render_history_page(st_api=mock_st)
 
         spy_test_mode.assert_called_once_with(mock_st)
         mock_st.info.assert_called_once_with("Nenhuma exclusão foi realizada.")
 
 
-@patch("app.get_all_analysis_history", return_value=[])
+@patch("qa_core.app.get_all_analysis_history", return_value=[])
 def test_visualizar_historico_vazio(mock_get_all, mock_st):
     """Garante mensagem informativa quando não há análises armazenadas."""
 

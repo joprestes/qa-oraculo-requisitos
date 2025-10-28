@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import streamlit
 
-import a11y
+from qa_core import a11y
 
 # ==========================================================
 # Define Constantes para Testes
@@ -190,7 +190,7 @@ def test_a11y_main_block_imprime_comandos(capsys):
 
     import runpy
 
-    runpy.run_module("a11y", run_name="__main__")
+    runpy.run_module("qa_core.a11y", run_name="__main__")
 
     captured = capsys.readouterr()
     assert "Módulo de acessibilidade" in captured.out
@@ -202,7 +202,7 @@ def test_a11y_main_block_imprime_comandos(capsys):
 # ==========================================================
 def test_apply_accessible_styles_injeta_css():
     """Valida que apply_accessible_styles injeta CSS no Streamlit."""
-    with patch("a11y.st") as mock_st:
+    with patch("qa_core.a11y.st") as mock_st:
         a11y.apply_accessible_styles()
 
         # Deve chamar st.markdown com CSS
@@ -222,7 +222,7 @@ def test_apply_accessible_styles_injeta_css():
 
 def test_apply_accessible_styles_contem_seletores_importantes():
     """Valida que o CSS contém seletores essenciais."""
-    with patch("a11y.st") as mock_st:
+    with patch("qa_core.a11y.st") as mock_st:
         a11y.apply_accessible_styles()
 
         css = mock_st.markdown.call_args[0][0]
@@ -245,7 +245,7 @@ def test_apply_accessible_styles_contem_seletores_importantes():
 
 def test_render_keyboard_shortcuts_guide():
     """Valida que o guia de atalhos é renderizado dentro de um expander no sidebar."""
-    with patch("a11y.st") as mock_st:
+    with patch("qa_core.a11y.st") as mock_st:
         # Configura o mock para simular o comportamento de um context manager ('with')
         mock_expander = MagicMock()
         mock_st.sidebar.expander.return_value.__enter__.return_value = mock_expander
@@ -271,7 +271,7 @@ def test_render_keyboard_shortcuts_guide():
 
 def test_render_accessibility_info():
     """Valida que informações de acessibilidade são exibidas."""
-    with patch("a11y.st") as mock_st:
+    with patch("qa_core.a11y.st") as mock_st:
         mock_expander = MagicMock()
         mock_st.sidebar.expander.return_value.__enter__.return_value = mock_expander
 
@@ -285,7 +285,7 @@ def test_render_accessibility_info():
 
 def test_check_accessibility_preferences_injeta_script_e_retorna_padrao():
     """Garante que o script de detecção é injetado e retorna valores padrão."""
-    with patch("a11y.st") as mock_st:
+    with patch("qa_core.a11y.st") as mock_st:
         resultado = a11y.check_accessibility_preferences()
 
         # Script deve ser injetado com unsafe_allow_html=True

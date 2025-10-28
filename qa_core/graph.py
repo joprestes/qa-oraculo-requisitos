@@ -15,8 +15,8 @@ from dotenv import load_dotenv
 from google.api_core.exceptions import ResourceExhausted
 from langgraph.graph import END, StateGraph
 
-from config import CONFIG_GERACAO_ANALISE, CONFIG_GERACAO_RELATORIO, NOME_MODELO
-from prompts import (
+from .config import CONFIG_GERACAO_ANALISE, CONFIG_GERACAO_RELATORIO, NOME_MODELO
+from .prompts import (
     PROMPT_ANALISE_US,
     PROMPT_CRIAR_PLANO_DE_TESTES,
     PROMPT_GERAR_RELATORIO_ANALISE,

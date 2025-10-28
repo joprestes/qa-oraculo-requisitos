@@ -20,7 +20,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-import app
+from qa_core import app
 
 # Constantes auxiliares para layouts de colunas nos testes
 FOUR_COLUMN_COUNT = 4
@@ -29,7 +29,7 @@ TWO_COLUMN_COUNT = 2
 
 # --- TESTES DAS FUNÇÕES WRAPPER ---
 def test_run_analysis_graph():
-    with patch("app.grafo_analise") as mock_grafo:
+    with patch("qa_core.app.grafo_analise") as mock_grafo:
         mock_grafo.invoke.return_value = {"ok": True}
         result = app.run_analysis_graph("US Teste")
         assert result == {"ok": True}
@@ -37,7 +37,7 @@ def test_run_analysis_graph():
 
 
 def test_run_test_plan_graph():
-    with patch("app.grafo_plano_testes") as mock_grafo:
+    with patch("qa_core.app.grafo_plano_testes") as mock_grafo:
         mock_grafo.invoke.return_value = {"plano": True}
         result = app.run_test_plan_graph({"analise": "x"})
         assert result == {"plano": True}
@@ -45,21 +45,21 @@ def test_run_test_plan_graph():
 
 
 # --- TESTES DO HISTÓRICO (Versões antigas, mantidas para compatibilidade) ---
-@patch("app.st")
+@patch("qa_core.app.st")
 def test_render_history_page_com_historico(mock_st):
     mock_st.session_state = {}
     mock_st.query_params.get.return_value = [None]
     mock_st.columns.return_value = [MagicMock(), MagicMock()]
 
     history = [{"id": 1, "created_at": "2025-09-26", "user_story": "US exemplo"}]
-    with patch("app.get_all_analysis_history", return_value=history):
+    with patch("qa_core.app.get_all_analysis_history", return_value=history):
         app.render_history_page()
 
     calls = [str(mock_call) for mock_call in mock_st.markdown.call_args_list]
     assert any("2025-09-26" in call_str for call_str in calls)
 
 
-@patch("app.st")
+@patch("qa_core.app.st")
 def test_render_history_page_detalhes(mock_st):
     mock_st.session_state = {}
     mock_st.query_params.get.return_value = ["1"]
@@ -71,16 +71,16 @@ def test_render_history_page_detalhes(mock_st):
         "analysis_report": "Relatório",
         "test_plan_report": "Plano",
     }
-    with patch("app.get_analysis_by_id", return_value=entry):
+    with patch("qa_core.app.get_analysis_by_id", return_value=entry):
         app.render_history_page()
         mock_st.markdown.assert_any_call("### Análise de 2025-09-26")
         mock_st.code.assert_called_once_with("Teste", language="gherkin")
 
 
 # --- TESTE DO MAIN ---
-@patch("app.render_main_analysis_page")
-@patch("app.render_history_page")
-@patch("app.st")
+@patch("qa_core.app.render_main_analysis_page")
+@patch("qa_core.app.render_history_page")
+@patch("qa_core.app.st")
 def test_main_troca_paginas(mock_st, mock_history, mock_main):
     """Verifica se o menu lateral alterna corretamente entre as páginas."""
     mock_st.sidebar.radio.return_value = "Analisar User Story"
@@ -96,7 +96,7 @@ def test_main_troca_paginas(mock_st, mock_history, mock_main):
 @pytest.fixture
 def mocked_st():
     """Fixture que simula o módulo streamlit com estado isolado."""
-    with patch("app.st") as mock_st:
+    with patch("qa_core.app.st") as mock_st:
         mock_st.session_state = {}
 
         def fake_columns(arg):
@@ -127,7 +127,7 @@ def mocked_st():
 def test_render_history_sem_historico(mocked_st):
     mocked_st.query_params.get.return_value = [None]
 
-    with patch("app.get_all_analysis_history", return_value=[]):
+    with patch("qa_core.app.get_all_analysis_history", return_value=[]):
         app.render_history_page()
 
     mocked_st.info.assert_called_with(
@@ -138,7 +138,7 @@ def test_render_history_sem_historico(mocked_st):
 def test_render_history_com_historico_lista(mocked_st):
     mocked_st.query_params.get.return_value = [None]
     history = [{"id": 1, "created_at": "2025-09-26", "user_story": "US exemplo"}]
-    with patch("app.get_all_analysis_history", return_value=history):
+    with patch("qa_core.app.get_all_analysis_history", return_value=history):
         app.render_history_page()
     mocked_st.container.assert_called()
 
@@ -152,7 +152,7 @@ def test_render_history_com_analysis_id_valido(mocked_st):
         "analysis_report": "Relatório IA",
         "test_plan_report": "Plano gerado",
     }
-    with patch("app.get_analysis_by_id", return_value=analysis_entry):
+    with patch("qa_core.app.get_analysis_by_id", return_value=analysis_entry):
         app.render_history_page()
     mocked_st.markdown.assert_any_call("### Análise de 2025-09-26")
     mocked_st.code.assert_called_with("User Story completa", language="gherkin")
@@ -160,7 +160,7 @@ def test_render_history_com_analysis_id_valido(mocked_st):
 
 def test_render_history_com_analysis_id_invalido(mocked_st):
     mocked_st.query_params.get.return_value = ["99"]
-    with patch("app.get_analysis_by_id", return_value=None):
+    with patch("qa_core.app.get_analysis_by_id", return_value=None):
         app.render_history_page()
     mocked_st.error.assert_called_with("Análise não encontrada.")
 
@@ -194,7 +194,7 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
 
 def test_render_main_analysis_page_downloads_sem_dados():
     """Força finalização sem test_plan_df nem pdf."""
-    with patch("app.st") as mock_st:
+    with patch("qa_core.app.st") as mock_st:
         mock_st.session_state = {
             "analysis_finished": True,
             "analysis_state": {"relatorio_analise_inicial": "Fake"},
@@ -235,7 +235,7 @@ def test_render_main_page_clica_em_encerrar(mocked_st):
     col1.button.return_value = False
     col2.button.return_value = True
 
-    with patch("app._save_current_analysis_to_history") as mock_save:
+    with patch("qa_core.app._save_current_analysis_to_history") as mock_save:
         app.render_main_analysis_page()
 
         assert mocked_st.session_state["analysis_finished"] is True
@@ -266,8 +266,8 @@ def test_render_main_page_falha_na_geracao_do_plano(mocked_st):
         "plano_e_casos_de_teste": {"casos_de_teste_gherkin": None},
     }
 
-    with patch("app.run_test_plan_graph", return_value=resultado_invalido):
-        with patch("app._save_current_analysis_to_history"):
+    with patch("qa_core.app.run_test_plan_graph", return_value=resultado_invalido):
+        with patch("qa_core.app._save_current_analysis_to_history"):
             app.render_main_analysis_page()
             mocked_st.error.assert_called_with(
                 "O Oráculo não conseguiu gerar um plano de testes estruturado."
@@ -308,9 +308,9 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
 
     # --- Mocka salvamento e regeneração de relatório ---
     with (
-        patch("app._save_current_analysis_to_history") as mock_save,
+        patch("qa_core.app._save_current_analysis_to_history") as mock_save,
         patch(
-            "utils.gerar_relatorio_md_dos_cenarios",
+            "qa_core.utils.gerar_relatorio_md_dos_cenarios",
             return_value="### 🧩 Login válido\n```gherkin\nCenário editado\n```",
         ),
     ):
@@ -360,7 +360,7 @@ def test_render_main_page_gera_plano_com_sucesso(mocked_st):
 
     with (
         patch(
-            "app.run_test_plan_graph",
+            "qa_core.app.run_test_plan_graph",
             return_value={
                 "plano_e_casos_de_teste": {
                     "casos_de_teste_gherkin": [
@@ -374,10 +374,10 @@ def test_render_main_page_gera_plano_com_sucesso(mocked_st):
                 "relatorio_plano_de_testes": "### Plano",
             },
         ),
-        patch("app.generate_pdf_report", return_value=b"pdf-gerado"),
-        patch("app._save_current_analysis_to_history") as mock_save,
+        patch("qa_core.app.generate_pdf_report", return_value=b"pdf-gerado"),
+        patch("qa_core.app._save_current_analysis_to_history") as mock_save,
         patch(
-            "app.accessible_text_area",
+            "qa_core.app.accessible_text_area",
             side_effect=lambda *args, **kwargs: kwargs.get("value", ""),
         ),
     ):
@@ -421,7 +421,7 @@ def test_render_main_page_sem_cenario_dispara_aviso(mocked_st):
 
     mocked_st.session_state.setdefault("show_generate_plan_button", False)
 
-    with patch("app.announce") as mock_announce:
+    with patch("qa_core.app.announce") as mock_announce:
         app.render_main_analysis_page()
 
     mock_announce.assert_any_call(
@@ -444,9 +444,9 @@ def _build_session_state_para_historia_valida():
     }
 
 
-@patch("database.get_db_connection")
-@patch("app.announce")
-@patch("app.st")
+@patch("qa_core.database.get_db_connection")
+@patch("qa_core.app.announce")
+@patch("qa_core.app.st")
 def test_save_current_analysis_to_history_sem_dados_suficientes(
     mock_st, mock_announce, mock_get_conn
 ):
@@ -464,8 +464,8 @@ def test_save_current_analysis_to_history_sem_dados_suficientes(
     mock_announce.assert_not_called()
 
 
-@patch("database.get_db_connection")
-@patch("app.st")
+@patch("qa_core.database.get_db_connection")
+@patch("qa_core.app.st")
 def test_save_current_analysis_to_history_atualiza_existente(mock_st, mock_get_conn):
     """Atualiza registros existentes quando update_existing=True."""
 
@@ -501,9 +501,9 @@ def test_save_current_analysis_to_history_atualiza_existente(mock_st, mock_get_c
     mock_conn.commit.assert_called_once()
 
 
-@patch("database.get_db_connection")
-@patch("app.announce")
-@patch("app.st")
+@patch("qa_core.database.get_db_connection")
+@patch("qa_core.app.announce")
+@patch("qa_core.app.st")
 def test_save_current_analysis_to_history_sqlite_error(
     mock_st, mock_announce, mock_get_conn
 ):
@@ -520,9 +520,9 @@ def test_save_current_analysis_to_history_sqlite_error(
     assert kwargs["st_api"] is mock_st
 
 
-@patch("database.get_db_connection")
-@patch("app.announce")
-@patch("app.st")
+@patch("qa_core.database.get_db_connection")
+@patch("qa_core.app.announce")
+@patch("qa_core.app.st")
 def test_save_current_analysis_to_history_erro_generico(
     mock_st, mock_announce, mock_get_conn
 ):
@@ -546,10 +546,10 @@ def test_save_current_analysis_to_history_erro_generico(
     assert kwargs["st_api"] is mock_st
 
 
-@patch("app.announce")
-@patch("app.delete_analysis_by_id", return_value=True)
-@patch("app.get_all_analysis_history", return_value=[])
-@patch("app.st")
+@patch("qa_core.app.announce")
+@patch("qa_core.app.delete_analysis_by_id", return_value=True)
+@patch("qa_core.app.get_all_analysis_history", return_value=[])
+@patch("qa_core.app.st")
 def test_render_history_page_impl_confirma_exclusao(
     mock_st, mock_get_history, mock_delete, mock_announce
 ):
@@ -590,10 +590,10 @@ def test_render_history_page_impl_confirma_exclusao(
     mock_st.rerun.assert_called_once()
 
 
-@patch("app.announce")
-@patch("app.delete_analysis_by_id", return_value=False)
-@patch("app.get_all_analysis_history", return_value=[])
-@patch("app.st")
+@patch("qa_core.app.announce")
+@patch("qa_core.app.delete_analysis_by_id", return_value=False)
+@patch("qa_core.app.get_all_analysis_history", return_value=[])
+@patch("qa_core.app.st")
 def test_render_history_page_impl_cancela_exclusao(
     mock_st, mock_get_history, mock_delete, mock_announce
 ):
@@ -634,10 +634,10 @@ def test_render_history_page_impl_cancela_exclusao(
     mock_st.rerun.assert_called_once()
 
 
-@patch("app.announce")
-@patch("app.clear_history", return_value=3)
-@patch("app.get_all_analysis_history", return_value=[])
-@patch("app.st")
+@patch("qa_core.app.announce")
+@patch("qa_core.app.clear_history", return_value=3)
+@patch("qa_core.app.get_all_analysis_history", return_value=[])
+@patch("qa_core.app.st")
 def test_render_history_page_impl_confirma_limpeza_total(
     mock_st, mock_get_history, mock_clear_history, mock_announce
 ):
@@ -678,9 +678,9 @@ def test_render_history_page_impl_confirma_limpeza_total(
     mock_st.rerun.assert_called_once()
 
 
-@patch("app.accessible_button")
-@patch("app.get_all_analysis_history")
-@patch("app.st")
+@patch("qa_core.app.accessible_button")
+@patch("qa_core.app.get_all_analysis_history")
+@patch("qa_core.app.st")
 def test_render_history_page_impl_lista_dispara_confirm_clear_all(
     mock_st, mock_get_history, mock_accessible_button
 ):
@@ -734,9 +734,9 @@ def test_main_execucao_direta_reload(monkeypatch):
 
 @pytest.mark.slow
 def test_main_execucao_direta_subprocess():
-    """Executa o app como script real (python -m app)."""
+    """Executa o app como script real (python -m qa_core.app)."""
     result = subprocess.run(
-        [sys.executable, "-m", "app"],
+        [sys.executable, "-m", "qa_core.app"],
         check=False,
         capture_output=True,
         text=True,

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-import app
+from qa_core import app
 
 
 # ----------------------------
@@ -25,7 +25,7 @@ class SessionState(dict):
 @pytest.fixture
 def mock_st():
     """Mocka o módulo Streamlit para isolar comportamento durante os testes."""
-    with patch("app.st") as mock_st:
+    with patch("qa_core.app.st") as mock_st:
         mock_st.session_state = SessionState()
 
         # Mock para st.columns que devolve a quantidade correta
@@ -89,7 +89,7 @@ def test_salvar_analise_refinada(mock_st):
     app.render_main_analysis_page()
 
 
-@patch("app.save_analysis_to_history")
+@patch("qa_core.app.save_analysis_to_history")
 def test_nao_encerrar_fluxo(mock_save, mock_st):
     mock_st.session_state["analysis_finished"] = False
     mock_st.session_state["analysis_state"] = make_analysis_state()
@@ -103,9 +103,9 @@ def test_nao_encerrar_fluxo(mock_save, mock_st):
     app.render_main_analysis_page()
 
 
-@patch("app.save_analysis_to_history")
-@patch("app.generate_pdf_report", return_value=b"fakepdf")
-@patch("app.run_test_plan_graph")
+@patch("qa_core.app.save_analysis_to_history")
+@patch("qa_core.app.generate_pdf_report", return_value=b"fakepdf")
+@patch("qa_core.app.run_test_plan_graph")
 def test_sim_gerar_plano(mock_run, mock_pdf, mock_save, mock_st):
     mock_st.session_state["analysis_finished"] = False
     mock_st.session_state["analysis_state"] = make_analysis_state()
@@ -125,7 +125,7 @@ def test_sim_gerar_plano(mock_run, mock_pdf, mock_save, mock_st):
     app.render_main_analysis_page()
 
 
-@patch("app.reset_session")
+@patch("qa_core.app.reset_session")
 def test_nova_analise_button(mock_reset, mock_st):
     mock_st.session_state["analysis_finished"] = True
     mock_st.session_state["analysis_state"] = make_analysis_state()
@@ -228,8 +228,8 @@ def test_render_main_analysis_page_exportadores(mock_st):
 
     # --- 3. Executa a função com patches de exportação ---
     with (
-        patch("app.to_excel", return_value=b"excel"),
-        patch("app.gerar_nome_arquivo_seguro", return_value="fake.xlsx"),
+        patch("qa_core.app.to_excel", return_value=b"excel"),
+        patch("qa_core.app.gerar_nome_arquivo_seguro", return_value="fake.xlsx"),
     ):
         app.render_main_analysis_page()
 

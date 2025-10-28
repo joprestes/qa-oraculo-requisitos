@@ -8,8 +8,8 @@ import pandas as pd
 import pytest
 from fpdf.enums import XPos, YPos
 
-import pdf_generator
-from pdf_generator import (
+from qa_core import pdf_generator
+from qa_core.pdf_generator import (
     PDF,
     add_cover,
     add_section_title,
@@ -149,7 +149,7 @@ def test_pdf_divider():
 # ===================================================================
 
 
-@patch("pdf_generator.PDF")
+@patch("qa_core.pdf_generator.PDF")
 @patch("matplotlib.font_manager.findfont", return_value="dummy_path.ttf")
 def test_generate_pdf_report_fluxo_completo(mock_findfont, mock_PDF):
     mock_pdf_instance = MagicMock()
@@ -167,7 +167,7 @@ def test_generate_pdf_report_fluxo_completo(mock_findfont, mock_PDF):
     mock_pdf_instance.output.assert_called_once()
 
 
-@patch("pdf_generator.PDF")
+@patch("qa_core.pdf_generator.PDF")
 @patch("matplotlib.font_manager.findfont", return_value="dummy_path.ttf")
 def test_generate_pdf_report_df_vazio(mock_findfont, mock_PDF):
     mock_pdf_instance = MagicMock()
@@ -202,8 +202,8 @@ def test_pdf_falha_fonte(monkeypatch):
         generate_pdf_report("texto", pd.DataFrame())
 
 
-@patch("pdf_generator.add_test_case_table")
-@patch("pdf_generator.PDF")
+@patch("qa_core.pdf_generator.add_test_case_table")
+@patch("qa_core.pdf_generator.PDF")
 @patch("matplotlib.font_manager.findfont", return_value="dummy_path.ttf")
 def test_generate_pdf_report_trata_entradas_vazias(
     mock_findfont, mock_PDF, mock_add_table
@@ -227,8 +227,8 @@ def test_normalize_test_plan_df_tipo_invalido(invalid_input):
         pdf_generator._normalize_test_plan_df(invalid_input)
 
 
-@patch("pdf_generator.add_test_case_table")
-@patch("pdf_generator.PDF")
+@patch("qa_core.pdf_generator.add_test_case_table")
+@patch("qa_core.pdf_generator.PDF")
 @patch("matplotlib.font_manager.findfont", return_value="dummy_path.ttf")
 def test_generate_pdf_report_normaliza_iteraveis(
     mock_findfont, mock_PDF, mock_add_table
@@ -245,7 +245,7 @@ def test_generate_pdf_report_normaliza_iteraveis(
     assert not df_passado.empty
 
 
-@patch("pdf_generator.PDF")
+@patch("qa_core.pdf_generator.PDF")
 @patch("matplotlib.font_manager.findfont", return_value="dummy_path.ttf")
 def test_generate_pdf_report_usa_mensagem_padrao_quando_relatorio_vazio(
     mock_findfont, mock_PDF

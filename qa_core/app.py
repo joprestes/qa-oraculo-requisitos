@@ -20,7 +20,7 @@ import sqlite3
 import pandas as pd
 import streamlit as st
 
-from a11y import (
+from .a11y import (
     accessible_button,
     accessible_text_area,
     announce,
@@ -35,7 +35,7 @@ from a11y import (
 # - app.clear_history
 # Por isso reexportamos estas funções do database aqui.
 # Demais funções do banco: leitura/consulta e persistência no histórico
-from database import (
+from .database import (
     clear_history,
     delete_analysis_by_id,
     get_all_analysis_history,
@@ -44,16 +44,16 @@ from database import (
 )
 
 # Grafos de IA (LangGraph) — invocados nas funções cacheadas
-from graph import grafo_analise, grafo_plano_testes
+from .graph import grafo_analise, grafo_plano_testes
 
 # Gerador de PDF — consolida análise e plano de testes em um relatório
-from pdf_generator import generate_pdf_report
+from .pdf_generator import generate_pdf_report
 
 # Estado global e reset — para nova análise sem resquícios
-from state_manager import initialize_state, reset_session
+from .state_manager import initialize_state, reset_session
 
 # Utilitários — helpers de exportação, normalização e formatação
-from utils import (
+from .utils import (
     clean_markdown_report,
     gerar_csv_azure_from_df,
     gerar_nome_arquivo_seguro,
@@ -155,7 +155,7 @@ def _save_current_analysis_to_history(update_existing: bool = False):
             print("⚠️ Nenhum dado válido para salvar no histórico.")
             return
 
-        from database import get_db_connection  # evita dependência circular
+        from .database import get_db_connection  # evita dependência circular
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -687,7 +687,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                                     ] = cenario_editado
 
                                     #  Regera o relatório de plano de testes (Markdown consolidado)
-                                    from utils import gerar_relatorio_md_dos_cenarios
+                                    from .utils import gerar_relatorio_md_dos_cenarios
 
                                     novo_relatorio = gerar_relatorio_md_dos_cenarios(
                                         st.session_state["test_plan_df"]
@@ -1307,7 +1307,7 @@ def main():
 # Ponto de entrada do aplicativo
 # ==========================================================
 if __name__ == "__main__":
-    # Quando o arquivo é executado diretamente (ex.: `streamlit run app.py`),
+    # Quando o arquivo é executado diretamente (ex.: `streamlit run qa_core/app.py`),
     # o Python entra por este bloco, chamando a função main().
     #
     # Essa abordagem garante:
@@ -1319,11 +1319,11 @@ if __name__ == "__main__":
 # ✅ FIM DO ARQUIVO — QA ORÁCULO
 # ==========================================================
 # 🔹 Este app segue o padrão modular QA Oráculo:
-#    - database.py    → persistência
-#    - utils.py       → formatação e exportações
-#    - graph.py       → integração com LangGraph
-#    - pdf_generator.py → relatórios em PDF
-#    - state_manager.py → controle de estado Streamlit
+#    - qa_core/database.py     → persistência
+#    - qa_core/utils.py        → formatação e exportações
+#    - qa_core/graph.py        → integração com LangGraph
+#    - qa_core/pdf_generator.py → relatórios em PDF
+#    - qa_core/state_manager.py → controle de estado Streamlit
 #
 # 🔹 Funções críticas cobertas por testes unitários (pytest):
 #    - Testes de fluxo (criação → edição → exportação)

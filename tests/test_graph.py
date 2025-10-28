@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 from google.api_core.exceptions import ResourceExhausted
 from langchain.globals import set_llm_cache
 
-from graph import (
+from qa_core.graph import (
     chamar_modelo_com_retry,
     extrair_json_da_resposta,
     grafo_analise,
@@ -65,7 +65,7 @@ class TestHelperFunctions(BaseGraphTestCase):
     def test_extrair_json_falha_graciosamente(self):
         self.assertIsNone(extrair_json_da_resposta("Apenas texto."))
 
-    @patch("graph.time.sleep", return_value=None)
+    @patch("qa_core.graph.time.sleep", return_value=None)
     def test_chamar_modelo_com_retry_e_sucesso(self, mock_sleep):
         mock_model_instance = MagicMock()
         mock_model_instance.generate_content.return_value = MagicMock(text="Sucesso")
@@ -73,7 +73,7 @@ class TestHelperFunctions(BaseGraphTestCase):
         self.assertEqual(resultado.text, "Sucesso")
         mock_model_instance.generate_content.assert_called_once()
 
-    @patch("graph.time.sleep", return_value=None)
+    @patch("qa_core.graph.time.sleep", return_value=None)
     def test_chamar_modelo_com_retry_e_falha_parcial(self, mock_sleep):
         mock_model_instance = MagicMock()
         mock_model_instance.generate_content.side_effect = [
@@ -85,7 +85,7 @@ class TestHelperFunctions(BaseGraphTestCase):
         self.assertEqual(mock_model_instance.generate_content.call_count, 2)
         mock_sleep.assert_called_once_with(60)
 
-    @patch("graph.time.sleep", return_value=None)
+    @patch("qa_core.graph.time.sleep", return_value=None)
     def test_chamar_modelo_com_falha_total_de_cota(self, mock_sleep):
         mock_model_instance = MagicMock()
         mock_model_instance.generate_content.side_effect = ResourceExhausted(
@@ -97,7 +97,7 @@ class TestHelperFunctions(BaseGraphTestCase):
         self.assertEqual(mock_sleep.call_count, 2)
 
     @patch("builtins.print", new=mock_print)
-    @patch("graph.time.sleep", return_value=None)
+    @patch("qa_core.graph.time.sleep", return_value=None)
     def test_chamar_modelo_com_erro_inesperado(self, mock_sleep):
         mock_model_instance = MagicMock()
         erro_generico = ValueError("Erro genérico")
@@ -115,7 +115,7 @@ class TestGraphNodes(BaseGraphTestCase):
         super().setUp()  # Chama o setUp da classe base primeiro
         self.estado_inicial_mock = {"user_story": "Uma US"}
 
-    @patch("graph.chamar_modelo_com_retry")
+    @patch("qa_core.graph.chamar_modelo_com_retry")
     def test_node_analisar_historia_resiliencia(self, mock_chamar_modelo):
         casos = {
             "json_invalido": (
@@ -132,7 +132,7 @@ class TestGraphNodes(BaseGraphTestCase):
                 self.assertIn("erro", resultado["analise_da_us"])
                 self.assertIn(msg_erro, resultado["analise_da_us"]["erro"])
 
-    @patch("graph.chamar_modelo_com_retry")
+    @patch("qa_core.graph.chamar_modelo_com_retry")
     def test_node_criar_plano_e_casos_de_teste_resiliencia(self, mock_chamar_modelo):
         estado_com_analise = {**self.estado_inicial_mock, "analise_da_us": {}}
         casos = {
@@ -150,7 +150,7 @@ class TestGraphNodes(BaseGraphTestCase):
                 self.assertIn("erro", resultado["plano_e_casos_de_teste"])
                 self.assertIn(msg_erro, resultado["plano_e_casos_de_teste"]["erro"])
 
-    @patch("graph.chamar_modelo_com_retry", return_value=None)
+    @patch("qa_core.graph.chamar_modelo_com_retry", return_value=None)
     def test_nodes_de_relatorio_lidam_com_falha_api(self, mock_chamar_modelo):
         nodes = {
             "analise": (
@@ -174,14 +174,14 @@ class TestGraphNodes(BaseGraphTestCase):
 class TestGraphFlows(BaseGraphTestCase):
     """Testes de ponta a ponta para os fluxos compilados do grafo."""
 
-    @patch("graph.chamar_modelo_com_retry")
+    @patch("qa_core.graph.chamar_modelo_com_retry")
     def test_fluxo_completo_grafo_analise(self, mock_chamar_modelo):
         mock_chamar_modelo.return_value = MagicMock(text='{"key": "value"}')
         resultado = grafo_analise.invoke({"user_story": "US de teste"})
         self.assertIn("relatorio_analise_inicial", resultado)
         self.assertNotIn("erro", resultado.get("analise_da_us", {}))
 
-    @patch("graph.chamar_modelo_com_retry")
+    @patch("qa_core.graph.chamar_modelo_com_retry")
     def test_fluxo_completo_grafo_plano_testes(self, mock_chamar_modelo):
         mock_chamar_modelo.return_value = MagicMock(text='{"key": "value"}')
         estado_mock = {"user_story": "US de teste", "analise_da_us": {}}

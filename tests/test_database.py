@@ -7,8 +7,8 @@ import sqlite3
 import unittest
 from unittest.mock import patch
 
-import database
-from database import (
+from qa_core import database
+from qa_core.database import (
     DB_NAME,
     clear_history,
     delete_analysis_by_id,
@@ -31,7 +31,7 @@ class TestDatabaseInitialization(unittest.TestCase):
         if os.path.exists(self.DB_TEST_FILE):
             os.remove(self.DB_TEST_FILE)
 
-    @patch("database.DB_NAME", DB_TEST_FILE)
+    @patch("qa_core.database.DB_NAME", DB_TEST_FILE)
     def test_real_init_and_get_connection(self):
         self.assertFalse(os.path.exists(self.DB_TEST_FILE))
         # Testa a idempotência chamando duas vezes
@@ -62,7 +62,7 @@ class TestDatabaseLogic(unittest.TestCase):
     def tearDown(self):
         self.conn.close()
 
-    @patch("database.get_db_connection")
+    @patch("qa_core.database.get_db_connection")
     def test_save_and_get_by_id(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         save_analysis_to_history("us", "analysis", "plan")
@@ -70,7 +70,7 @@ class TestDatabaseLogic(unittest.TestCase):
         self.assertIsNotNone(retrieved)
         self.assertEqual(retrieved["user_story"], "us")
 
-    @patch("database.get_db_connection")
+    @patch("qa_core.database.get_db_connection")
     def test_get_all_analysis_history_order(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         save_analysis_to_history("US 1", "A 1", "P 1")
@@ -80,7 +80,7 @@ class TestDatabaseLogic(unittest.TestCase):
 
         self.assertEqual(all_entries[0]["id"], 2)
 
-    @patch("database.get_db_connection")
+    @patch("qa_core.database.get_db_connection")
     def test_get_all_history_on_empty_db(self, mock_get_conn):
 
         mock_get_conn.return_value = self.conn
@@ -88,13 +88,13 @@ class TestDatabaseLogic(unittest.TestCase):
         self.assertEqual(len(all_entries), 0)
         self.assertIsInstance(all_entries, list)
 
-    @patch("database.get_db_connection")
+    @patch("qa_core.database.get_db_connection")
     def test_get_nonexistent_entry(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         retrieved = get_analysis_by_id(999)
         self.assertIsNone(retrieved)
 
-    @patch("database.get_db_connection")
+    @patch("qa_core.database.get_db_connection")
     def test_save_analysis_to_history_with_fallback_text(self, mock_get_conn):
         connection = sqlite3.connect(
             ":memory:", detect_types=sqlite3.PARSE_DECLTYPES, check_same_thread=False
@@ -146,7 +146,7 @@ class TestDatabaseDelete(unittest.TestCase):
     def tearDown(self):
         self.conn.close()
 
-    @patch("database.get_db_connection")
+    @patch("qa_core.database.get_db_connection")
     def test_delete_analysis_by_id(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         save_analysis_to_history("US Teste", "A", "P")
@@ -154,7 +154,7 @@ class TestDatabaseDelete(unittest.TestCase):
         result = get_analysis_by_id(1)
         self.assertIsNone(result)
 
-    @patch("database.get_db_connection")
+    @patch("qa_core.database.get_db_connection")
     def test_clear_history(self, mock_get_conn):
         mock_get_conn.return_value = self.conn
         save_analysis_to_history("US 1", "A", "P")
