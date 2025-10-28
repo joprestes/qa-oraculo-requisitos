@@ -24,9 +24,9 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-import utils
-from app import _ensure_bytes
-from utils import (
+from qa_core import utils
+from qa_core.app import _ensure_bytes
+from qa_core.utils import (
     clean_markdown_report,
     gerar_nome_arquivo_seguro,
     gerar_relatorio_md_dos_cenarios,
@@ -125,7 +125,7 @@ class TestUtilsFunctions(unittest.TestCase):
         df_zephyr = preparar_df_para_zephyr_xlsx(self.sample_df, "High", "s1", "Desc")
         self.assertEqual(len(df_zephyr), 3)
 
-    @patch("utils.datetime")
+    @patch("qa_core.utils.datetime")
     def test_gerar_nome_arquivo_seguro(self, mock_datetime):
         """
         Garante que o nome de arquivo gerado:

@@ -5,7 +5,7 @@ import unittest
 
 import streamlit as st
 
-from state_manager import initialize_state, reset_session
+from qa_core.state_manager import initialize_state, reset_session
 
 
 class TestStateManager(unittest.TestCase):

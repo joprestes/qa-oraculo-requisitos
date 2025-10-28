@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 import streamlit as st
 
-from database import DB_NAME, clear_history
+from qa_core.database import DB_NAME, clear_history
 
 
 # --------------------------
@@ -56,7 +56,7 @@ def st_session_state(monkeypatch):
 def db_in_memory(monkeypatch):
     """Substitui o banco real por uma instância SQLite em memória."""
     conn = sqlite3.connect(":memory:")
-    monkeypatch.setattr("database.get_db_connection", lambda: conn)
+    monkeypatch.setattr("qa_core.database.get_db_connection", lambda: conn)
     return conn
 
 

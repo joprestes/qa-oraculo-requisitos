@@ -137,7 +137,7 @@ GOOGLE_API_KEY="sua_chave_de_api_aqui"
 ### ▶️ Executar
 
 ```bash
-streamlit run app.py
+streamlit run qa_core/app.py
 ```
 
 🎉 O QA Oráculo abrirá automaticamente no navegador!

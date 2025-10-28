@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import app
+from qa_core import app
 
 
 @pytest.mark.parametrize(

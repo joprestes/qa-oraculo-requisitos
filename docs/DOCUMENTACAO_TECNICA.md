@@ -54,18 +54,19 @@ Fluxo equivalente para o shell do Windows.
 ## 🧩 Estrutura de Código
 
 ```text
-qa-oraculo/
-├── app.py               # Interface Streamlit + camada de orquestração
-├── config.py            # Configurações, variáveis de ambiente e feature flags
-├── database.py          # Persistência (SQLite + helpers de histórico)
-├── graph.py             # Fluxos de IA (LangGraph + Gemini)
-├── pdf_generator.py     # Geração de relatórios PDF
-├── prompts.py           # Prompt base e templates dinâmicos
-├── schemas.py           # Schemas Pydantic (contratos de entrada/saída)
-├── state_manager.py     # Estado da sessão e resets controlados
-├── utils.py             # Funções auxiliares e exportações (CSV/XLSX)
-├── assets/              # Logos, ícones e arquivos estáticos
-└── tests/               # Testes unitários e de integração leve
+qa-oraculo-requisitos/
+├── qa_core/
+│   ├── app.py             # Interface Streamlit + camada de orquestração
+│   ├── config.py          # Configurações, variáveis de ambiente e feature flags
+│   ├── database.py        # Persistência (SQLite + helpers de histórico)
+│   ├── graph.py           # Fluxos de IA (LangGraph + Gemini)
+│   ├── pdf_generator.py   # Geração de relatórios PDF
+│   ├── prompts.py         # Prompt base e templates dinâmicos
+│   ├── schemas.py         # Schemas Pydantic (contratos de entrada/saída)
+│   ├── state_manager.py   # Estado da sessão e resets controlados
+│   └── utils.py           # Funções auxiliares e exportações (CSV/XLSX)
+├── assets/                # Logos, ícones e arquivos estáticos
+└── tests/                 # Testes unitários e de integração leve
 ```
 
 ---
@@ -76,22 +77,22 @@ qa-oraculo/
 
 graph TB
   subgraph "Camada de Apresentação"
-    UI[app.py - Interface Streamlit]
+    UI[qa_core/app.py - Interface Streamlit]
   end
   
   subgraph "Camada de Lógica"
-    FLOW[graph.py - Fluxos de IA]
-    PROMPTS[prompts.py - Templates]
+    FLOW[qa_core/graph.py - Fluxos de IA]
+    PROMPTS[qa_core/prompts.py - Templates]
   end
   
   subgraph "Camada de Dados"
-    DB[database.py - SQLite]
-    STATE[state_manager.py]
+    DB[qa_core/database.py - SQLite]
+    STATE[qa_core/state_manager.py]
   end
   
   subgraph "Camada de Utilidades"
-    UTILS[utils.py - Helpers]
-    PDF[pdf_generator.py]
+    UTILS[qa_core/utils.py - Helpers]
+    PDF[qa_core/pdf_generator.py]
   end
 
   UI --> FLOW
@@ -107,15 +108,15 @@ graph TB
 
 ```
 
-- `app.py`: porta de entrada com Streamlit, integração de IA e exportações.
-- `config.py`: resolve variáveis de ambiente, chaves externas e toggles de recursos.
-- `graph.py`: centraliza o fluxo de raciocínio da IA com LangGraph.
-- `prompts.py`: mantém prompts versionados para análise e plano de testes.
-- `database.py`: persistência local e caching leve para histórico de análises.
-- `state_manager.py`: abstrai o estado da sessão e resets seguros.
-- `pdf_generator.py`: exportação de relatórios formatados em PDF.
-- `schemas.py`: contratos Pydantic que validam dados trocados entre módulos.
-- `utils.py`: funções auxiliares para formatação, exportação e normalizações.
+- `qa_core/app.py`: porta de entrada com Streamlit, integração de IA e exportações.
+- `qa_core/config.py`: resolve variáveis de ambiente, chaves externas e toggles de recursos.
+- `qa_core/graph.py`: centraliza o fluxo de raciocínio da IA com LangGraph.
+- `qa_core/prompts.py`: mantém prompts versionados para análise e plano de testes.
+- `qa_core/database.py`: persistência local e caching leve para histórico de análises.
+- `qa_core/state_manager.py`: abstrai o estado da sessão e resets seguros.
+- `qa_core/pdf_generator.py`: exportação de relatórios formatados em PDF.
+- `qa_core/schemas.py`: contratos Pydantic que validam dados trocados entre módulos.
+- `qa_core/utils.py`: funções auxiliares para formatação, exportação e normalizações.
 
 ---
 
@@ -175,26 +176,26 @@ graph TB
 - Compatível com Windows, Linux, macOS
 - CI usa o mesmo ambiente (`setup.sh` idêntico ao pipeline)
 - Parâmetros sensíveis: arquivo `.env` com `GOOGLE_API_KEY` (obrigatório para
-  uso da API Gemini) documentado em `graph.py`.
+  uso da API Gemini) documentado em `qa_core/graph.py`.
 
 ---
 
 ## 🛠️ Configuração e Orquestração da IA
 
-- `config.py` concentra os parâmetros de geração (modelo, temperatura,
+- `qa_core/config.py` concentra os parâmetros de geração (modelo, temperatura,
   `max_output_tokens`) consumidos pelos fluxos de IA.
-- `graph.py` carrega o `.env` e lê a variável `GOOGLE_API_KEY`, necessária para
+- `qa_core/graph.py` carrega o `.env` e lê a variável `GOOGLE_API_KEY`, necessária para
   autenticar chamadas ao Google Gemini.
-- `prompts.py` contém o prompt mestre e auxiliares; as funções retornam versões
+- `qa_core/prompts.py` contém o prompt mestre e auxiliares; as funções retornam versões
   interpoladas conforme a user story em análise.
-- `graph.py` monta o LangGraph com nós para análise, plano de testes e ajustes;
+- `qa_core/graph.py` monta o LangGraph com nós para análise, plano de testes e ajustes;
   a função `grafo_analise` retorna uma aplicação pronta para inferência.
 
 ---
 
 ## 📦 Validação e Schemas
 
-- `schemas.py` define modelos Pydantic que normalizam entradas/saídas entre IA,
+- `qa_core/schemas.py` define modelos Pydantic que normalizam entradas/saídas entre IA,
   interface e banco.
 - Cada exportação (PDF, CSV Azure, XLSX Zephyr) consome estruturas validadas por
   esses schemas, evitando divergências em produção.

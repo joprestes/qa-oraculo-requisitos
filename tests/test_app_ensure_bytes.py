@@ -1,7 +1,7 @@
 # tests/test_app_ensure_bytes.py
 import io
 
-import app
+from qa_core import app
 
 
 def test_ensure_bytes_str():
