@@ -56,6 +56,7 @@ from .state_manager import initialize_state, reset_session
 from .utils import (
     clean_markdown_report,
     gerar_csv_azure_from_df,
+    gerar_csv_xray_from_df,
     gerar_nome_arquivo_seguro,
     get_flexible,
     preparar_df_para_zephyr_xlsx,
@@ -716,7 +717,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
         st.divider()
         st.subheader("Downloads Disponíveis")
 
-        col_md, col_pdf, col_azure, col_zephyr = st.columns(4)
+        col_md, col_pdf, col_azure, col_zephyr, col_xray = st.columns(5)
 
         # Markdown unificado (análise + plano)
         relatorio_completo_md = (
@@ -788,6 +789,21 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     st_api=st,
                 )
 
+                st.divider()
+
+                # Xray (Jira Test Management)
+                st.markdown("##### Xray (Jira Test Management)")
+                st.markdown(
+                    "⚠️ **Importante:** O diretório especificado em Test Repository Folder "
+                    "deve ser criado previamente no Xray antes da importação."
+                )
+                st.text_input(
+                    "Test Repository Folder:",
+                    placeholder="Exemplo: TED, Pagamentos, Login",
+                    key="xray_test_folder",
+                    help="Nome do diretório no Xray onde os testes serão salvos. Este diretório deve existir no Xray.",
+                )
+
             # ------------------------------------------------------
             # Dados para exportações
             # ------------------------------------------------------
@@ -835,6 +851,27 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 ),
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
+            )
+
+            # Xray - requer que o campo Test_Repository_Folder esteja preenchido
+            xray_folder = st.session_state.get("xray_test_folder", "").strip()
+            is_xray_disabled = not xray_folder
+
+            csv_xray = gerar_csv_xray_from_df(
+                df_para_ferramentas,
+                xray_folder,
+            )
+
+            col_xray.download_button(
+                "🧪 Xray (.csv)",
+                _ensure_bytes(csv_xray),
+                file_name=gerar_nome_arquivo_seguro(
+                    st.session_state.get("user_story_input", ""), "xray.csv"
+                ),
+                mime="text/csv",
+                use_container_width=True,
+                disabled=is_xray_disabled,
+                help="Preencha o Test Repository Folder no expander acima para habilitar. O formato é compatível com Xray Test Case Importer.",
             )
 
         # ------------------------------------------------------

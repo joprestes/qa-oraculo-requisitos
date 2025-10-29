@@ -332,3 +332,94 @@ def gerar_relatorio_md_dos_cenarios(df):
 """
         blocos.append(bloco)
     return "\n".join(blocos)
+
+
+# ==========================================================
+#  EXPORTAÇÃO PARA XRAY (JIRA XRAY) - CSV
+# ==========================================================
+
+
+def gerar_csv_xray_from_df(
+    df_original: pd.DataFrame,
+    test_repository_folder: str,
+) -> bytes:
+    """
+    Gera um CSV 100% compatível com Xray (Jira Test Management).
+
+    Formato requerido pelo Xray:
+    - Summary: nome da atividade de teste
+    - Description: descrição do teste
+    - Test_Repository_Folder: diretório onde o teste será salvo (deve existir no Xray)
+    - Test_Type: tipo de teste (sempre "Cucumber" para cenários Gherkin)
+    - Gherkin_Definition: cenário de teste completo em formato Gherkin
+
+    Requisitos:
+    - Separação por vírgulas
+    - Codificação UTF-8
+    - Quebras de linha preservadas no campo Gherkin_Definition
+    """
+
+    header = [
+        "Summary",
+        "Description",
+        "Test_Repository_Folder",
+        "Test_Type",
+        "Gherkin_Definition",
+    ]
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, delimiter=",", quoting=csv.QUOTE_ALL)
+    writer.writerow(header)
+
+    if df_original.empty:
+        return buffer.getvalue().encode("utf-8")
+
+    test_repository_folder = (test_repository_folder or "").strip()
+
+    # Cada linha do DataFrame é um caso de teste
+    for index, row in df_original.iterrows():
+        # Summary: usa o título do caso de teste
+        summary = row.get("titulo", f"Caso de Teste {index+1}")
+
+        # Description: combina critério de aceitação e justificativa de acessibilidade
+        criterio = row.get("criterio_de_aceitacao_relacionado", "")
+        justificativa = row.get("justificativa_acessibilidade", "")
+
+        description_parts = []
+        if criterio:
+            description_parts.append(f"Critério de Aceitação: {criterio}")
+        if justificativa:
+            description_parts.append(
+                f"Justificativa de Acessibilidade: {justificativa}"
+            )
+
+        description = (
+            " | ".join(description_parts)
+            if description_parts
+            else "Teste gerado pelo QA Oráculo"
+        )
+
+        # Test_Type: sempre "Cucumber"
+        test_type = "Cucumber"
+
+        # Gherkin_Definition: cenário completo preservando quebras de linha
+        cenario = row.get("cenario", "")
+        if isinstance(cenario, list):
+            gherkin_definition = "\n".join(cenario)
+        else:
+            gherkin_definition = str(cenario).strip()
+
+        # Escreve a linha no CSV
+        writer.writerow(
+            [
+                summary,
+                description,
+                test_repository_folder,
+                test_type,
+                gherkin_definition,
+            ]
+        )
+
+    csv_bytes = buffer.getvalue().encode("utf-8")
+    buffer.close()
+    return csv_bytes
