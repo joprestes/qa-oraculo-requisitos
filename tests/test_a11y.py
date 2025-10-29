@@ -187,14 +187,21 @@ def test_announce_nivel_invalido_usa_info():
 # ==========================================================
 def test_a11y_main_block_imprime_comandos(capsys):
     """Executa o módulo como script para validar mensagens educativas."""
+    import subprocess
+    import sys
 
-    import runpy
+    # Executa como subprocess para evitar warning de importação
+    result = subprocess.run(
+        [sys.executable, "-m", "qa_core.a11y"],
+        capture_output=True,
+        text=True,
+        cwd="/workspace",
+        check=False,
+    )
 
-    runpy.run_module("qa_core.a11y", run_name="__main__")
-
-    captured = capsys.readouterr()
-    assert "Módulo de acessibilidade" in captured.out
-    assert "apply_accessible_styles" in captured.out
+    assert result.returncode == 0
+    assert "Módulo de acessibilidade" in result.stdout
+    assert "apply_accessible_styles" in result.stdout
 
 
 # ==========================================================
