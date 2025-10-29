@@ -797,62 +797,80 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     "⚠️ **Importante:** O diretório especificado em Test Repository Folder "
                     "deve ser criado previamente no Xray antes da importação."
                 )
+
+                # Campo obrigatório
                 st.text_input(
-                    "Test Repository Folder:",
+                    "Test Repository Folder (Obrigatório):",
                     placeholder="Exemplo: TED, Pagamentos, Login",
                     key="xray_test_folder",
-                    help="Nome do diretório no Xray onde os testes serão salvos. Este diretório deve existir no Xray.",
+                    help="Nome do diretório no Xray onde TODOS os testes deste arquivo serão salvos. Este diretório deve existir no Xray.",
                 )
 
-                # Campos personalizados opcionais
-                with st.expander("+ Campos Personalizados (Opcional)", expanded=False):
-                    st.markdown("Configure campos adicionais para o Xray/Jira:")
+                # Campos opcionais padrão do Xray
+                with st.expander(
+                    "⚙️ Configurações Adicionais (Opcional)", expanded=False
+                ):
+                    st.markdown("**📋 Campos Padrão do Xray/Jira:**")
 
-                    xray_col1, xray_col2 = st.columns(2)
+                    col1, col2 = st.columns(2)
 
-                    with xray_col1:
+                    with col1:
                         st.text_input(
                             "Labels:",
-                            placeholder="Ex: QA, Automation, Regression",
+                            placeholder="Ex: Automation, Regression",
                             key="xray_labels",
-                            help="Etiquetas separadas por vírgula para categorização dos testes",
+                            help="Etiquetas para todos os testes (separadas por vírgula)",
                         )
                         st.text_input(
                             "Component:",
-                            placeholder="Ex: Pagamentos, Login, API",
+                            placeholder="Ex: Pagamentos",
                             key="xray_component",
-                            help="Componente do sistema relacionado ao teste",
+                            help="Componente do Jira",
+                        )
+                        st.text_input(
+                            "Fix Version:",
+                            placeholder="Ex: 1.0.0",
+                            key="xray_fix_version",
+                            help="Versão de correção do Jira",
                         )
 
-                    with xray_col2:
+                    with col2:
                         st.selectbox(
                             "Priority:",
-                            ["", "High", "Medium", "Low"],
+                            ["", "Highest", "High", "Medium", "Low", "Lowest"],
                             key="xray_priority",
-                            help="Prioridade do teste no Jira",
+                            help="Prioridade padrão para todos os testes",
                         )
                         st.text_input(
                             "Assignee:",
-                            placeholder="Ex: joao.silva@empresa.com",
+                            placeholder="Ex: joao.silva",
                             key="xray_assignee",
-                            help="Responsável pelo teste (email do usuário no Jira)",
+                            help="Responsável pelos testes (username do Jira)",
+                        )
+                        st.text_input(
+                            "Test Set:",
+                            placeholder="Ex: Sprint 10",
+                            key="xray_test_set",
+                            help="Test Set onde os testes serão agrupados",
                         )
 
-                    st.markdown("##### 🔧 Campos Customizados Adicionais")
-                    st.markdown(
-                        "Para campos customizados do seu Jira, use o formato: `Nome_Campo=Valor`"
-                    )
+                    st.divider()
+
+                    st.markdown("**🔧 Campos Customizados do Seu Jira:**")
+                    st.markdown("Formato: `Nome_do_Campo=Valor` (um por linha)")
+
                     accessible_text_area(
-                        label="Campos Customizados (um por linha):",
+                        label="Campos Personalizados:",
                         key="xray_custom_fields",
                         height=100,
                         help_text=(
-                            "Adicione campos customizados do Jira, um por linha.\n"
-                            "Formato: NomeCampo=Valor\n"
-                            "Exemplo:\n"
+                            "Adicione campos customizados do seu Jira, um por linha.\n\n"
+                            "Formato: NomeDoCampo=Valor\n\n"
+                            "Exemplos:\n"
                             "Epic Link=PROJ-123\n"
                             "Sprint=Sprint 10\n"
-                            "Custom Field=Valor"
+                            "Story Points=5\n"
+                            "Team=Squad Core"
                         ),
                         placeholder="Epic Link=PROJ-123\nSprint=Sprint 10",
                         st_api=st,
@@ -911,25 +929,36 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
             xray_folder = st.session_state.get("xray_test_folder", "").strip()
             is_xray_disabled = not xray_folder
 
-            # Monta dicionário de campos personalizados
-            xray_custom_fields = {}
+            # Monta dicionário de campos para o Xray CSV
+            xray_fields = {}
 
-            # Campos padrão opcionais
+            # Campos padrão do Xray (ordem importa no CSV!)
             if st.session_state.get("xray_labels", "").strip():
-                xray_custom_fields["Labels"] = st.session_state.get(
-                    "xray_labels", ""
-                ).strip()
+                xray_fields["Labels"] = st.session_state.get("xray_labels", "").strip()
+
             if st.session_state.get("xray_priority", "").strip():
-                xray_custom_fields["Priority"] = st.session_state.get(
+                xray_fields["Priority"] = st.session_state.get(
                     "xray_priority", ""
                 ).strip()
+
             if st.session_state.get("xray_component", "").strip():
-                xray_custom_fields["Component"] = st.session_state.get(
+                xray_fields["Component"] = st.session_state.get(
                     "xray_component", ""
                 ).strip()
+
+            if st.session_state.get("xray_fix_version", "").strip():
+                xray_fields["Fix Version"] = st.session_state.get(
+                    "xray_fix_version", ""
+                ).strip()
+
             if st.session_state.get("xray_assignee", "").strip():
-                xray_custom_fields["Assignee"] = st.session_state.get(
+                xray_fields["Assignee"] = st.session_state.get(
                     "xray_assignee", ""
+                ).strip()
+
+            if st.session_state.get("xray_test_set", "").strip():
+                xray_fields["Test Set"] = st.session_state.get(
+                    "xray_test_set", ""
                 ).strip()
 
             # Campos customizados do usuário (formato: Campo=Valor)
@@ -939,12 +968,12 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                     stripped_line = raw_line.strip()
                     if "=" in stripped_line:
                         key, value = stripped_line.split("=", 1)
-                        xray_custom_fields[key.strip()] = value.strip()
+                        xray_fields[key.strip()] = value.strip()
 
             csv_xray = gerar_csv_xray_from_df(
                 df_para_ferramentas,
                 xray_folder,
-                custom_fields=xray_custom_fields if xray_custom_fields else None,
+                custom_fields=xray_fields if xray_fields else None,
             )
 
             col_xray.download_button(

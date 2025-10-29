@@ -8,13 +8,27 @@ O QA Oráculo agora suporta exportação de cenários de teste no formato CSV co
 
 O arquivo CSV gerado segue a especificação oficial do Xray com as seguintes colunas:
 
+### Campos Obrigatórios
+
 | Coluna | Descrição | Origem no QA Oráculo |
 |--------|-----------|---------------------|
 | **Summary** | Nome da atividade de teste | Campo `titulo` do cenário |
 | **Description** | Descrição do teste | Combinação de `criterio_de_aceitacao_relacionado` e `justificativa_acessibilidade` |
-| **Test_Repository_Folder** | Diretório no Xray onde o teste será salvo | Configurado pelo usuário na interface |
+| **Test_Repository_Folder** | Diretório no Xray onde TODOS os testes serão salvos | Configurado UMA VEZ para todo o arquivo CSV |
 | **Test_Type** | Tipo de teste | Sempre "Cucumber" para cenários Gherkin |
 | **Gherkin_Definition** | Cenário de teste completo | Campo `cenario` do caso de teste |
+
+### Campos Opcionais Suportados
+
+| Campo | Descrição | Exemplo |
+|-------|-----------|---------|
+| **Labels** | Etiquetas para categorização | `Automation, Regression` |
+| **Priority** | Prioridade do teste | `Highest, High, Medium, Low, Lowest` |
+| **Component** | Componente do Jira | `Pagamentos` |
+| **Fix Version** | Versão de correção | `1.0.0` |
+| **Assignee** | Responsável pelo teste | `joao.silva` (username do Jira) |
+| **Test Set** | Agrupamento de testes | `Sprint 10` |
+| **Campos Customizados** | Qualquer campo do seu Jira | `Epic Link=PROJ-123` |
 
 ## 🚀 Como Usar
 
@@ -28,30 +42,47 @@ O arquivo CSV gerado segue a especificação oficial do Xray com as seguintes co
 
 Na seção **"Opções de Exportação para Ferramentas Externas"**, expanda o accordion e:
 
+#### ✅ Campo Obrigatório
+
 1. Role até a seção **"Xray (Jira Test Management)"**
-2. Preencha o campo **"Test Repository Folder"** com o nome do diretório no Xray
+2. Preencha o campo **"Test Repository Folder (Obrigatório)"**
    - Exemplo: `TED`, `Pagamentos`, `Login`
-   - ⚠️ **Importante**: Este diretório **deve existir previamente** no Xray
+   - ⚠️ **Importante**: 
+     - Este valor será aplicado a **TODOS os testes** do arquivo CSV
+     - O diretório **deve existir previamente** no Xray
+     - É um diretório **único por arquivo exportado**
 
-### 3. Configurar Campos Personalizados (Opcional)
+### 3. Configurar Campos Adicionais (Opcional)
 
-Para adicionar campos extras ao CSV, expanda **"+ Campos Personalizados (Opcional)"**:
+Para adicionar campos extras ao CSV, expanda **"⚙️ Configurações Adicionais (Opcional)"**:
 
-#### Campos Padrão Disponíveis:
-- **Labels**: Etiquetas separadas por vírgula (ex: `QA, Automation, Regression`)
-- **Priority**: Prioridade do teste (`High`, `Medium`, `Low`)
-- **Component**: Componente do sistema (ex: `Pagamentos`, `Login`, `API`)
-- **Assignee**: Responsável pelo teste (email do Jira: `joao.silva@empresa.com`)
+#### 📋 Campos Padrão do Xray/Jira:
 
-#### Campos Customizados Adicionais:
-Para campos específicos do seu Jira, use a área de texto "Campos Customizados":
-- **Formato**: Um campo por linha: `NomeCampo=Valor`
-- **Exemplos**:
-  ```
-  Epic Link=PROJ-123
-  Sprint=Sprint 10
-  Custom Field=Valor Personalizado
-  ```
+| Campo | Uso | Exemplo |
+|-------|-----|---------|
+| **Labels** | Etiquetas para categorização | `Automation, Regression` |
+| **Priority** | Prioridade dos testes | `Highest`, `High`, `Medium`, `Low`, `Lowest` |
+| **Component** | Componente do Jira | `Pagamentos` |
+| **Fix Version** | Versão de correção | `1.0.0`, `Release 2.5` |
+| **Assignee** | Responsável pelos testes | `joao.silva` (username do Jira) |
+| **Test Set** | Agrupamento de testes | `Sprint 10`, `Smoke Tests` |
+
+💡 **Importante**: Estes valores serão aplicados a **TODOS os testes** do arquivo CSV.
+
+#### 🔧 Campos Customizados do Seu Jira:
+
+Para campos específicos da sua empresa/projeto:
+
+**Formato**: `NomeDoCampo=Valor` (um por linha)
+
+**Exemplos**:
+```
+Epic Link=PROJ-123
+Sprint=Sprint 10
+Story Points=5
+Team=Squad Core
+Business Area=Financeiro
+```
 
 ### 4. Fazer Download do CSV
 
