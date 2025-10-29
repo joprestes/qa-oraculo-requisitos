@@ -342,6 +342,7 @@ def gerar_relatorio_md_dos_cenarios(df):
 def gerar_csv_xray_from_df(
     df_original: pd.DataFrame,
     test_repository_folder: str,
+    custom_fields: dict | None = None,
 ) -> bytes:
     """
     Gera um CSV 100% compatível com Xray (Jira Test Management).
@@ -353,12 +354,25 @@ def gerar_csv_xray_from_df(
     - Test_Type: tipo de teste (sempre "Cucumber" para cenários Gherkin)
     - Gherkin_Definition: cenário de teste completo em formato Gherkin
 
+    Campos opcionais/personalizados suportados:
+    - Labels: etiquetas para categorização
+    - Priority: prioridade do teste (High, Medium, Low)
+    - Component: componente do sistema relacionado
+    - Assignee: responsável pelo teste
+    - Qualquer outro campo customizado do Jira
+
+    Args:
+        df_original: DataFrame com os cenários de teste
+        test_repository_folder: Diretório no Xray onde os testes serão salvos
+        custom_fields: Dicionário com campos personalizados (ex: {"Labels": "QA,Automation", "Priority": "High"})
+
     Requisitos:
     - Separação por vírgulas
     - Codificação UTF-8
     - Quebras de linha preservadas no campo Gherkin_Definition
     """
 
+    # Campos obrigatórios do Xray
     header = [
         "Summary",
         "Description",
@@ -366,6 +380,11 @@ def gerar_csv_xray_from_df(
         "Test_Type",
         "Gherkin_Definition",
     ]
+
+    # Adiciona campos personalizados ao cabeçalho
+    custom_fields = custom_fields or {}
+    if custom_fields:
+        header.extend(custom_fields.keys())
 
     buffer = io.StringIO()
     writer = csv.writer(buffer, delimiter=",", quoting=csv.QUOTE_ALL)
@@ -409,16 +428,21 @@ def gerar_csv_xray_from_df(
         else:
             gherkin_definition = str(cenario).strip()
 
+        # Monta a linha com campos obrigatórios
+        row_data = [
+            summary,
+            description,
+            test_repository_folder,
+            test_type,
+            gherkin_definition,
+        ]
+
+        # Adiciona valores dos campos personalizados
+        if custom_fields:
+            row_data.extend(custom_fields.values())
+
         # Escreve a linha no CSV
-        writer.writerow(
-            [
-                summary,
-                description,
-                test_repository_folder,
-                test_type,
-                gherkin_definition,
-            ]
-        )
+        writer.writerow(row_data)
 
     csv_bytes = buffer.getvalue().encode("utf-8")
     buffer.close()

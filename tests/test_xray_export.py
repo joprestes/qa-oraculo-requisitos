@@ -242,3 +242,114 @@ def test_gerar_csv_xray_campos_opcionais_ausentes():
     # Deve usar descrição padrão quando campos opcionais estão ausentes
     assert "Teste Mínimo" in csv_text
     assert "teste simples" in csv_text
+
+
+def test_gerar_csv_xray_com_campos_personalizados():
+    """
+    Testa adição de campos personalizados ao CSV.
+    """
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "Teste com Campos Customizados",
+                "cenario": "Given cenário\nWhen ação\nThen resultado",
+            }
+        ]
+    )
+
+    custom_fields = {"Labels": "QA,Automation", "Priority": "High", "Component": "API"}
+
+    csv_bytes = gerar_csv_xray_from_df(df, "Testes", custom_fields=custom_fields)
+    csv_text = csv_bytes.decode("utf-8")
+
+    # Verifica cabeçalho com campos customizados
+    assert "Labels" in csv_text
+    assert "Priority" in csv_text
+    assert "Component" in csv_text
+
+    # Verifica valores dos campos
+    assert "QA,Automation" in csv_text
+    assert "High" in csv_text
+    assert "API" in csv_text
+
+
+def test_gerar_csv_xray_com_campos_personalizados_complexos():
+    """
+    Testa campos customizados com nomes compostos e valores complexos.
+    """
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "Teste Complexo",
+                "cenario": "Given teste",
+            }
+        ]
+    )
+
+    custom_fields = {
+        "Epic Link": "PROJ-123",
+        "Sprint": "Sprint 10",
+        "Custom Field": "Valor com espaços",
+    }
+
+    csv_bytes = gerar_csv_xray_from_df(df, "Testes", custom_fields=custom_fields)
+    csv_text = csv_bytes.decode("utf-8")
+
+    # Verifica campos com nomes compostos
+    assert "Epic Link" in csv_text
+    assert "PROJ-123" in csv_text
+    assert "Sprint" in csv_text
+    assert "Sprint 10" in csv_text
+    assert "Custom Field" in csv_text
+    assert "Valor com espaços" in csv_text
+
+
+def test_gerar_csv_xray_sem_campos_personalizados():
+    """
+    Testa que campos personalizados None ou vazio não quebram a função.
+    """
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "Teste Sem Customização",
+                "cenario": "Given teste básico",
+            }
+        ]
+    )
+
+    # Testa com None
+    csv_bytes = gerar_csv_xray_from_df(df, "Testes", custom_fields=None)
+    csv_text = csv_bytes.decode("utf-8")
+    assert "Teste Sem Customização" in csv_text
+
+    # Testa com dicionário vazio
+    csv_bytes = gerar_csv_xray_from_df(df, "Testes", custom_fields={})
+    csv_text = csv_bytes.decode("utf-8")
+    assert "Teste Sem Customização" in csv_text
+
+
+def test_gerar_csv_xray_ordem_campos_personalizados():
+    """
+    Testa se a ordem dos campos personalizados é preservada.
+    """
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "Teste Ordem",
+                "cenario": "Given teste",
+            }
+        ]
+    )
+
+    custom_fields = {"Campo1": "Valor1", "Campo2": "Valor2", "Campo3": "Valor3"}
+
+    csv_bytes = gerar_csv_xray_from_df(df, "Testes", custom_fields=custom_fields)
+    csv_text = csv_bytes.decode("utf-8")
+
+    # Verifica que todos os campos estão presentes
+    assert "Campo1" in csv_text
+    assert "Campo2" in csv_text
+    assert "Campo3" in csv_text
+    assert "Valor1" in csv_text
+    assert "Valor2" in csv_text
+    assert "Valor3" in csv_text

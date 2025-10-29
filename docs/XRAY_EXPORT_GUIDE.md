@@ -33,13 +33,35 @@ Na seção **"Opções de Exportação para Ferramentas Externas"**, expanda o a
    - Exemplo: `TED`, `Pagamentos`, `Login`
    - ⚠️ **Importante**: Este diretório **deve existir previamente** no Xray
 
-### 3. Fazer Download do CSV
+### 3. Configurar Campos Personalizados (Opcional)
+
+Para adicionar campos extras ao CSV, expanda **"+ Campos Personalizados (Opcional)"**:
+
+#### Campos Padrão Disponíveis:
+- **Labels**: Etiquetas separadas por vírgula (ex: `QA, Automation, Regression`)
+- **Priority**: Prioridade do teste (`High`, `Medium`, `Low`)
+- **Component**: Componente do sistema (ex: `Pagamentos`, `Login`, `API`)
+- **Assignee**: Responsável pelo teste (email do Jira: `joao.silva@empresa.com`)
+
+#### Campos Customizados Adicionais:
+Para campos específicos do seu Jira, use a área de texto "Campos Customizados":
+- **Formato**: Um campo por linha: `NomeCampo=Valor`
+- **Exemplos**:
+  ```
+  Epic Link=PROJ-123
+  Sprint=Sprint 10
+  Custom Field=Valor Personalizado
+  ```
+
+### 4. Fazer Download do CSV
 
 1. Clique no botão **"🧪 Xray (.csv)"** na seção de Downloads
 2. O arquivo será baixado com o nome baseado na User Story + timestamp
 3. O arquivo estará pronto para importação no Xray
 
-## 📋 Exemplo de Arquivo Gerado
+## 📋 Exemplos de Arquivos Gerados
+
+### Exemplo 1: CSV Básico (sem campos personalizados)
 
 ```csv
 "Summary","Description","Test_Repository_Folder","Test_Type","Gherkin_Definition"
@@ -50,6 +72,19 @@ Examples:
 | dados           |
 | data_pagamento  |
 | valor_pagamento |"
+```
+
+### Exemplo 2: CSV com Campos Personalizados
+
+```csv
+"Summary","Description","Test_Repository_Folder","Test_Type","Gherkin_Definition","Labels","Priority","Component","Assignee","Epic Link"
+"Solicitar TED sem enviar dados obrigatórios","Critério de Aceitação: Sistema deve validar campos obrigatórios | Justificativa de Acessibilidade: Mensagens de erro acessíveis via leitores de tela","TED","Cucumber","Given que possuo conta PJ
+When solicito uma transferencia sem enviar <dados>
+Then devo obter mensagem de erro e status code 400
+Examples:
+| dados           |
+| data_pagamento  |
+| valor_pagamento |","QA,Automation,Regression","High","Pagamentos","joao.silva@empresa.com","PROJ-123"
 ```
 
 ## 🔧 Importar no Xray
