@@ -12,10 +12,7 @@ from tests.test_constants import (
     TEST_DF_BASIC,
     TEST_EDIT_STATE,
     TEST_EXPORT_CONFIG,
-    TEST_MESSAGES,
-    TEST_SESSION_STATE_BASIC,
     TEST_SESSION_STATE_FINISHED,
-    TEST_USER_STORY,
     MOCK_COLUMNS_COUNT,
 )
 
@@ -204,7 +201,10 @@ def test_render_main_analysis_page_exportadores(mock_st):
     # --- 3. Executa a função com patches de exportação ---
     with (
         patch("qa_core.app.to_excel", return_value=TEST_EXPORT_CONFIG["excel_content"]),
-        patch("qa_core.app.gerar_nome_arquivo_seguro", return_value=TEST_EXPORT_CONFIG["filename"]),
+        patch(
+            "qa_core.app.gerar_nome_arquivo_seguro",
+            return_value=TEST_EXPORT_CONFIG["filename"],
+        ),
     ):
         app.render_main_analysis_page()
 

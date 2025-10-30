@@ -7,6 +7,64 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-10-29
+
+### Added
+
+- **Reorganização completa da estrutura do projeto:**
+  - Pasta `.config/` para arquivos de configuração centralizados
+  - Pasta `scripts/` para scripts de setup e automação
+  - Pasta `data/` para banco de dados e dados persistentes
+  - Pasta `templates/` para templates e modelos
+  - Arquivo `.gitignore` completo e organizado
+  - `Makefile` com comandos de desenvolvimento padronizados
+
+- **Melhorias na qualidade dos testes:**
+  - Arquivo `tests/test_constants.py` com dados de teste centralizados
+  - Refatoração de valores hardcoded para constantes reutilizáveis
+  - Melhoria na manutenibilidade e legibilidade dos testes
+  - Padronização de dados de teste entre diferentes arquivos
+
+- **Comandos de desenvolvimento via Makefile:**
+  - `make setup` - Setup completo do ambiente
+  - `make run` - Executar aplicação
+  - `make test` - Executar testes
+  - `make lint` - Verificação de linting
+  - `make format` - Formatação de código
+  - `make dev-check` - Verificação completa de qualidade
+  - `make help` - Lista todos os comandos disponíveis
+
+### Changed
+
+- **Estrutura de pastas reorganizada:**
+  - `pyproject.toml`, `pytest.ini`, `pyrightconfig.json` → `.config/`
+  - Scripts de setup → `scripts/`
+  - Banco de dados → `data/`
+  - Template de PR → `templates/`
+
+- **Configurações atualizadas:**
+  - Caminho do banco de dados atualizado para `data/qa_oraculo_history.db`
+  - Criação automática da pasta `data/` se não existir
+  - Configurações de pytest apontando para nova estrutura
+
+- **Documentação atualizada:**
+  - `PROJECT_STRUCTURE.md` com nova organização
+  - `README.md` com comandos de desenvolvimento
+  - Links internos atualizados para nova estrutura
+
+### Fixed
+
+- **Problemas de testes corrigidos:**
+  - Fallback para `st.columns(5)` em ambientes de teste
+  - Correção de problemas de indentação em arquivos de teste
+  - Melhoria na robustez dos mocks de colunas
+  - Correção de problemas de diretório em testes de a11y
+
+- **Melhorias na robustez:**
+  - Tratamento de casos onde `st.columns` retorna menos elementos
+  - Criação automática de diretórios necessários
+  - Melhoria na compatibilidade com diferentes ambientes de teste
+
 ## [1.5.0] - 2025-10-29
 
 ### Added

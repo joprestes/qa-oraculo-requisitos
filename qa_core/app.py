@@ -1086,7 +1086,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
             col_md, col_pdf, col_azure, col_zephyr, col_xray = columns
         else:
             # Fallback para testes ou quando há menos colunas
-            col_md = col_pdf = col_azure = col_zephyr = col_xray = columns[0] if columns else None
+            col_md = col_pdf = col_azure = col_zephyr = col_xray = (
+                columns[0] if columns else None
+            )
 
         # Markdown unificado (análise + plano)
         relatorio_completo_md = (

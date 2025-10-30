@@ -46,8 +46,14 @@ TEST_SESSION_STATE_FINISHED = {
 
 # === DataFrames de Teste ===
 TEST_DF_BASIC = [
-    {"titulo": "CT 1", "cenario": "Dado que estou na tela de login\nQuando preencho os campos\nEntão sou redirecionado"},
-    {"titulo": "CT 2", "cenario": "Dado que estou logado\nQuando clico em sair\nEntão sou deslogado"},
+    {
+        "titulo": "CT 1",
+        "cenario": "Dado que estou na tela de login\nQuando preencho os campos\nEntão sou redirecionado",
+    },
+    {
+        "titulo": "CT 2",
+        "cenario": "Dado que estou logado\nQuando clico em sair\nEntão sou deslogado",
+    },
 ]
 
 # === Configurações de Mock ===
