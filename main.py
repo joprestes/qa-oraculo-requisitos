@@ -14,7 +14,7 @@ root_dir = Path(__file__).parent
 sys.path.insert(0, str(root_dir))
 
 # Importa e executa o app principal
-from qa_core.app import main
+from qa_core.app import main  # noqa: E402
 
 if __name__ == "__main__":
     main()

@@ -187,6 +187,7 @@ def test_announce_nivel_invalido_usa_info():
 # ==========================================================
 def test_a11y_main_block_imprime_comandos(capsys):
     """Executa o módulo como script para validar mensagens educativas."""
+    import os
     import subprocess
     import sys
 
@@ -195,7 +196,7 @@ def test_a11y_main_block_imprime_comandos(capsys):
         [sys.executable, "-m", "qa_core.a11y"],
         capture_output=True,
         text=True,
-        cwd="/workspace",
+        cwd=os.getcwd(),
         check=False,
     )
 

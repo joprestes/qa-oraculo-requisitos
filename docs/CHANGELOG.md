@@ -7,6 +7,136 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+## [1.6.1] - 2025-10-29
+
+### Fixed
+
+- **Correção de duplicação de lógica de exportação:**
+  - Removida duplicação de código na função `render_main_analysis_page`
+  - Lógica de exportação agora centralizada na função `_render_export_section()`
+  - Eliminado conflito de merge não resolvido que causava bypass da função de exportação
+  - Corrigido teste `test_render_main_analysis_page_exportadores` para verificar chamada da função correta
+
+- **Correção de inconsistência de caminhos do ambiente virtual:**
+  - Padronizado uso de `venv/` (sem ponto) em todos os scripts e configurações
+  - Corrigidos scripts `quick-setup.sh` e `quick-setup.bat` para criar `venv/` em vez de `.venv/`
+  - Atualizado `.gitignore` para remover referências duplicadas a `.venv/`
+  - Garantida compatibilidade entre Makefile, VS Code e scripts de setup
+
+## [1.6.0] - 2025-10-29
+
+### Added
+
+- **Reorganização completa da estrutura do projeto:**
+  - Pasta `.config/` para arquivos de configuração centralizados
+  - Pasta `scripts/` para scripts de setup e automação
+  - Pasta `data/` para banco de dados e dados persistentes
+  - Pasta `templates/` para templates e modelos
+  - Arquivo `.gitignore` completo e organizado
+  - `Makefile` com comandos de desenvolvimento padronizados
+
+- **Melhorias na qualidade dos testes:**
+  - Arquivo `tests/test_constants.py` com dados de teste centralizados
+  - Refatoração de valores hardcoded para constantes reutilizáveis
+  - Melhoria na manutenibilidade e legibilidade dos testes
+  - Padronização de dados de teste entre diferentes arquivos
+
+- **Comandos de desenvolvimento via Makefile:**
+  - `make setup` - Setup completo do ambiente
+  - `make run` - Executar aplicação
+  - `make test` - Executar testes
+  - `make lint` - Verificação de linting
+  - `make format` - Formatação de código
+  - `make dev-check` - Verificação completa de qualidade
+  - `make help` - Lista todos os comandos disponíveis
+
+### Changed
+
+- **Estrutura de pastas reorganizada:**
+  - `pyproject.toml`, `pytest.ini`, `pyrightconfig.json` → `.config/`
+  - Scripts de setup → `scripts/`
+  - Banco de dados → `data/`
+  - Template de PR → `templates/`
+
+- **Configurações atualizadas:**
+  - Caminho do banco de dados atualizado para `data/qa_oraculo_history.db`
+  - Criação automática da pasta `data/` se não existir
+  - Configurações de pytest apontando para nova estrutura
+
+- **Documentação atualizada:**
+  - `PROJECT_STRUCTURE.md` com nova organização
+  - `README.md` com comandos de desenvolvimento
+  - Links internos atualizados para nova estrutura
+
+### Fixed
+
+- **Problemas de testes corrigidos:**
+  - Fallback para `st.columns(5)` em ambientes de teste
+  - Correção de problemas de indentação em arquivos de teste
+  - Melhoria na robustez dos mocks de colunas
+  - Correção de problemas de diretório em testes de a11y
+
+- **Melhorias na robustez:**
+  - Tratamento de casos onde `st.columns` retorna menos elementos
+  - Criação automática de diretórios necessários
+  - Melhoria na compatibilidade com diferentes ambientes de teste
+
+## [1.5.0] - 2025-10-29
+
+### Added
+
+- **Exportação para Xray (Jira Test Management):**
+  - Nova função `gerar_csv_xray_from_df()` em `qa_core/utils.py`
+  - Interface de configuração com campo "Test Repository Folder" obrigatório
+  - Suporte a campos personalizados do Jira (Labels, Component, Fix Version, Priority, Assignee, Test Set)
+  - Configuração de campos customizados via formato "Campo=Valor"
+  - Botão de download "🧪 Xray (.csv)" na seção de exportações
+  - Validação: botão desabilitado se Test Repository Folder não for preenchido
+  - CSV compatível com Xray Test Case Importer
+  - Preservação de quebras de linha nos cenários Gherkin
+  - Codificação UTF-8 para caracteres especiais
+  - Test_Type definido automaticamente como "Cucumber"
+
+- **Testes automatizados para Xray:**
+  - Arquivo `tests/test_xray_export.py` com 10 casos de teste
+  - Cobertura completa da funcionalidade de exportação
+  - Validação de estrutura CSV, encoding e campos obrigatórios
+
+- **Documentação Xray:**
+  - `XRAY_EXPORT_GUIDE.md` - Guia completo de uso
+  - `XRAY_IMPLEMENTATION_SUMMARY.md` - Resumo técnico da implementação
+  - `RESUMO_FINAL_XRAY.md` - Documentação final
+  - `CAMPOS_PERSONALIZADOS_XRAY.md` - Guia de campos customizados
+
+### Changed
+
+- Interface de exportações expandida com seção dedicada ao Xray
+- Validação aprimorada para campos obrigatórios de exportação
+- Organização melhorada da seção de downloads
+
+### Added
+
+- **Guia de Setup Simplificado:**
+  - `SETUP_GUIDE.md` - Guia completo e didático de instalação
+  - `quick-setup.sh` - Script automático para Linux/Mac
+  - `quick-setup.bat` - Script automático para Windows
+  - `DEVELOPER_QUICK_START.md` - Guia rápido para desenvolvedores
+  - Setup interativo com configuração automática da API Key
+  - Verificação automática de dependências e instalação
+  - Instruções claras passo a passo
+
+### Changed
+
+- README principal atualizado com opções de setup simplificado
+- Scripts de setup mais amigáveis e informativos
+- Melhor organização da documentação de instalação
+
+### Fixed
+
+- Correção de merge conflicts no arquivo `app.py`
+- Resolução de problemas de indentação
+- Melhoria na estrutura de configuração de exportações
+
 ## [1.4.0] - 2025-01-20
 
 ### Added

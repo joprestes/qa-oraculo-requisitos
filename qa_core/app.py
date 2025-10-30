@@ -693,16 +693,16 @@ def _render_results_section():
         _render_test_cases_table()
 
 
-def _render_export_section():
-    """
-    Renderiza a seção de downloads e exportações.
-    Inclui suporte para: Markdown, PDF, Azure DevOps, Jira Zephyr e Xray.
-    Todos os formulários seguem padrões de acessibilidade WCAG 2.1 Level AA.
-    """
-    st.divider()
-    st.subheader("Downloads Disponíveis")
-
-    col_md, col_pdf, col_azure, col_zephyr, col_xray = st.columns(5)
+def _render_basic_exports():
+    """Renderiza os downloads básicos (Markdown e PDF)."""
+    columns = st.columns(5)
+    if len(columns) >= 5:
+        col_md, col_pdf, col_azure, col_zephyr, col_xray = columns
+    else:
+        # Fallback para testes ou quando há menos colunas
+        col_md = col_pdf = col_azure = col_zephyr = col_xray = (
+            columns[0] if columns else None
+        )
 
     # Markdown unificado (análise + plano)
     relatorio_completo_md = (
@@ -731,6 +731,20 @@ def _render_export_section():
             ),
             use_container_width=True,
         )
+
+    return col_azure, col_zephyr, col_xray
+
+
+def _render_export_section():  # noqa: C901, PLR0915
+    """
+    Renderiza a seção de downloads e exportações.
+    Inclui suporte para: Markdown, PDF, Azure DevOps, Jira Zephyr e Xray.
+    Todos os formulários seguem padrões de acessibilidade WCAG 2.1 Level AA.
+    """
+    st.divider()
+    st.subheader("Downloads Disponíveis")
+
+    col_azure, col_zephyr, col_xray = _render_basic_exports()
 
     # ==================================================
     #  OPÇÕES DE EXPORTAÇÃO (AZURE / ZEPHYR)
@@ -1011,7 +1025,7 @@ def _render_new_analysis_button():
 # ==========================================================
 #  Página Principal — Análise de User Story (Refatorada)
 # ==========================================================
-def render_main_analysis_page():
+def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     """
     Fluxo da página principal (refatorado em funções menores):
 
@@ -1060,287 +1074,7 @@ def render_main_analysis_page():
     # ------------------------------------------------------
     if st.session_state.get("analysis_finished"):
         _render_results_section()
-
-        # ==================================================
-        #  SEÇÃO DE DOWNLOADS
-        # ==================================================
-<<<<<<< HEAD
         _render_export_section()
-=======
-        st.divider()
-        st.subheader("Downloads Disponíveis")
-
-        col_md, col_pdf, col_azure, col_zephyr, col_xray = st.columns(5)
-
-        # Markdown unificado (análise + plano)
-        relatorio_completo_md = (
-            f"{(st.session_state.get('analysis_state', {}).get('relatorio_analise_inicial') or '')}\n\n"
-            f"---\n\n"
-            f"{(st.session_state.get('test_plan_report') or '')}"
-        )
-
-        # 📥 Exporta análise completa em Markdown
-        col_md.download_button(
-            "📥 Análise (.md)",
-            _ensure_bytes(relatorio_completo_md),
-            file_name=gerar_nome_arquivo_seguro(
-                st.session_state.get("user_story_input", ""), "md"
-            ),
-            use_container_width=True,
-        )
-
-        # 📄 Exporta relatório PDF
-        if st.session_state.get("pdf_report_bytes"):
-            col_pdf.download_button(
-                "📄 Relatório (.pdf)",
-                _ensure_bytes(st.session_state.get("pdf_report_bytes")),
-                file_name=gerar_nome_arquivo_seguro(
-                    st.session_state.get("user_story_input", ""), "pdf"
-                ),
-                use_container_width=True,
-            )
-
-        # ==================================================
-        #  OPÇÕES DE EXPORTAÇÃO (AZURE / ZEPHYR)
-        # ==================================================
-        if (
-            st.session_state.get("test_plan_df") is not None
-            and not st.session_state.get("test_plan_df").empty
-        ):
-            with st.expander(
-                "⚙️ Opções de Exportação para Ferramentas Externas", expanded=False
-            ):
-                # Azure DevOps
-                st.markdown("##### Azure DevOps")
-                az_col1, az_col2 = st.columns(2)
-                az_col1.text_input("Area Path:", key="area_path_input")
-                az_col2.text_input("Atribuído a:", key="assigned_to_input")
-
-                st.divider()
-
-                # Jira Zephyr
-                st.markdown("##### Jira Zephyr")
-                st.selectbox(
-                    "Prioridade Padrão:",
-                    ["Medium", "High", "Low"],
-                    key="jira_priority",
-                )
-                st.text_input(
-                    "Labels (separadas por vírgula):",
-                    "QA-Oraculo",
-                    key="jira_labels",
-                )
-                accessible_text_area(
-                    label="Descrição Padrão",
-                    key="jira_description",
-                    height=100,
-                    help_text=(
-                        "Descrição padrão enviada ao Jira ao criar o caso de teste. "
-                        "Você pode editar para adicionar detalhes específicos da funcionalidade."
-                    ),
-                    placeholder="Exemplo: Caso de teste gerado automaticamente a partir da análise de requisitos.",
-                    st_api=st,
-                )
-
-                st.divider()
-
-                # Xray (Jira Test Management)
-                st.markdown("##### Xray (Jira Test Management)")
-                st.markdown(
-                    "⚠️ **Importante:** O diretório especificado em Test Repository Folder "
-                    "deve ser criado previamente no Xray antes da importação."
-                )
-
-                # Campo obrigatório
-                st.text_input(
-                    "Test Repository Folder (Obrigatório):",
-                    placeholder="Exemplo: TED, Pagamentos, Login",
-                    key="xray_test_folder",
-                    help="Nome do diretório no Xray onde TODOS os testes deste arquivo serão salvos. Este diretório deve existir no Xray.",
-                )
-
-                # Campos opcionais padrão do Xray
-                with st.expander(
-                    "⚙️ Configurações Adicionais (Opcional)", expanded=False
-                ):
-                    st.markdown("**📋 Campos Padrão do Xray/Jira:**")
-
-                    col1, col2 = st.columns(2)
-
-                    with col1:
-                        st.text_input(
-                            "Labels:",
-                            placeholder="Ex: Automation, Regression",
-                            key="xray_labels",
-                            help="Etiquetas para todos os testes (separadas por vírgula)",
-                        )
-                        st.text_input(
-                            "Component:",
-                            placeholder="Ex: Pagamentos",
-                            key="xray_component",
-                            help="Componente do Jira",
-                        )
-                        st.text_input(
-                            "Fix Version:",
-                            placeholder="Ex: 1.0.0",
-                            key="xray_fix_version",
-                            help="Versão de correção do Jira",
-                        )
-
-                    with col2:
-                        st.selectbox(
-                            "Priority:",
-                            ["", "Highest", "High", "Medium", "Low", "Lowest"],
-                            key="xray_priority",
-                            help="Prioridade padrão para todos os testes",
-                        )
-                        st.text_input(
-                            "Assignee:",
-                            placeholder="Ex: joao.silva",
-                            key="xray_assignee",
-                            help="Responsável pelos testes (username do Jira)",
-                        )
-                        st.text_input(
-                            "Test Set:",
-                            placeholder="Ex: Sprint 10",
-                            key="xray_test_set",
-                            help="Test Set onde os testes serão agrupados",
-                        )
-
-                    st.divider()
-
-                    st.markdown("**🔧 Campos Customizados do Seu Jira:**")
-                    st.markdown("Formato: `Nome_do_Campo=Valor` (um por linha)")
-
-                    accessible_text_area(
-                        label="Campos Personalizados:",
-                        key="xray_custom_fields",
-                        height=100,
-                        help_text=(
-                            "Adicione campos customizados do seu Jira, um por linha.\n\n"
-                            "Formato: NomeDoCampo=Valor\n\n"
-                            "Exemplos:\n"
-                            "Epic Link=PROJ-123\n"
-                            "Sprint=Sprint 10\n"
-                            "Story Points=5\n"
-                            "Team=Squad Core"
-                        ),
-                        placeholder="Epic Link=PROJ-123\nSprint=Sprint 10",
-                        st_api=st,
-                    )
-
-            # ------------------------------------------------------
-            # Dados para exportações
-            # ------------------------------------------------------
-            df_para_ferramentas = st.session_state.get("test_plan_df", pd.DataFrame())
-
-            # Azure requer que os campos de área e responsável estejam preenchidos
-            is_azure_disabled = not (
-                st.session_state.get("area_path_input", "").strip()
-                and st.session_state.get("assigned_to_input", "").strip()
-            )
-
-            csv_azure = gerar_csv_azure_from_df(
-                df_para_ferramentas,
-                st.session_state.get("area_path_input", ""),
-                st.session_state.get("assigned_to_input", ""),
-            )
-
-            col_azure.download_button(
-                "🚀 Azure (.csv)",
-                _ensure_bytes(csv_azure),
-                file_name=gerar_nome_arquivo_seguro(
-                    st.session_state.get("user_story_input", ""), "azure.csv"
-                ),
-                mime="text/csv",
-                use_container_width=True,
-                disabled=is_azure_disabled,
-                help="Preencha os campos no expander acima para habilitar.",
-            )
-
-            # Zephyr
-            df_zephyr = preparar_df_para_zephyr_xlsx(
-                df_para_ferramentas,
-                st.session_state.get("jira_priority", "Medium"),
-                st.session_state.get("jira_labels", ""),
-                st.session_state.get("jira_description", ""),
-            )
-            excel_zephyr = to_excel(df_zephyr, sheet_name="Zephyr Import")
-            excel_zephyr_bytes = _ensure_bytes(excel_zephyr)
-
-            col_zephyr.download_button(
-                "📊 Jira Zephyr (.xlsx)",
-                excel_zephyr_bytes,
-                file_name=gerar_nome_arquivo_seguro(
-                    st.session_state.get("user_story_input", ""), "zephyr.xlsx"
-                ),
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True,
-            )
->>>>>>> origin/main
-
-            # Xray - requer que o campo Test_Repository_Folder esteja preenchido
-            xray_folder = st.session_state.get("xray_test_folder", "").strip()
-            is_xray_disabled = not xray_folder
-
-            # Monta dicionário de campos para o Xray CSV
-            xray_fields = {}
-
-            # Campos padrão do Xray (ordem importa no CSV!)
-            if st.session_state.get("xray_labels", "").strip():
-                xray_fields["Labels"] = st.session_state.get("xray_labels", "").strip()
-
-            if st.session_state.get("xray_priority", "").strip():
-                xray_fields["Priority"] = st.session_state.get(
-                    "xray_priority", ""
-                ).strip()
-
-            if st.session_state.get("xray_component", "").strip():
-                xray_fields["Component"] = st.session_state.get(
-                    "xray_component", ""
-                ).strip()
-
-            if st.session_state.get("xray_fix_version", "").strip():
-                xray_fields["Fix Version"] = st.session_state.get(
-                    "xray_fix_version", ""
-                ).strip()
-
-            if st.session_state.get("xray_assignee", "").strip():
-                xray_fields["Assignee"] = st.session_state.get(
-                    "xray_assignee", ""
-                ).strip()
-
-            if st.session_state.get("xray_test_set", "").strip():
-                xray_fields["Test Set"] = st.session_state.get(
-                    "xray_test_set", ""
-                ).strip()
-
-            # Campos customizados do usuário (formato: Campo=Valor)
-            custom_text = st.session_state.get("xray_custom_fields", "").strip()
-            if custom_text:
-                for raw_line in custom_text.split("\n"):
-                    stripped_line = raw_line.strip()
-                    if "=" in stripped_line:
-                        key, value = stripped_line.split("=", 1)
-                        xray_fields[key.strip()] = value.strip()
-
-            csv_xray = gerar_csv_xray_from_df(
-                df_para_ferramentas,
-                xray_folder,
-                custom_fields=xray_fields if xray_fields else None,
-            )
-
-            col_xray.download_button(
-                "🧪 Xray (.csv)",
-                _ensure_bytes(csv_xray),
-                file_name=gerar_nome_arquivo_seguro(
-                    st.session_state.get("user_story_input", ""), "xray.csv"
-                ),
-                mime="text/csv",
-                use_container_width=True,
-                disabled=is_xray_disabled,
-                help="Preencha o Test Repository Folder no expander acima para habilitar. O formato é compatível com Xray Test Case Importer.",
-            )
 
         # ------------------------------------------------------
         # Botão para resetar e reiniciar o fluxo
