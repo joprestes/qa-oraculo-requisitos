@@ -251,11 +251,769 @@ def run_test_plan_graph(analysis_state: dict):
 
 
 # ==========================================================
-#  Página Principal — Análise de User Story
+#  Funções Auxiliares da Página Principal (Refatoradas)
 # ==========================================================
-def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
+
+
+def _render_user_story_input():
     """
-    Fluxo da página principal:
+    Renderiza o campo de entrada da User Story e o botão de análise.
+
+    Returns:
+        bool: True se a análise foi iniciada, False caso contrário.
+    """
+    accessible_text_area(
+        label="Insira a User Story aqui:",
+        key="user_story_input",
+        height=250,
+        help_text="Digite ou cole sua User Story no formato: Como [persona], quero [ação], para [objetivo].",
+        placeholder="Exemplo: Como usuário do app, quero redefinir minha senha via email...",
+        st_api=st,
+    )
+
+    # Compatibilidade com testes que usam mock do streamlit
+    if getattr(st.text_area, "__module__", "").startswith("unittest.mock"):
+        st.text_area(
+            "Insira a User Story aqui:",
+            height=250,
+            key="user_story_input",
+        )
+
+    # Botão que dispara a análise inicial usando o grafo
+    if accessible_button(
+        label="Analisar User Story",
+        key="btn_analyze",
+        context="Inicia a análise de IA da User Story fornecida. Aguarde alguns segundos para o resultado.",
+        type="primary",
+        st_api=st,
+    ):
+        user_story_txt = st.session_state.get("user_story_input", "")
+
+        if user_story_txt.strip():
+            with st.spinner("🔮 O Oráculo está realizando a análise inicial..."):
+                resultado_analise = run_analysis_graph(user_story_txt)
+
+                # Guarda o resultado bruto da IA para edição posterior
+                st.session_state["analysis_state"] = resultado_analise
+
+                # Enquanto a edição não é confirmada, não mostramos o botão de gerar o plano
+                st.session_state["show_generate_plan_button"] = False
+
+                # Re-renderiza a página para exibir a seção de edição
+                st.rerun()
+        else:
+            announce(
+                "Por favor, insira uma User Story antes de analisar.",
+                "warning",
+                st_api=st,
+            )
+        return True
+    return False
+
+
+def _extract_analysis_fields():
+    """
+    Extrai os campos da análise do session_state e os converte para formato editável.
+
+    Returns:
+        tuple: (avaliacao_str, pontos_str, perguntas_str, criterios_str, riscos_str)
+    """
+    analise_json = st.session_state.get("analysis_state", {}).get("analise_da_us", {})
+
+    # Usa get_flexible para aceitar variações de chave que a IA pode devolver
+    avaliacao_str = get_flexible(analise_json, ["avaliacao_geral", "avaliacao"], "")
+    pontos_list = get_flexible(
+        analise_json, ["pontos_ambiguos", "pontos_de_ambiguidade"], []
+    )
+    perguntas_list = get_flexible(
+        analise_json, ["perguntas_para_po", "perguntas_ao_po"], []
+    )
+    criterios_list = get_flexible(
+        analise_json,
+        ["sugestao_criterios_aceite", "criterios_de_aceite"],
+        [],
+    )
+    riscos_list = get_flexible(analise_json, ["riscos_e_dependencias", "riscos"], [])
+
+    # Converte listas em strings com quebra de linha para o form
+    pontos_str = "\n".join(pontos_list)
+    perguntas_str = "\n".join(perguntas_list)
+    criterios_str = "\n".join(criterios_list)
+    riscos_str = "\n".join(riscos_list)
+
+    return avaliacao_str, pontos_str, perguntas_str, criterios_str, riscos_str
+
+
+def _save_edited_analysis_fields():
+    """
+    Salva os campos editados do formulário de volta no session_state.
+    """
+    st.session_state.setdefault("analysis_state", {})
+    st.session_state["analysis_state"].setdefault("analise_da_us", {})
+    bloco = st.session_state["analysis_state"]["analise_da_us"]
+
+    # Salva os campos editados — sempre normalizando para lista onde necessário
+    bloco["avaliacao_geral"] = st.session_state.get("edit_avaliacao", "")
+
+    bloco["pontos_ambiguos"] = [
+        linha.strip()
+        for linha in st.session_state.get("edit_pontos", "").split("\n")
+        if linha.strip()
+    ]
+
+    bloco["perguntas_para_po"] = [
+        linha.strip()
+        for linha in st.session_state.get("edit_perguntas", "").split("\n")
+        if linha.strip()
+    ]
+
+    bloco["sugestao_criterios_aceite"] = [
+        linha.strip()
+        for linha in st.session_state.get("edit_criterios", "").split("\n")
+        if linha.strip()
+    ]
+
+    bloco["riscos_e_dependencias"] = [
+        linha.strip()
+        for linha in st.session_state.get("edit_riscos", "").split("\n")
+        if linha.strip()
+    ]
+
+    # Agora podemos avançar para a geração de plano
+    st.session_state["show_generate_plan_button"] = True
+
+
+def _render_analysis_edit_form():
+    """
+    Renderiza o formulário de edição da análise gerada pela IA.
+    """
+    announce(
+        " 🔮 O Oráculo gerou a análise abaixo. Revise, edite se necessário e clique em 'Salvar' para prosseguir.",
+        "info",
+        st_api=st,
+    )
+
+    # Extrai os campos para edição
+    avaliacao_str, pontos_str, perguntas_str, criterios_str, riscos_str = (
+        _extract_analysis_fields()
+    )
+
+    # Formulário de edição — decisão de UX:
+    #   editar tudo numa única tela para facilitar a revisão humana.
+    with st.form(key="analysis_edit_form"):
+        st.subheader("📝 Análise Editável")
+
+        accessible_text_area(
+            label="Avaliação Geral",
+            key="edit_avaliacao",
+            height=75,
+            value=avaliacao_str,
+            help_text="Descreva o entendimento geral da User Story — clareza, coerência e completude.",
+            placeholder="Exemplo: A User Story apresenta objetivo claro, mas falta detalhar critérios de sucesso.",
+            st_api=st,
+        )
+
+        accessible_text_area(
+            label="Pontos Ambíguos",
+            key="edit_pontos",
+            height=125,
+            value=pontos_str,
+            help_text="Liste trechos da User Story que podem gerar múltiplas interpretações ou dúvidas.",
+            placeholder="Exemplo: O termo 'processar pagamento' não especifica o meio de pagamento utilizado.",
+            st_api=st,
+        )
+
+        accessible_text_area(
+            label="Perguntas para o PO",
+            key="edit_perguntas",
+            height=125,
+            value=perguntas_str,
+            help_text="Inclua perguntas que o QA faria ao PO para esclarecer requisitos e expectativas.",
+            placeholder="Exemplo: O campo de CPF será validado no backend ou apenas no frontend?",
+            st_api=st,
+        )
+
+        accessible_text_area(
+            label="Critérios de Aceite",
+            key="edit_criterios",
+            height=150,
+            value=criterios_str,
+            help_text="Defina os critérios objetivos para considerar a User Story concluída com sucesso.",
+            placeholder="Exemplo: O usuário deve receber um email de confirmação após redefinir a senha.",
+            st_api=st,
+        )
+
+        accessible_text_area(
+            label="Riscos e Dependências",
+            key="edit_riscos",
+            height=100,
+            value=riscos_str,
+            help_text="Aponte riscos técnicos, dependências entre times ou pré-condições para execução.",
+            placeholder="Exemplo: Depende da API de autenticação, ainda em desenvolvimento pelo time backend.",
+            st_api=st,
+        )
+
+        submitted = st.form_submit_button("Salvar Análise e Continuar")
+
+    # Quando o form é submetido, persistimos as edições no estado
+    if submitted:
+        _save_edited_analysis_fields()
+        announce("Análise refinada salva com sucesso!", "success", st_api=st)
+        st.rerun()
+
+
+def _render_test_plan_generation():
+    """
+    Renderiza a seção de geração do plano de testes.
+    """
+    # Mostra o relatório de análise (texto da IA)
+    with st.expander("📘 Análise Refinada da User Story", expanded=False):
+        relatorio = st.session_state.get("analysis_state", {}).get(
+            "relatorio_analise_inicial", ""
+        )
+        st.markdown(clean_markdown_report(relatorio), unsafe_allow_html=True)
+
+    announce(
+        "Deseja que o Oráculo gere um Plano de Testes com base na análise refinada?",
+        "info",
+        st_api=st,
+    )
+
+    col1, col2, _ = st.columns([1, 1, 2])
+
+    # Botão para gerar o plano de testes com LangGraph
+    if col1.button(
+        "Sim, Gerar Plano de Testes", type="primary", use_container_width=True
+    ):
+        with st.spinner(
+            "🔮 Elaborando o Plano de Testes com base na análise refinada..."
+        ):
+            try:
+                resultado_plano = run_test_plan_graph(
+                    st.session_state.get("analysis_state", {})
+                )
+
+                casos_de_teste = resultado_plano.get("plano_e_casos_de_teste", {}).get(
+                    "casos_de_teste_gherkin", []
+                )
+
+                if not casos_de_teste or not isinstance(casos_de_teste, list):
+                    # Força a entrada no 'except' se a IA não retornar o formato esperado
+                    raise ValueError(
+                        "O Oráculo não conseguiu gerar um plano de testes estruturado."
+                    )
+
+                st.session_state["test_plan_report"] = resultado_plano.get(
+                    "relatorio_plano_de_testes"
+                )
+                df = pd.DataFrame(casos_de_teste)
+                df_clean = df.apply(
+                    lambda col: col.apply(
+                        lambda x: ("\n".join(map(str, x)) if isinstance(x, list) else x)
+                    )
+                )
+                df_clean.fillna("", inplace=True)
+                st.session_state["test_plan_df"] = df_clean
+
+                pdf_bytes = generate_pdf_report(
+                    st.session_state.get("analysis_state", {}).get(
+                        "relatorio_analise_inicial", ""
+                    ),
+                    df_clean,
+                )
+                st.session_state["pdf_report_bytes"] = pdf_bytes
+
+                if not st.session_state.get("history_saved"):
+                    _save_current_analysis_to_history()
+                    st.session_state["history_saved"] = True  # evita duplicação
+
+                st.session_state["analysis_finished"] = True
+                announce("Plano de Testes gerado com sucesso!", "success", st_api=st)
+                st.rerun()
+
+            except Exception as e:
+                # Em caso de falha, informa o usuário, mas não perde o progresso
+                print(f"❌ Falha na geração do plano de testes: {e}")
+                announce(
+                    "O Oráculo não conseguiu gerar um plano de testes estruturado.",
+                    "error",
+                    st_api=st,
+                )
+                # Limpa qualquer resquício de plano de teste para não exibir dados errados
+                st.session_state["test_plan_report"] = ""
+                st.session_state["test_plan_df"] = None
+                _save_current_analysis_to_history()
+                st.rerun()
+
+    # Botão para encerrar sem gerar plano (mas salvando análise)
+    if col2.button("Não, Encerrar", use_container_width=True):
+        if not st.session_state.get("history_saved"):
+            _save_current_analysis_to_history()
+            st.session_state["history_saved"] = True  # evita duplicação
+        st.session_state["analysis_finished"] = True
+        st.rerun()
+
+
+def _render_test_cases_table():
+    """
+    Renderiza a tabela de casos de teste com expanderes individuais.
+    """
+    if (
+        st.session_state.get("test_plan_df") is None
+        or st.session_state["test_plan_df"].empty
+    ):
+        return
+
+    df = st.session_state["test_plan_df"].copy()
+
+    #  Define as colunas completas para o resumo
+    colunas_resumo = [
+        "id",
+        "titulo",
+        "prioridade",
+        "criterio_de_aceitacao_relacionado",
+        "justificativa_acessibilidade",
+    ]
+
+    #  Filtra e renomeia para nomes amigáveis
+    df_resumo = (
+        df[[c for c in colunas_resumo if c in df.columns]]
+        .rename(
+            columns={
+                "id": "ID",
+                "titulo": "Título",
+                "prioridade": "Prioridade",
+                "criterio_de_aceitacao_relacionado": "Critério de Aceitação Relacionado",
+                "justificativa_acessibilidade": "Justificativa de Acessibilidade",
+            }
+        )
+        .fillna("")  # evita None
+    )
+
+    st.markdown("### 📊 Resumo dos Casos de Teste")
+    st.dataframe(df_resumo, use_container_width=True)
+    st.markdown(
+        '<div data-testid="tabela-casos-teste"></div>',
+        unsafe_allow_html=True,
+    )
+
+    #  Dropdowns individuais (detalhes)
+    with st.expander("📁 Casos de Teste (Expandir para ver todos)", expanded=False):
+        for index, row in df.iterrows():
+            # Garante que sempre haverá um identificador mesmo se a coluna "id" não existir
+            test_id = row.get("id", f"CT-{index + 1:03d}")
+            with st.expander(
+                f"📋 {test_id} — {row.get('titulo', '-')}", expanded=False
+            ):
+                st.markdown(f"**Prioridade:** {row.get('prioridade', '-')}")
+                st.markdown(
+                    f"**Critério de Aceitação Relacionado:** {row.get('criterio_de_aceitacao_relacionado','-')}"
+                )
+                st.markdown(
+                    f"**Justificativa de Acessibilidade:** {row.get('justificativa_acessibilidade','-')}"
+                )
+                if row.get("cenario"):
+                    st.markdown("**Cenário Gherkin (editável):**")
+
+                    cenario_editado = accessible_text_area(
+                        label=f"Editar Cenário {test_id}",
+                        key=f"edit_cenario_{test_id}",
+                        value=row["cenario"],
+                        height=220,
+                        help_text="Edite o cenário de teste mantendo a estrutura Gherkin (Dado, Quando, Então).",
+                        placeholder=(
+                            "Exemplo:\n"
+                            "Dado que o usuário possui um cartão válido\n"
+                            "Quando ele realiza a compra\n"
+                            "Então o sistema deve gerar um token de pagamento com sucesso"
+                        ),
+                        st_api=st,
+                    )
+
+                    # Atualiza o DataFrame se houve edição
+                    if cenario_editado.strip() != str(row["cenario"]).strip():
+                        st.session_state["test_plan_df"].at[
+                            index, "cenario"
+                        ] = cenario_editado
+
+                        #  Regera o relatório de plano de testes (Markdown consolidado)
+                        from .utils import gerar_relatorio_md_dos_cenarios
+
+                        novo_relatorio = gerar_relatorio_md_dos_cenarios(
+                            st.session_state["test_plan_df"]
+                        )
+                        st.session_state["test_plan_report"] = novo_relatorio
+
+                        #  Atualiza histórico com a versão revisada (atualização em linha)
+                        _save_current_analysis_to_history(update_existing=True)
+                        st.toast(
+                            "✅ Cenário atualizado e persistido no histórico (ID existente)."
+                        )
+                else:
+                    announce(
+                        "Este caso de teste ainda não possui cenário em formato Gherkin.",
+                        "info",
+                        st_api=st,
+                    )
+
+
+def _render_results_section():
+    """
+    Renderiza a seção de resultados da análise e plano de testes.
+    """
+    announce("Análise concluída com sucesso!", "success", st_api=st)
+
+    # ==================================================
+    #  ANÁLISE REFINADA DA USER STORY
+    # ==================================================
+    if st.session_state.get("analysis_state"):
+        with st.expander("📘 Análise Refinada da User Story", expanded=False):
+            relatorio_analise = st.session_state.get("analysis_state", {}).get(
+                "relatorio_analise_inicial", ""
+            )
+            st.markdown(
+                clean_markdown_report(relatorio_analise), unsafe_allow_html=True
+            )
+
+        # ==================================================
+        #  RELATÓRIO DO PLANO DE TESTES (VISÃO GERAL)
+        # ==================================================
+        if st.session_state.get("test_plan_report"):
+            with st.expander(
+                "🧪 Plano de Testes Gerado (Resumo em Markdown)", expanded=True
+            ):
+                st.markdown(
+                    clean_markdown_report(st.session_state.get("test_plan_report", "")),
+                    unsafe_allow_html=True,
+                )
+
+        # ==================================================
+        # 📂 CASOS DE TESTE (TABELA RESUMO + DETALHES)
+        # ==================================================
+        _render_test_cases_table()
+
+
+def _render_export_section():
+    """
+    Renderiza a seção de downloads e exportações.
+    Inclui suporte para: Markdown, PDF, Azure DevOps, Jira Zephyr e Xray.
+    Todos os formulários seguem padrões de acessibilidade WCAG 2.1 Level AA.
+    """
+    st.divider()
+    st.subheader("Downloads Disponíveis")
+
+    col_md, col_pdf, col_azure, col_zephyr, col_xray = st.columns(5)
+
+    # Markdown unificado (análise + plano)
+    relatorio_completo_md = (
+        f"{(st.session_state.get('analysis_state', {}).get('relatorio_analise_inicial') or '')}\n\n"
+        f"---\n\n"
+        f"{(st.session_state.get('test_plan_report') or '')}"
+    )
+
+    # 📥 Exporta análise completa em Markdown
+    col_md.download_button(
+        "📥 Análise (.md)",
+        _ensure_bytes(relatorio_completo_md),
+        file_name=gerar_nome_arquivo_seguro(
+            st.session_state.get("user_story_input", ""), "md"
+        ),
+        use_container_width=True,
+    )
+
+    # 📄 Exporta relatório PDF
+    if st.session_state.get("pdf_report_bytes"):
+        col_pdf.download_button(
+            "📄 Relatório (.pdf)",
+            _ensure_bytes(st.session_state.get("pdf_report_bytes")),
+            file_name=gerar_nome_arquivo_seguro(
+                st.session_state.get("user_story_input", ""), "pdf"
+            ),
+            use_container_width=True,
+        )
+
+    # ==================================================
+    #  OPÇÕES DE EXPORTAÇÃO (AZURE / ZEPHYR)
+    # ==================================================
+    if (
+        st.session_state.get("test_plan_df") is not None
+        and not st.session_state.get("test_plan_df").empty
+    ):
+        with st.expander(
+            "⚙️ Opções de Exportação para Ferramentas Externas", expanded=False
+        ):
+            # Azure DevOps
+            st.markdown("##### Azure DevOps")
+            az_col1, az_col2 = st.columns(2)
+            az_col1.text_input("Area Path:", key="area_path_input")
+            az_col2.text_input("Atribuído a:", key="assigned_to_input")
+
+            st.divider()
+
+            # Jira Zephyr
+            st.markdown("##### Jira Zephyr")
+            st.selectbox(
+                "Prioridade Padrão:",
+                ["Medium", "High", "Low"],
+                key="jira_priority",
+            )
+            st.text_input(
+                "Labels (separadas por vírgula):",
+                "QA-Oraculo",
+                key="jira_labels",
+            )
+            accessible_text_area(
+                label="Descrição Padrão",
+                key="jira_description",
+                height=100,
+                help_text=(
+                    "Descrição padrão enviada ao Jira ao criar o caso de teste. "
+                    "Você pode editar para adicionar detalhes específicos da funcionalidade."
+                ),
+                placeholder="Exemplo: Caso de teste gerado automaticamente a partir da análise de requisitos.",
+                st_api=st,
+            )
+
+            st.divider()
+
+            # ======================================================================
+            # Xray (Jira Test Management) - COM ACESSIBILIDADE COMPLETA
+            # ======================================================================
+            st.markdown("##### 🧪 Xray (Jira Test Management)")
+            announce(
+                "Xray: Ferramenta de gerenciamento de testes do Jira. Requer Test Repository Folder.",
+                "info",
+                st_api=st,
+            )
+            st.markdown(
+                "⚠️ **Importante:** O diretório especificado em Test Repository Folder "
+                "deve ser criado previamente no Xray antes da importação."
+            )
+
+            # Campo obrigatório com acessibilidade
+            st.text_input(
+                "Test Repository Folder (Obrigatório):",
+                placeholder="Exemplo: TED, Pagamentos, Login",
+                key="xray_test_folder",
+                help=(
+                    "Nome do diretório no Xray onde TODOS os testes deste arquivo serão salvos. "
+                    "Este diretório deve existir no Xray. Campo obrigatório para exportação."
+                ),
+            )
+
+            # Campos opcionais padrão do Xray
+            with st.expander(
+                "⚙️ Configurações Adicionais do Xray (Opcional)", expanded=False
+            ):
+                st.markdown("**📋 Campos Padrão do Xray/Jira:**")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.text_input(
+                        "Labels:",
+                        placeholder="Ex: Automation, Regression",
+                        key="xray_labels",
+                        help="Etiquetas para todos os testes (separadas por vírgula). Melhora organização e filtros.",
+                    )
+                    st.text_input(
+                        "Component:",
+                        placeholder="Ex: Pagamentos",
+                        key="xray_component",
+                        help="Componente do Jira associado aos testes. Ajuda na rastreabilidade.",
+                    )
+                    st.text_input(
+                        "Fix Version:",
+                        placeholder="Ex: 1.0.0",
+                        key="xray_fix_version",
+                        help="Versão de correção do Jira. Indica em qual release o teste será executado.",
+                    )
+
+                with col2:
+                    st.selectbox(
+                        "Priority:",
+                        ["", "Highest", "High", "Medium", "Low", "Lowest"],
+                        key="xray_priority",
+                        help="Prioridade padrão para todos os testes. Vazio = usar prioridade individual de cada teste.",
+                    )
+                    st.text_input(
+                        "Assignee:",
+                        placeholder="Ex: joao.silva",
+                        key="xray_assignee",
+                        help="Responsável pelos testes (username do Jira). Opcional.",
+                    )
+                    st.text_input(
+                        "Test Set:",
+                        placeholder="Ex: Sprint 10",
+                        key="xray_test_set",
+                        help="Test Set onde os testes serão agrupados. Útil para organizar por sprint ou release.",
+                    )
+
+                st.divider()
+
+                st.markdown("**🔧 Campos Customizados do Seu Jira:**")
+                st.markdown("Formato: `Nome_do_Campo=Valor` (um por linha)")
+
+                accessible_text_area(
+                    label="Campos Personalizados:",
+                    key="xray_custom_fields",
+                    height=120,
+                    help_text=(
+                        "Adicione campos customizados do seu Jira, um por linha.\n\n"
+                        "Formato: NomeDoCampo=Valor\n\n"
+                        "Exemplos práticos:\n"
+                        "• Epic Link=PROJ-123\n"
+                        "• Sprint=Sprint 10\n"
+                        "• Story Points=5\n"
+                        "• Team=Squad Core\n\n"
+                        "Esses campos serão adicionados a TODOS os testes exportados."
+                    ),
+                    placeholder="Epic Link=PROJ-123\nSprint=Sprint 10\nTeam=QA Core",
+                    st_api=st,
+                )
+
+        # ------------------------------------------------------
+        # Dados para exportações
+        # ------------------------------------------------------
+        df_para_ferramentas = st.session_state.get("test_plan_df", pd.DataFrame())
+
+        # Azure requer que os campos de área e responsável estejam preenchidos
+        is_azure_disabled = not (
+            st.session_state.get("area_path_input", "").strip()
+            and st.session_state.get("assigned_to_input", "").strip()
+        )
+
+        csv_azure = gerar_csv_azure_from_df(
+            df_para_ferramentas,
+            st.session_state.get("area_path_input", ""),
+            st.session_state.get("assigned_to_input", ""),
+        )
+
+        col_azure.download_button(
+            "🚀 Azure (.csv)",
+            _ensure_bytes(csv_azure),
+            file_name=gerar_nome_arquivo_seguro(
+                st.session_state.get("user_story_input", ""), "azure.csv"
+            ),
+            mime="text/csv",
+            use_container_width=True,
+            disabled=is_azure_disabled,
+            help="Preencha os campos no expander acima para habilitar.",
+        )
+
+        # Zephyr
+        df_zephyr = preparar_df_para_zephyr_xlsx(
+            df_para_ferramentas,
+            st.session_state.get("jira_priority", "Medium"),
+            st.session_state.get("jira_labels", ""),
+            st.session_state.get("jira_description", ""),
+        )
+        excel_zephyr = to_excel(df_zephyr, sheet_name="Zephyr Import")
+        excel_zephyr_bytes = _ensure_bytes(excel_zephyr)
+
+        col_zephyr.download_button(
+            "📊 Jira Zephyr (.xlsx)",
+            excel_zephyr_bytes,
+            file_name=gerar_nome_arquivo_seguro(
+                st.session_state.get("user_story_input", ""), "zephyr.xlsx"
+            ),
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True,
+        )
+
+        # ======================================================================
+        # EXPORTAÇÃO XRAY - Requer Test Repository Folder
+        # ======================================================================
+        xray_folder = st.session_state.get("xray_test_folder", "").strip()
+        is_xray_disabled = not xray_folder
+
+        # Monta dicionário de campos para o Xray CSV
+        xray_fields = {}
+
+        # Campos padrão do Xray (ordem importa no CSV!)
+        if st.session_state.get("xray_labels", "").strip():
+            xray_fields["Labels"] = st.session_state.get("xray_labels", "").strip()
+
+        if st.session_state.get("xray_priority", "").strip():
+            xray_fields["Priority"] = st.session_state.get("xray_priority", "").strip()
+
+        if st.session_state.get("xray_component", "").strip():
+            xray_fields["Component"] = st.session_state.get(
+                "xray_component", ""
+            ).strip()
+
+        if st.session_state.get("xray_fix_version", "").strip():
+            xray_fields["Fix Version"] = st.session_state.get(
+                "xray_fix_version", ""
+            ).strip()
+
+        if st.session_state.get("xray_assignee", "").strip():
+            xray_fields["Assignee"] = st.session_state.get("xray_assignee", "").strip()
+
+        if st.session_state.get("xray_test_set", "").strip():
+            xray_fields["Test Set"] = st.session_state.get("xray_test_set", "").strip()
+
+        # Campos customizados do usuário (formato: Campo=Valor)
+        custom_text = st.session_state.get("xray_custom_fields", "").strip()
+        if custom_text:
+            for raw_line in custom_text.split("\n"):
+                stripped_line = raw_line.strip()
+                if "=" in stripped_line:
+                    key, value = stripped_line.split("=", 1)
+                    xray_fields[key.strip()] = value.strip()
+
+        csv_xray = gerar_csv_xray_from_df(
+            df_para_ferramentas,
+            xray_folder,
+            custom_fields=xray_fields if xray_fields else None,
+        )
+
+        col_xray.download_button(
+            "🧪 Xray (.csv)",
+            _ensure_bytes(csv_xray),
+            file_name=gerar_nome_arquivo_seguro(
+                st.session_state.get("user_story_input", ""), "xray.csv"
+            ),
+            mime="text/csv",
+            use_container_width=True,
+            disabled=is_xray_disabled,
+            help=(
+                "Preencha o Test Repository Folder no expander acima para habilitar. "
+                "O formato é compatível com Xray Test Case Importer (CSV). "
+                "Use navegação por teclado (Tab) para acessar o formulário acima."
+            ),
+        )
+
+
+def _render_new_analysis_button():
+    """
+    Renderiza o botão de nova análise com função de reset.
+    """
+    st.divider()
+
+    def resetar_fluxo():
+        """Reseta o estado completo da sessão, incluindo a flag de histórico."""
+        # Remove explicitamente a flag antes de chamar reset_session
+        st.session_state.pop("history_saved", None)
+        reset_session()  # já limpa user_story_input, analysis_state, etc.
+
+    accessible_button(
+        label="🔄 Realizar Nova Análise",
+        key="nova_analise_button",
+        context="Limpa os resultados anteriores e reinicia o fluxo de análise da User Story.",
+        type="primary",
+        use_container_width=True,
+        on_click=resetar_fluxo,
+        st_api=st,
+    )
+
+
+# ==========================================================
+#  Página Principal — Análise de User Story (Refatorada)
+# ==========================================================
+def render_main_analysis_page():
+    """
+    Fluxo da página principal (refatorado em funções menores):
 
     1) Entrada da User Story (text_area) + Execução da análise de IA.
     2) Edição humana dos blocos sugeridos (form).
@@ -279,52 +1037,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
         # Se ainda não há análise no estado, exibimos o input inicial
         if not st.session_state.get("analysis_state"):
-            accessible_text_area(
-                label="Insira a User Story aqui:",
-                key="user_story_input",
-                height=250,
-                help_text="Digite ou cole sua User Story no formato: Como [persona], quero [ação], para [objetivo].",
-                placeholder="Exemplo: Como usuário do app, quero redefinir minha senha via email...",
-                st_api=st,
-            )
-
-            if getattr(st.text_area, "__module__", "").startswith("unittest.mock"):
-                st.text_area(
-                    "Insira a User Story aqui:",
-                    height=250,
-                    key="user_story_input",
-                )
-
-            # Botão que dispara a análise inicial usando o grafo
-            if accessible_button(
-                label="Analisar User Story",
-                key="btn_analyze",
-                context="Inicia a análise de IA da User Story fornecida. Aguarde alguns segundos para o resultado.",
-                type="primary",
-                st_api=st,
-            ):
-                user_story_txt = st.session_state.get("user_story_input", "")
-
-                if user_story_txt.strip():
-                    with st.spinner(
-                        "🔮 O Oráculo está realizando a análise inicial..."
-                    ):
-                        resultado_analise = run_analysis_graph(user_story_txt)
-
-                        # Guarda o resultado bruto da IA para edição posterior
-                        st.session_state["analysis_state"] = resultado_analise
-
-                        # Enquanto a edição não é confirmada, não mostramos o botão de gerar o plano
-                        st.session_state["show_generate_plan_button"] = False
-
-                        # Re-renderiza a página para exibir a seção de edição
-                        st.rerun()
-                else:
-                    announce(
-                        "Por favor, insira uma User Story antes de analisar.",
-                        "warning",
-                        st_api=st,
-                    )
+            _render_user_story_input()
 
         # ------------------------------------------------------
         # 2) Edição dos blocos gerados pela IA
@@ -334,386 +1047,26 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 
             # Enquanto a edição não for salva, mostramos o formulário editável
             if not st.session_state.get("show_generate_plan_button"):
-                announce(
-                    " 🔮 O Oráculo gerou a análise abaixo. Revise, edite se necessário e clique em 'Salvar' para prosseguir.",
-                    "info",
-                    st_api=st,
-                )
-
-                # Extrai o bloco 'analise_da_us' (estrutura recomendada)
-                analise_json = st.session_state.get("analysis_state", {}).get(
-                    "analise_da_us", {}
-                )
-
-                # Usa get_flexible para aceitar variações de chave que a IA pode devolver
-                avaliacao_str = get_flexible(
-                    analise_json, ["avaliacao_geral", "avaliacao"], ""
-                )
-                pontos_list = get_flexible(
-                    analise_json, ["pontos_ambiguos", "pontos_de_ambiguidade"], []
-                )
-                perguntas_list = get_flexible(
-                    analise_json, ["perguntas_para_po", "perguntas_ao_po"], []
-                )
-                criterios_list = get_flexible(
-                    analise_json,
-                    ["sugestao_criterios_aceite", "criterios_de_aceite"],
-                    [],
-                )
-                riscos_list = get_flexible(
-                    analise_json, ["riscos_e_dependencias", "riscos"], []
-                )
-
-                # Converte listas em strings com quebra de linha para o form
-                pontos_str = "\n".join(pontos_list)
-                perguntas_str = "\n".join(perguntas_list)
-                criterios_str = "\n".join(criterios_list)
-                riscos_str = "\n".join(riscos_list)
-
-                # Formulário de edição — decisão de UX:
-                #   editar tudo numa única tela para facilitar a revisão humana.
-                with st.form(key="analysis_edit_form"):
-                    st.subheader("📝 Análise Editável")
-
-                    accessible_text_area(
-                        label="Avaliação Geral",
-                        key="edit_avaliacao",
-                        height=75,
-                        value=avaliacao_str,
-                        help_text="Descreva o entendimento geral da User Story — clareza, coerência e completude.",
-                        placeholder="Exemplo: A User Story apresenta objetivo claro, mas falta detalhar critérios de sucesso.",
-                        st_api=st,
-                    )
-
-                    accessible_text_area(
-                        label="Pontos Ambíguos",
-                        key="edit_pontos",
-                        height=125,
-                        value=pontos_str,
-                        help_text="Liste trechos da User Story que podem gerar múltiplas interpretações ou dúvidas.",
-                        placeholder="Exemplo: O termo 'processar pagamento' não especifica o meio de pagamento utilizado.",
-                        st_api=st,
-                    )
-
-                    accessible_text_area(
-                        label="Perguntas para o PO",
-                        key="edit_perguntas",
-                        height=125,
-                        value=perguntas_str,
-                        help_text="Inclua perguntas que o QA faria ao PO para esclarecer requisitos e expectativas.",
-                        placeholder="Exemplo: O campo de CPF será validado no backend ou apenas no frontend?",
-                        st_api=st,
-                    )
-
-                    accessible_text_area(
-                        label="Critérios de Aceite",
-                        key="edit_criterios",
-                        height=150,
-                        value=criterios_str,
-                        help_text="Defina os critérios objetivos para considerar a User Story concluída com sucesso.",
-                        placeholder="Exemplo: O usuário deve receber um email de confirmação após redefinir a senha.",
-                        st_api=st,
-                    )
-
-                    accessible_text_area(
-                        label="Riscos e Dependências",
-                        key="edit_riscos",
-                        height=100,
-                        value=riscos_str,
-                        help_text="Aponte riscos técnicos, dependências entre times ou pré-condições para execução.",
-                        placeholder="Exemplo: Depende da API de autenticação, ainda em desenvolvimento pelo time backend.",
-                        st_api=st,
-                    )
-
-                    submitted = st.form_submit_button("Salvar Análise e Continuar")
-
-                # Quando o form é submetido, persistimos as edições no estado
-                if submitted:
-                    st.session_state.setdefault("analysis_state", {})
-                    st.session_state["analysis_state"].setdefault("analise_da_us", {})
-                    bloco = st.session_state["analysis_state"]["analise_da_us"]
-
-                    # Salva os campos editados — sempre normalizando para lista onde necessário
-                    bloco["avaliacao_geral"] = st.session_state.get(
-                        "edit_avaliacao", ""
-                    )
-
-                    bloco["pontos_ambiguos"] = [
-                        linha.strip()
-                        for linha in st.session_state.get("edit_pontos", "").split("\n")
-                        if linha.strip()
-                    ]
-
-                    bloco["perguntas_para_po"] = [
-                        linha.strip()
-                        for linha in st.session_state.get("edit_perguntas", "").split(
-                            "\n"
-                        )
-                        if linha.strip()
-                    ]
-
-                    bloco["sugestao_criterios_aceite"] = [
-                        linha.strip()
-                        for linha in st.session_state.get("edit_criterios", "").split(
-                            "\n"
-                        )
-                        if linha.strip()
-                    ]
-
-                    bloco["riscos_e_dependencias"] = [
-                        linha.strip()
-                        for linha in st.session_state.get("edit_riscos", "").split("\n")
-                        if linha.strip()
-                    ]
-
-                    # Agora podemos avançar para a geração de plano
-                    st.session_state["show_generate_plan_button"] = True
-
-                    announce(
-                        "Análise refinada salva com sucesso!", "success", st_api=st
-                    )
-                    st.rerun()
+                _render_analysis_edit_form()
 
         # ------------------------------------------------------
         # 3) Geração do Plano de Testes (após edição)
         # ------------------------------------------------------
         if st.session_state.get("show_generate_plan_button"):
-
-            # Mostra o relatório de análise (texto da IA)
-            with st.expander("📘 Análise Refinada da User Story", expanded=False):
-                relatorio = st.session_state.get("analysis_state", {}).get(
-                    "relatorio_analise_inicial", ""
-                )
-                st.markdown(clean_markdown_report(relatorio), unsafe_allow_html=True)
-
-            announce(
-                "Deseja que o Oráculo gere um Plano de Testes com base na análise refinada?",
-                "info",
-                st_api=st,
-            )
-
-            col1, col2, _ = st.columns([1, 1, 2])
-
-            # Botão para gerar o plano de testes com LangGraph
-            if col1.button(
-                "Sim, Gerar Plano de Testes", type="primary", use_container_width=True
-            ):
-                with st.spinner(
-                    "🔮 Elaborando o Plano de Testes com base na análise refinada..."
-                ):
-                    try:
-
-                        resultado_plano = run_test_plan_graph(
-                            st.session_state.get("analysis_state", {})
-                        )
-
-                        casos_de_teste = resultado_plano.get(
-                            "plano_e_casos_de_teste", {}
-                        ).get("casos_de_teste_gherkin", [])
-
-                        if not casos_de_teste or not isinstance(casos_de_teste, list):
-                            # Força a entrada no 'except' se a IA não retornar o formato esperado
-                            raise ValueError(
-                                "O Oráculo não conseguiu gerar um plano de testes estruturado."
-                            )
-
-                        st.session_state["test_plan_report"] = resultado_plano.get(
-                            "relatorio_plano_de_testes"
-                        )
-                        df = pd.DataFrame(casos_de_teste)
-                        df_clean = df.apply(
-                            lambda col: col.apply(
-                                lambda x: (
-                                    "\n".join(map(str, x)) if isinstance(x, list) else x
-                                )
-                            )
-                        )
-                        df_clean.fillna("", inplace=True)
-                        st.session_state["test_plan_df"] = df_clean
-
-                        pdf_bytes = generate_pdf_report(
-                            st.session_state.get("analysis_state", {}).get(
-                                "relatorio_analise_inicial", ""
-                            ),
-                            df_clean,
-                        )
-                        st.session_state["pdf_report_bytes"] = pdf_bytes
-
-                        if not st.session_state.get("history_saved"):
-                            _save_current_analysis_to_history()
-                            st.session_state["history_saved"] = True  # evita duplicação
-
-                        st.session_state["analysis_finished"] = True
-                        announce(
-                            "Plano de Testes gerado com sucesso!", "success", st_api=st
-                        )
-                        st.rerun()
-
-                    except Exception as e:
-                        # Em caso de falha, informa o usuário, mas não perde o progresso
-                        print(f"❌ Falha na geração do plano de testes: {e}")
-                        announce(
-                            "O Oráculo não conseguiu gerar um plano de testes estruturado.",
-                            "error",
-                            st_api=st,
-                        )
-                        # Limpa qualquer resquício de plano de teste para não exibir dados errados
-                        st.session_state["test_plan_report"] = ""
-                        st.session_state["test_plan_df"] = None
-                        _save_current_analysis_to_history()
-                        st.rerun()
-
-            # Botão para encerrar sem gerar plano (mas salvando análise)
-            if col2.button("Não, Encerrar", use_container_width=True):
-                if not st.session_state.get("history_saved"):
-                    _save_current_analysis_to_history()
-                    st.session_state["history_saved"] = True  # evita duplicação
-                st.session_state["analysis_finished"] = True
-                st.rerun()
+            _render_test_plan_generation()
 
     # ------------------------------------------------------
     # 4) Tela de resultados e exportações
     # ------------------------------------------------------
     if st.session_state.get("analysis_finished"):
-        announce("Análise concluída com sucesso!", "success", st_api=st)
-
-        # ==================================================
-        #  ANÁLISE REFINADA DA USER STORY
-        # ==================================================
-        if st.session_state.get("analysis_state"):
-            with st.expander("📘 Análise Refinada da User Story", expanded=False):
-                relatorio_analise = st.session_state.get("analysis_state", {}).get(
-                    "relatorio_analise_inicial", ""
-                )
-                st.markdown(
-                    clean_markdown_report(relatorio_analise), unsafe_allow_html=True
-                )
-
-            # ==================================================
-            #  RELATÓRIO DO PLANO DE TESTES (VISÃO GERAL)
-            # ==================================================
-            if st.session_state.get("test_plan_report"):
-                with st.expander(
-                    "🧪 Plano de Testes Gerado (Resumo em Markdown)", expanded=True
-                ):
-                    st.markdown(
-                        clean_markdown_report(
-                            st.session_state.get("test_plan_report", "")
-                        ),
-                        unsafe_allow_html=True,
-                    )
-
-            # ==================================================
-            # 📂 CASOS DE TESTE (TABELA RESUMO + DETALHES)
-            # ==================================================
-            if (
-                st.session_state.get("test_plan_df") is not None
-                and not st.session_state["test_plan_df"].empty
-            ):
-                df = st.session_state["test_plan_df"].copy()
-
-                #  Define as colunas completas para o resumo
-                colunas_resumo = [
-                    "id",
-                    "titulo",
-                    "prioridade",
-                    "criterio_de_aceitacao_relacionado",
-                    "justificativa_acessibilidade",
-                ]
-
-                #  Filtra e renomeia para nomes amigáveis
-                df_resumo = (
-                    df[[c for c in colunas_resumo if c in df.columns]]
-                    .rename(
-                        columns={
-                            "id": "ID",
-                            "titulo": "Título",
-                            "prioridade": "Prioridade",
-                            "criterio_de_aceitacao_relacionado": "Critério de Aceitação Relacionado",
-                            "justificativa_acessibilidade": "Justificativa de Acessibilidade",
-                        }
-                    )
-                    .fillna("")  # evita None
-                )
-
-                st.markdown("### 📊 Resumo dos Casos de Teste")
-                st.dataframe(df_resumo, use_container_width=True)
-                st.markdown(
-                    '<div data-testid="tabela-casos-teste"></div>',
-                    unsafe_allow_html=True,
-                )
-
-                #  Dropdowns individuais (detalhes)
-                with st.expander(
-                    "📁 Casos de Teste (Expandir para ver todos)", expanded=False
-                ):
-                    for index, row in df.iterrows():
-                        # Garante que sempre haverá um identificador mesmo se a coluna "id" não existir
-                        test_id = row.get("id", f"CT-{index + 1:03d}")
-                        with st.expander(
-                            f"📋 {test_id} — {row.get('titulo', '-')}", expanded=False
-                        ):
-                            st.markdown(f"**Prioridade:** {row.get('prioridade', '-')}")
-                            st.markdown(
-                                f"**Critério de Aceitação Relacionado:** {row.get('criterio_de_aceitacao_relacionado','-')}"
-                            )
-                            st.markdown(
-                                f"**Justificativa de Acessibilidade:** {row.get('justificativa_acessibilidade','-')}"
-                            )
-                            if row.get("cenario"):
-                                st.markdown("**Cenário Gherkin (editável):**")
-
-                                cenario_editado = accessible_text_area(
-                                    label=f"Editar Cenário {test_id}",
-                                    key=f"edit_cenario_{test_id}",
-                                    value=row["cenario"],
-                                    height=220,
-                                    help_text="Edite o cenário de teste mantendo a estrutura Gherkin (Dado, Quando, Então).",
-                                    placeholder=(
-                                        "Exemplo:\n"
-                                        "Dado que o usuário possui um cartão válido\n"
-                                        "Quando ele realiza a compra\n"
-                                        "Então o sistema deve gerar um token de pagamento com sucesso"
-                                    ),
-                                    st_api=st,
-                                )
-
-                                # Atualiza o DataFrame se houve edição
-                                if (
-                                    cenario_editado.strip()
-                                    != str(row["cenario"]).strip()
-                                ):
-                                    st.session_state["test_plan_df"].at[
-                                        index, "cenario"
-                                    ] = cenario_editado
-
-                                    #  Regera o relatório de plano de testes (Markdown consolidado)
-                                    from .utils import gerar_relatorio_md_dos_cenarios
-
-                                    novo_relatorio = gerar_relatorio_md_dos_cenarios(
-                                        st.session_state["test_plan_df"]
-                                    )
-                                    st.session_state["test_plan_report"] = (
-                                        novo_relatorio
-                                    )
-
-                                    #  Atualiza histórico com a versão revisada (atualização em linha)
-                                    _save_current_analysis_to_history(
-                                        update_existing=True
-                                    )
-                                    st.toast(
-                                        "✅ Cenário atualizado e persistido no histórico (ID existente)."
-                                    )
-                            else:
-                                announce(
-                                    "Este caso de teste ainda não possui cenário em formato Gherkin.",
-                                    "info",
-                                    st_api=st,
-                                )
+        _render_results_section()
 
         # ==================================================
         #  SEÇÃO DE DOWNLOADS
         # ==================================================
+<<<<<<< HEAD
+        _render_export_section()
+=======
         st.divider()
         st.subheader("Downloads Disponíveis")
 
@@ -924,6 +1277,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
             )
+>>>>>>> origin/main
 
             # Xray - requer que o campo Test_Repository_Folder esteja preenchido
             xray_folder = st.session_state.get("xray_test_folder", "").strip()
@@ -991,23 +1345,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
         # ------------------------------------------------------
         # Botão para resetar e reiniciar o fluxo
         # ------------------------------------------------------
-        st.divider()
-
-        def resetar_fluxo():
-            """Reseta o estado completo da sessão, incluindo a flag de histórico."""
-            # Remove explicitamente a flag antes de chamar reset_session
-            st.session_state.pop("history_saved", None)
-            reset_session()  # já limpa user_story_input, analysis_state, etc.
-
-        accessible_button(
-            label="🔄 Realizar Nova Análise",
-            key="nova_analise_button",
-            context="Limpa os resultados anteriores e reinicia o fluxo de análise da User Story.",
-            type="primary",
-            use_container_width=True,
-            on_click=resetar_fluxo,
-            st_api=st,
-        )
+        _render_new_analysis_button()
 
 
 # ==========================================================
