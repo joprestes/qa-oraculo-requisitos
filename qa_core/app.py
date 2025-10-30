@@ -696,11 +696,13 @@ def _render_results_section():
 def _render_export_section():
     """
     Renderiza a seção de downloads e exportações.
+    Inclui suporte para: Markdown, PDF, Azure DevOps, Jira Zephyr e Xray.
+    Todos os formulários seguem padrões de acessibilidade WCAG 2.1 Level AA.
     """
     st.divider()
     st.subheader("Downloads Disponíveis")
 
-    col_md, col_pdf, col_azure, col_zephyr = st.columns(4)
+    col_md, col_pdf, col_azure, col_zephyr, col_xray = st.columns(5)
 
     # Markdown unificado (análise + plano)
     relatorio_completo_md = (
@@ -772,6 +774,104 @@ def _render_export_section():
                 st_api=st,
             )
 
+            st.divider()
+
+            # ======================================================================
+            # Xray (Jira Test Management) - COM ACESSIBILIDADE COMPLETA
+            # ======================================================================
+            st.markdown("##### 🧪 Xray (Jira Test Management)")
+            announce(
+                "Xray: Ferramenta de gerenciamento de testes do Jira. Requer Test Repository Folder.",
+                "info",
+                st_api=st,
+            )
+            st.markdown(
+                "⚠️ **Importante:** O diretório especificado em Test Repository Folder "
+                "deve ser criado previamente no Xray antes da importação."
+            )
+
+            # Campo obrigatório com acessibilidade
+            st.text_input(
+                "Test Repository Folder (Obrigatório):",
+                placeholder="Exemplo: TED, Pagamentos, Login",
+                key="xray_test_folder",
+                help=(
+                    "Nome do diretório no Xray onde TODOS os testes deste arquivo serão salvos. "
+                    "Este diretório deve existir no Xray. Campo obrigatório para exportação."
+                ),
+            )
+
+            # Campos opcionais padrão do Xray
+            with st.expander(
+                "⚙️ Configurações Adicionais do Xray (Opcional)", expanded=False
+            ):
+                st.markdown("**📋 Campos Padrão do Xray/Jira:**")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.text_input(
+                        "Labels:",
+                        placeholder="Ex: Automation, Regression",
+                        key="xray_labels",
+                        help="Etiquetas para todos os testes (separadas por vírgula). Melhora organização e filtros.",
+                    )
+                    st.text_input(
+                        "Component:",
+                        placeholder="Ex: Pagamentos",
+                        key="xray_component",
+                        help="Componente do Jira associado aos testes. Ajuda na rastreabilidade.",
+                    )
+                    st.text_input(
+                        "Fix Version:",
+                        placeholder="Ex: 1.0.0",
+                        key="xray_fix_version",
+                        help="Versão de correção do Jira. Indica em qual release o teste será executado.",
+                    )
+
+                with col2:
+                    st.selectbox(
+                        "Priority:",
+                        ["", "Highest", "High", "Medium", "Low", "Lowest"],
+                        key="xray_priority",
+                        help="Prioridade padrão para todos os testes. Vazio = usar prioridade individual de cada teste.",
+                    )
+                    st.text_input(
+                        "Assignee:",
+                        placeholder="Ex: joao.silva",
+                        key="xray_assignee",
+                        help="Responsável pelos testes (username do Jira). Opcional.",
+                    )
+                    st.text_input(
+                        "Test Set:",
+                        placeholder="Ex: Sprint 10",
+                        key="xray_test_set",
+                        help="Test Set onde os testes serão agrupados. Útil para organizar por sprint ou release.",
+                    )
+
+                st.divider()
+
+                st.markdown("**🔧 Campos Customizados do Seu Jira:**")
+                st.markdown("Formato: `Nome_do_Campo=Valor` (um por linha)")
+
+                accessible_text_area(
+                    label="Campos Personalizados:",
+                    key="xray_custom_fields",
+                    height=120,
+                    help_text=(
+                        "Adicione campos customizados do seu Jira, um por linha.\n\n"
+                        "Formato: NomeDoCampo=Valor\n\n"
+                        "Exemplos práticos:\n"
+                        "• Epic Link=PROJ-123\n"
+                        "• Sprint=Sprint 10\n"
+                        "• Story Points=5\n"
+                        "• Team=Squad Core\n\n"
+                        "Esses campos serão adicionados a TODOS os testes exportados."
+                    ),
+                    placeholder="Epic Link=PROJ-123\nSprint=Sprint 10\nTeam=QA Core",
+                    st_api=st,
+                )
+
         # ------------------------------------------------------
         # Dados para exportações
         # ------------------------------------------------------
@@ -819,6 +919,69 @@ def _render_export_section():
             ),
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True,
+        )
+
+        # ======================================================================
+        # EXPORTAÇÃO XRAY - Requer Test Repository Folder
+        # ======================================================================
+        xray_folder = st.session_state.get("xray_test_folder", "").strip()
+        is_xray_disabled = not xray_folder
+
+        # Monta dicionário de campos para o Xray CSV
+        xray_fields = {}
+
+        # Campos padrão do Xray (ordem importa no CSV!)
+        if st.session_state.get("xray_labels", "").strip():
+            xray_fields["Labels"] = st.session_state.get("xray_labels", "").strip()
+
+        if st.session_state.get("xray_priority", "").strip():
+            xray_fields["Priority"] = st.session_state.get("xray_priority", "").strip()
+
+        if st.session_state.get("xray_component", "").strip():
+            xray_fields["Component"] = st.session_state.get(
+                "xray_component", ""
+            ).strip()
+
+        if st.session_state.get("xray_fix_version", "").strip():
+            xray_fields["Fix Version"] = st.session_state.get(
+                "xray_fix_version", ""
+            ).strip()
+
+        if st.session_state.get("xray_assignee", "").strip():
+            xray_fields["Assignee"] = st.session_state.get("xray_assignee", "").strip()
+
+        if st.session_state.get("xray_test_set", "").strip():
+            xray_fields["Test Set"] = st.session_state.get("xray_test_set", "").strip()
+
+        # Campos customizados do usuário (formato: Campo=Valor)
+        custom_text = st.session_state.get("xray_custom_fields", "").strip()
+        if custom_text:
+            for raw_line in custom_text.split("\n"):
+                stripped_line = raw_line.strip()
+                if "=" in stripped_line:
+                    key, value = stripped_line.split("=", 1)
+                    xray_fields[key.strip()] = value.strip()
+
+        csv_xray = gerar_csv_xray_from_df(
+            df_para_ferramentas,
+            xray_folder,
+            custom_fields=xray_fields if xray_fields else None,
+        )
+
+        col_xray.download_button(
+            "🧪 Xray (.csv)",
+            _ensure_bytes(csv_xray),
+            file_name=gerar_nome_arquivo_seguro(
+                st.session_state.get("user_story_input", ""), "xray.csv"
+            ),
+            mime="text/csv",
+            use_container_width=True,
+            disabled=is_xray_disabled,
+            help=(
+                "Preencha o Test Repository Folder no expander acima para habilitar. "
+                "O formato é compatível com Xray Test Case Importer (CSV). "
+                "Use navegação por teclado (Tab) para acessar o formulário acima."
+            ),
         )
 
 
