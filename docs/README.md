@@ -60,6 +60,7 @@ Em poucos minutos, você terá:
 - 📥 **Exportação Avançada e Configurável**:
   - Formulário dedicado para Azure DevOps e Jira (Area Path, Assigned To, labels etc.)
   - CSV formatado para Azure com passos Gherkin e tratamento automático de prioridade e idioma  
+  - CSV compatível com Xray (Jira Test Management) para importação de cenários Cucumber
   - PDF acessível com fonte Unicode, capa e cabeçalho padronizado  
 - 📖 **Histórico de Análises Aprimorado** – visualização expandida, exclusão segura e navegação por URL.  
 - 🧱 **Código Modular e Testado** – cobertura alta e estrutura limpa.
@@ -137,10 +138,12 @@ GOOGLE_API_KEY="sua_chave_de_api_aqui"
 ### ▶️ Executar
 
 ```bash
-streamlit run qa_core/app.py
+streamlit run main.py
 ```
 
 🎉 O QA Oráculo abrirá automaticamente no navegador!
+
+**Nota**: Use `main.py` como entry point (não `qa_core/app.py` diretamente) para evitar erros de importação.
 
 ---
 
