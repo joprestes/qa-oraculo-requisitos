@@ -1458,12 +1458,12 @@ def main():
 # Ponto de entrada do aplicativo
 # ==========================================================
 if __name__ == "__main__":
-    # Quando o arquivo é executado diretamente (ex.: `streamlit run qa_core/app.py`),
-    # o Python entra por este bloco, chamando a função main().
+    # NOTA: Para executar o app, use `streamlit run main.py` na raiz do projeto.
+    # Não execute este arquivo diretamente (`streamlit run qa_core/app.py`).
     #
-    # Essa abordagem garante:
-    #   • Execução isolada (não executa se for importado por testes)
-    #   • Consistência entre desenvolvimento local e produção
+    # Este bloco é mantido para:
+    #   • Compatibilidade com testes que importam o módulo
+    #   • Execução via main.py (entry point correto)
     main()
 
 # ==========================================================
