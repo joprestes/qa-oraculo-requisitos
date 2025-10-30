@@ -113,7 +113,7 @@ black --check .
 
 ## 📸 Screenshots
 
-*Adicione screenshots da nova interface se aplicável*
+### Adicione screenshots da nova interface se aplicável
 
 ## 🔗 Links Relacionados
 
