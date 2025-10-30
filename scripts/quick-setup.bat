@@ -42,8 +42,8 @@ if not exist "main.py" (
 
 :: 1. Criar ambiente virtual
 echo 🔧 Criando ambiente virtual...
-if not exist ".venv" (
-    python -m venv .venv
+if not exist "venv" (
+    python -m venv venv
     echo ✅ Ambiente virtual criado!
 ) else (
     echo ℹ️  Ambiente virtual já existe. Pulando criação.
@@ -51,7 +51,7 @@ if not exist ".venv" (
 
 :: 2. Ativar ambiente virtual
 echo 🔧 Ativando ambiente virtual...
-call .venv\Scripts\activate
+call venv\Scripts\activate
 echo ✅ Ambiente virtual ativado!
 
 :: 3. Atualizar pip
@@ -105,7 +105,7 @@ echo.
 echo ℹ️  Para executar o QA Oráculo:
 echo.
 echo 1. Ative o ambiente virtual:
-echo    .venv\Scripts\activate
+echo    venv\Scripts\activate
 echo.
 echo 2. Execute o aplicativo:
 echo    streamlit run main.py

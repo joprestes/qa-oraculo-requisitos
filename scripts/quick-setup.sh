@@ -69,8 +69,8 @@ fi
 
 # 1. Criar ambiente virtual
 print_step "Criando ambiente virtual..."
-if [ ! -d ".venv" ]; then
-    python3 -m venv .venv
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
     print_success "Ambiente virtual criado!"
 else
     print_info "Ambiente virtual já existe. Pulando criação."
@@ -78,7 +78,7 @@ fi
 
 # 2. Ativar ambiente virtual
 print_step "Ativando ambiente virtual..."
-source .venv/bin/activate
+source venv/bin/activate
 print_success "Ambiente virtual ativado!"
 
 # 3. Atualizar pip
@@ -146,7 +146,7 @@ echo ""
 print_info "Para executar o QA Oráculo:"
 echo ""
 echo "1. Ative o ambiente virtual:"
-echo "   source .venv/bin/activate"
+echo "   source venv/bin/activate"
 echo ""
 echo "2. Execute o aplicativo:"
 echo "   streamlit run main.py"

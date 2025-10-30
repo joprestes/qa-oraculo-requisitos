@@ -35,7 +35,6 @@ env/
 ENV/
 env.bak/
 venv.bak/
-.venv/
 
 # === IDE e Editores ===
 .vscode/settings.json
@@ -86,7 +85,6 @@ celerybeat.pid
 
 # === Environments ===
 .env
-.venv
 ENV/
 env/
 venv/

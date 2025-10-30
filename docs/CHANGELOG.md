@@ -17,6 +17,12 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
   - Eliminado conflito de merge não resolvido que causava bypass da função de exportação
   - Corrigido teste `test_render_main_analysis_page_exportadores` para verificar chamada da função correta
 
+- **Correção de inconsistência de caminhos do ambiente virtual:**
+  - Padronizado uso de `venv/` (sem ponto) em todos os scripts e configurações
+  - Corrigidos scripts `quick-setup.sh` e `quick-setup.bat` para criar `venv/` em vez de `.venv/`
+  - Atualizado `.gitignore` para remover referências duplicadas a `.venv/`
+  - Garantida compatibilidade entre Makefile, VS Code e scripts de setup
+
 ## [1.6.0] - 2025-10-29
 
 ### Added
