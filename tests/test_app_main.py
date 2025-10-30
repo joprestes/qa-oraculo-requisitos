@@ -217,6 +217,8 @@ def test_render_main_analysis_page_exportadores(mock_st):
     cols_azure = [MagicMock(), MagicMock()]
 
     def columns_side_effect(arg):
+        if arg == 5:  # Para st.columns(5) na seção de downloads
+            return [MagicMock(), MagicMock(), MagicMock(), MagicMock(), MagicMock()]
         if arg == 4:  # noqa: PLR2004
             return cols_downloads
         if arg == 2:  # noqa: PLR2004

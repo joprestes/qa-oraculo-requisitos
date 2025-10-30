@@ -700,7 +700,9 @@ def _render_basic_exports():
         col_md, col_pdf, col_azure, col_zephyr, col_xray = columns
     else:
         # Fallback para testes ou quando há menos colunas
-        col_md = col_pdf = col_azure = col_zephyr = col_xray = columns[0] if columns else None
+        col_md = col_pdf = col_azure = col_zephyr = col_xray = (
+            columns[0] if columns else None
+        )
 
     # Markdown unificado (análise + plano)
     relatorio_completo_md = (
@@ -1079,7 +1081,12 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
         st.divider()
         st.subheader("Downloads Disponíveis")
 
-        col_md, col_pdf, col_azure, col_zephyr, col_xray = st.columns(5)
+        columns = st.columns(5)
+        if len(columns) >= 5:
+            col_md, col_pdf, col_azure, col_zephyr, col_xray = columns
+        else:
+            # Fallback para testes ou quando há menos colunas
+            col_md = col_pdf = col_azure = col_zephyr = col_xray = columns[0] if columns else None
 
         # Markdown unificado (análise + plano)
         relatorio_completo_md = (

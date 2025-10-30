@@ -36,6 +36,10 @@ def get_db_connection():
     Cria uma conexão com o banco de dados SQLite.
     Usa row_factory para permitir acesso por chave (dict-like).
     """
+    # Garante que o diretório data/ existe
+    import os
+    os.makedirs(os.path.dirname(DB_NAME), exist_ok=True)
+    
     conn = sqlite3.connect(
         DB_NAME, check_same_thread=False, detect_types=sqlite3.PARSE_DECLTYPES
     )
