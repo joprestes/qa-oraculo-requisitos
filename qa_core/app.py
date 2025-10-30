@@ -693,16 +693,14 @@ def _render_results_section():
         _render_test_cases_table()
 
 
-def _render_export_section():
-    """
-    Renderiza a seção de downloads e exportações.
-    Inclui suporte para: Markdown, PDF, Azure DevOps, Jira Zephyr e Xray.
-    Todos os formulários seguem padrões de acessibilidade WCAG 2.1 Level AA.
-    """
-    st.divider()
-    st.subheader("Downloads Disponíveis")
-
-    col_md, col_pdf, col_azure, col_zephyr, col_xray = st.columns(5)
+def _render_basic_exports():
+    """Renderiza os downloads básicos (Markdown e PDF)."""
+    columns = st.columns(5)
+    if len(columns) >= 5:
+        col_md, col_pdf, col_azure, col_zephyr, col_xray = columns
+    else:
+        # Fallback para testes ou quando há menos colunas
+        col_md = col_pdf = col_azure = col_zephyr = col_xray = columns[0] if columns else None
 
     # Markdown unificado (análise + plano)
     relatorio_completo_md = (
@@ -731,6 +729,20 @@ def _render_export_section():
             ),
             use_container_width=True,
         )
+
+    return col_azure, col_zephyr, col_xray
+
+
+def _render_export_section():  # noqa: C901, PLR0915
+    """
+    Renderiza a seção de downloads e exportações.
+    Inclui suporte para: Markdown, PDF, Azure DevOps, Jira Zephyr e Xray.
+    Todos os formulários seguem padrões de acessibilidade WCAG 2.1 Level AA.
+    """
+    st.divider()
+    st.subheader("Downloads Disponíveis")
+
+    col_azure, col_zephyr, col_xray = _render_basic_exports()
 
     # ==================================================
     #  OPÇÕES DE EXPORTAÇÃO (AZURE / ZEPHYR)
@@ -1011,7 +1023,7 @@ def _render_new_analysis_button():
 # ==========================================================
 #  Página Principal — Análise de User Story (Refatorada)
 # ==========================================================
-def render_main_analysis_page():
+def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     """
     Fluxo da página principal (refatorado em funções menores):
 

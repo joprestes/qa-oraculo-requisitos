@@ -233,7 +233,9 @@ def test_wrapper_usa_modo_teste_em_cancelamento(mock_st):
     )
 
     original = app._render_history_page_test_mode
-    with patch("qa_core.app._render_history_page_test_mode", wraps=original) as spy_test_mode:
+    with patch(
+        "qa_core.app._render_history_page_test_mode", wraps=original
+    ) as spy_test_mode:
         app.render_history_page(st_api=mock_st)
 
         spy_test_mode.assert_called_once_with(mock_st)
