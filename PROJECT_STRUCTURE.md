@@ -1,133 +1,223 @@
-# 📁 Estrutura do Projeto - QA Oráculo
+# 📁 Estrutura do Projeto QA Oráculo
 
-Este documento descreve a organização e estrutura do projeto QA Oráculo.
+## 🎯 Visão Geral
 
-## 🏗️ Estrutura de Diretórios
+Este documento descreve a organização e estrutura do projeto QA Oráculo, um sistema inteligente para análise e geração de planos de teste baseado em IA.
+
+## 📂 Estrutura de Diretórios
 
 ```
 qa-oraculo-requisitos/
-├── 📁 docs/                          # 📚 Documentação completa
-│   ├── INDEX.md                      # Índice geral da documentação
-│   ├── README.md                     # Documentação técnica
-│   ├── SETUP_GUIDE.md                # Guia de instalação
-│   ├── DEVELOPER_QUICK_START.md      # Guia para desenvolvedores
-│   ├── CHANGELOG.md                  # Histórico de mudanças
-│   ├── XRAY_EXPORT_GUIDE.md          # Guia de exportação Xray
-│   ├── acessibilidade.md             # Guia de acessibilidade
-│   ├── CAMPOS_PERSONALIZADOS_XRAY.md # Campos customizados Xray
-│   ├── RESUMO_FINAL_XRAY.md          # Resumo implementação Xray
-│   ├── XRAY_IMPLEMENTATION_SUMMARY.md # Resumo técnico Xray
-│   └── DOCUMENTACAO_TECNICA.md       # Documentação técnica (legado)
+├── 📁 .config/                    # Configurações do projeto
+│   ├── pyproject.toml            # Configuração do projeto e ferramentas
+│   ├── pytest.ini               # Configuração do pytest
+│   └── pyrightconfig.json       # Configuração do Pyright (type checker)
 │
-├── 📁 qa_core/                       # 🧩 Código principal
-│   ├── __init__.py                   # Inicialização do módulo
-│   ├── app.py                        # Interface Streamlit
-│   ├── graph.py                      # Grafos de IA (LangGraph)
-│   ├── database.py                   # Persistência SQLite
-│   ├── utils.py                      # Utilitários e exportações
-│   ├── pdf_generator.py              # Geração de PDFs
-│   ├── a11y.py                       # Recursos de acessibilidade
-│   ├── config.py                     # Configurações
-│   ├── prompts.py                    # Prompts da IA
-│   ├── schemas.py                    # Esquemas de dados
-│   └── state_manager.py              # Gerenciamento de estado
+├── 📁 .vscode/                   # Configurações do VS Code
+│   └── settings.json            # Configurações específicas do workspace
 │
-├── 📁 tests/                         # 🧪 Testes unitários
-│   ├── conftest.py                   # Fixtures globais
-│   ├── test_app.py                   # Testes da interface
-│   ├── test_database.py              # Testes do banco
-│   ├── test_graph.py                 # Testes da IA
-│   ├── test_utils.py                 # Testes de utilitários
-│   ├── test_xray_export.py           # Testes Xray
-│   ├── test_a11y.py                  # Testes acessibilidade
-│   └── ...                          # Outros testes
+├── 📁 assets/                    # Recursos estáticos
+│   ├── logo_oraculo.png         # Logo do projeto
+│   └── qa_oraculo_cartoon_demo.gif # Demo animado
 │
-├── 📁 assets/                        # 🎨 Recursos visuais
-│   ├── logo_oraculo.png              # Logo do projeto
-│   └── qa_oraculo_cartoon_demo.gif   # Demo animado
+├── 📁 data/                      # Dados persistentes
+│   └── qa_oraculo_history.db    # Banco de dados SQLite
 │
-├── 📄 README.md                      # 📖 README principal
-├── 📄 main.py                        # 🚀 Entry point
-├── 📄 setup.py                       # Configuração do pacote
-├── 📄 pyproject.toml                 # Configuração do projeto
-├── 📄 pytest.ini                    # Configuração dos testes
-├── 📄 requirements.txt               # Dependências principais
-├── 📄 requirements-dev.txt           # Dependências de desenvolvimento
-├── 📄 quick-setup.sh                 # Setup automático Linux/Mac
-├── 📄 quick-setup.bat                # Setup automático Windows
-├── 📄 setup.sh                       # Setup completo Linux/Mac
-├── 📄 setup.bat                      # Setup completo Windows
-├── 📄 pyrightconfig.json             # Configuração Pyright
-├── 📄 qa_oraculo_history.db          # Banco de dados SQLite
-└── 📄 LICENSE                        # Licença do projeto
+├── 📁 docs/                      # Documentação
+│   ├── INDEX.md                 # Índice geral da documentação
+│   ├── README.md                # Documentação técnica
+│   ├── SETUP_GUIDE.md           # Guia de instalação
+│   ├── DEVELOPER_QUICK_START.md # Guia para desenvolvedores
+│   ├── CHANGELOG.md             # Histórico de mudanças
+│   ├── acessibilidade.md        # Documentação de acessibilidade
+│   ├── CAMPOS_PERSONALIZADOS_XRAY.md # Campos Xray
+│   ├── DOCUMENTACAO_TECNICA.md  # Documentação técnica detalhada
+│   ├── RESUMO_FINAL_XRAY.md     # Resumo Xray
+│   ├── XRAY_EXPORT_GUIDE.md     # Guia de exportação Xray
+│   └── XRAY_IMPLEMENTATION_SUMMARY.md # Resumo implementação Xray
+│
+├── 📁 qa_core/                   # Código principal da aplicação
+│   ├── __init__.py              # Inicialização do módulo
+│   ├── app.py                   # Aplicação principal Streamlit
+│   ├── config.py                # Configurações da aplicação
+│   ├── database.py              # Módulo de banco de dados
+│   ├── graph.py                 # Lógica de grafos e fluxos
+│   ├── pdf_generator.py         # Geração de PDFs
+│   ├── prompts.py               # Prompts para IA
+│   ├── schemas.py               # Esquemas de dados
+│   ├── state_manager.py         # Gerenciamento de estado
+│   ├── utils.py                 # Utilitários gerais
+│   └── a11y.py                  # Funcionalidades de acessibilidade
+│
+├── 📁 scripts/                   # Scripts de automação
+│   ├── quick-setup.sh           # Setup rápido (Linux/Mac)
+│   ├── quick-setup.bat          # Setup rápido (Windows)
+│   ├── setup.sh                 # Setup completo (Linux/Mac)
+│   └── setup.bat                # Setup completo (Windows)
+│
+├── 📁 templates/                 # Templates e modelos
+│   └── PR_TEMPLATE.md           # Template para Pull Requests
+│
+├── 📁 tests/                     # Testes automatizados
+│   ├── __init__.py              # Inicialização do módulo de testes
+│   ├── conftest.py              # Configuração do pytest
+│   ├── test_app.py              # Testes da aplicação principal
+│   ├── test_app_main.py         # Testes do main.py
+│   ├── test_app_history_delete.py # Testes de exclusão de histórico
+│   ├── test_app_ensure_bytes.py # Testes de conversão de bytes
+│   ├── test_database.py         # Testes do banco de dados
+│   ├── test_graph.py            # Testes de grafos
+│   ├── test_pdf_generator.py    # Testes de geração de PDF
+│   ├── test_state_manager.py    # Testes de gerenciamento de estado
+│   ├── test_utils.py            # Testes de utilitários
+│   ├── test_a11y.py             # Testes de acessibilidade
+│   ├── test_xray_export.py      # Testes de exportação Xray
+│   └── tests_schemas.py         # Testes de esquemas
+│
+├── 📄 .gitignore                # Arquivos ignorados pelo Git
+├── 📄 Makefile                  # Comandos de desenvolvimento
+├── 📄 LICENSE                   # Licença do projeto
+├── 📄 main.py                   # Ponto de entrada da aplicação
+├── 📄 PROJECT_STRUCTURE.md      # Este arquivo
+├── 📄 README.md                 # Documentação principal
+├── 📄 requirements.txt          # Dependências de produção
+├── 📄 requirements-dev.txt      # Dependências de desenvolvimento
+└── 📄 setup.py                  # Configuração do pacote Python
 ```
 
-## 📚 Organização da Documentação
+## 🎯 Princípios de Organização
 
-### 🎯 Por Público-Alvo
+### 📁 **Separação por Responsabilidade**
+- **`.config/`**: Todas as configurações centralizadas
+- **`qa_core/`**: Lógica de negócio e aplicação
+- **`tests/`**: Testes isolados e organizados
+- **`docs/`**: Documentação estruturada
+- **`scripts/`**: Automação e utilitários
+- **`templates/`**: Modelos e templates reutilizáveis
 
-| Público | Documentos Principais |
-|---------|----------------------|
-| **Usuários Novos** | `docs/SETUP_GUIDE.md` |
-| **Desenvolvedores** | `docs/DEVELOPER_QUICK_START.md`, `docs/README.md` |
-| **QA/Usuários Xray** | `docs/XRAY_EXPORT_GUIDE.md` |
-| **Contribuidores** | `docs/DEVELOPER_QUICK_START.md` |
+### 🔧 **Configuração Centralizada**
+- **`pyproject.toml`**: Configuração principal do projeto
+- **`pytest.ini`**: Configuração específica de testes
+- **`pyrightconfig.json`**: Configuração de type checking
+- **`.vscode/settings.json`**: Configuração do IDE
 
-### 📋 Por Categoria
+### 📊 **Dados Organizados**
+- **`data/`**: Dados persistentes e banco de dados
+- **`assets/`**: Recursos estáticos e mídia
+- **`htmlcov/`**: Relatórios de cobertura (gerado automaticamente)
 
-| Categoria | Documentos |
-|-----------|------------|
-| **Setup/Instalação** | `SETUP_GUIDE.md`, `DEVELOPER_QUICK_START.md` |
-| **Técnica** | `README.md`, `DOCUMENTACAO_TECNICA.md` |
-| **Funcionalidades** | `XRAY_EXPORT_GUIDE.md`, `acessibilidade.md` |
-| **Xray** | `CAMPOS_PERSONALIZADOS_XRAY.md`, `RESUMO_FINAL_XRAY.md`, `XRAY_IMPLEMENTATION_SUMMARY.md` |
-| **Projeto** | `CHANGELOG.md`, `INDEX.md` |
+## 🚀 Comandos de Desenvolvimento
 
-## 🎯 Benefícios da Nova Organização
+### **Setup Inicial**
+```bash
+# Setup completo
+make setup
 
-### ✅ **Estrutura Limpa**
-- Documentação centralizada em `docs/`
-- Código principal em `qa_core/`
-- Testes organizados em `tests/`
-- Scripts de setup na raiz
+# Apenas instalação
+make install-dev
+```
 
-### ✅ **Navegação Fácil**
-- `docs/INDEX.md` como ponto de entrada
-- Documentos categorizados por público-alvo
-- Links atualizados no README principal
+### **Execução**
+```bash
+# Executar aplicação
+make run
 
-### ✅ **Manutenção Simplificada**
-- Documentação separada do código
-- Estrutura consistente
-- Fácil localização de arquivos
+# Modo desenvolvimento
+make run-dev
+```
 
-### ✅ **Onboarding Melhorado**
-- Guias específicos para cada tipo de usuário
-- Setup automático simplificado
-- Documentação progressiva
+### **Testes**
+```bash
+# Todos os testes
+make test
 
-## 🚀 Como Navegar
+# Com cobertura
+make test-cov
 
-### 👤 **Sou novo no projeto**
-1. Leia `README.md` (raiz)
-2. Siga `docs/SETUP_GUIDE.md`
-3. Execute `quick-setup.sh` ou `quick-setup.bat`
+# Apenas testes rápidos
+make test-fast
+```
 
-### 👨‍💻 **Sou desenvolvedor**
-1. Veja `docs/DEVELOPER_QUICK_START.md`
-2. Consulte `docs/README.md` para detalhes técnicos
-3. Explore `qa_core/` para entender o código
+### **Qualidade de Código**
+```bash
+# Linting
+make lint
 
-### 🧪 **Sou QA e quero usar Xray**
-1. Leia `docs/XRAY_EXPORT_GUIDE.md`
-2. Configure campos em `docs/CAMPOS_PERSONALIZADOS_XRAY.md`
-3. Teste a exportação
+# Formatação
+make format
 
-### 📚 **Quero explorar toda documentação**
-1. Comece com `docs/INDEX.md`
-2. Navegue pelas categorias
-3. Use os links internos para aprofundar
+# Verificação completa
+make dev-check
+```
+
+### **Limpeza**
+```bash
+# Limpar arquivos temporários
+make clean
+
+# Remover ambiente virtual
+make clean-venv
+```
+
+## 📋 Convenções de Nomenclatura
+
+### **Arquivos Python**
+- **Snake_case**: `database.py`, `state_manager.py`
+- **Módulos**: Nomes descritivos e claros
+- **Classes**: PascalCase (quando aplicável)
+
+### **Arquivos de Configuração**
+- **Kebab-case**: `pyproject.toml`, `pytest.ini`
+- **Prefixo ponto**: `.gitignore`, `.vscode/`
+
+### **Documentação**
+- **UPPER_CASE**: `README.md`, `CHANGELOG.md`
+- **Snake_case**: `setup_guide.md`, `developer_quick_start.md`
+
+## 🔍 Estrutura de Testes
+
+### **Organização por Módulo**
+- Cada módulo em `qa_core/` tem testes correspondentes em `tests/`
+- Testes de integração em arquivos separados
+- Configuração centralizada em `conftest.py`
+
+### **Cobertura**
+- Configurada para 90%+ de cobertura
+- Relatórios HTML em `htmlcov/`
+- Exclusões configuradas em `pyproject.toml`
+
+## 📚 Documentação
+
+### **Estrutura Hierárquica**
+- **`INDEX.md`**: Índice geral e navegação
+- **`README.md`**: Documentação técnica principal
+- **Guias específicos**: Setup, desenvolvimento, Xray, etc.
+
+### **Manutenção**
+- Documentação sempre atualizada
+- Links internos funcionais
+- Exemplos práticos incluídos
+
+## 🎯 Benefícios da Nova Estrutura
+
+### **Para Desenvolvedores**
+- ✅ Navegação mais intuitiva
+- ✅ Configurações centralizadas
+- ✅ Comandos padronizados via Makefile
+- ✅ Separação clara de responsabilidades
+
+### **Para Manutenção**
+- ✅ Estrutura escalável
+- ✅ Configurações organizadas
+- ✅ Testes bem estruturados
+- ✅ Documentação acessível
+
+### **Para Onboarding**
+- ✅ Setup simplificado
+- ✅ Guias claros
+- ✅ Estrutura previsível
+- ✅ Comandos padronizados
 
 ---
 
-**Última atualização**: 2025-10-29
+**Esta estrutura foi projetada para ser escalável, manutenível e fácil de navegar! 🚀**

@@ -28,7 +28,7 @@ sqlite3.register_converter(
     "timestamp", lambda val: datetime.datetime.fromisoformat(val.decode("utf-8"))
 )
 
-DB_NAME = "qa_oraculo_history.db"
+DB_NAME = "data/qa_oraculo_history.db"
 
 
 def get_db_connection():

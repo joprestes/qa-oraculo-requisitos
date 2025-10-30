@@ -27,6 +27,7 @@ exclude = [
 minversion = "8.0"
 addopts = "-ra"
 testpaths = ["tests"]
+config_file = ".config/pytest.ini"
 
 [tool.coverage.run]
 branch = true

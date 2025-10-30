@@ -41,12 +41,12 @@ O **QA Oráculo** é uma ferramenta revolucionária que utiliza **Inteligência 
 
 **Windows:**
 ```bash
-quick-setup.bat
+scripts/quick-setup.bat
 ```
 
 **Linux/Mac:**
 ```bash
-./quick-setup.sh
+./scripts/quick-setup.sh
 ```
 
 ### 🔧 Opção 2: Setup Manual
@@ -64,6 +64,25 @@ echo 'GOOGLE_API_KEY="sua_chave_aqui"' > .env
 
 # 4. Execute o aplicativo
 streamlit run main.py
+```
+
+### 🛠️ Comandos de Desenvolvimento
+
+```bash
+# Setup completo
+make setup
+
+# Executar aplicação
+make run
+
+# Executar testes
+make test
+
+# Verificar qualidade
+make dev-check
+
+# Ver todos os comandos
+make help
 ```
 
 > **💡 Dica**: Para instruções detalhadas e troubleshooting, veja nosso [**Guia Completo de Instalação**](docs/SETUP_GUIDE.md)
