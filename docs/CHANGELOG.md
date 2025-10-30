@@ -7,6 +7,16 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+## [1.6.1] - 2025-10-29
+
+### Fixed
+
+- **Correção de duplicação de lógica de exportação:**
+  - Removida duplicação de código na função `render_main_analysis_page`
+  - Lógica de exportação agora centralizada na função `_render_export_section()`
+  - Eliminado conflito de merge não resolvido que causava bypass da função de exportação
+  - Corrigido teste `test_render_main_analysis_page_exportadores` para verificar chamada da função correta
+
 ## [1.6.0] - 2025-10-29
 
 ### Added
