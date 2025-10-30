@@ -1064,9 +1064,6 @@ def render_main_analysis_page():
         # ==================================================
         #  SEÇÃO DE DOWNLOADS
         # ==================================================
-<<<<<<< HEAD
-        _render_export_section()
-=======
         st.divider()
         st.subheader("Downloads Disponíveis")
 
@@ -1277,7 +1274,6 @@ def render_main_analysis_page():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
             )
->>>>>>> origin/main
 
             # Xray - requer que o campo Test_Repository_Folder esteja preenchido
             xray_folder = st.session_state.get("xray_test_folder", "").strip()

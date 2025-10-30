@@ -1,4 +1,16 @@
 {
-  "python.formatting.provider": "black",
-  "editor.formatOnSave": true
+    "python.defaultInterpreterPath": "./venv/bin/python",
+    "python.analysis.extraPaths": [
+        "./venv/lib/python3.13/site-packages",
+        "."
+    ],
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": false,
+    "python.linting.mypyEnabled": false,
+    "python.formatting.provider": "black",
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.diagnosticMode": "workspace"
 }

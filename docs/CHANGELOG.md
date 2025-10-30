@@ -7,6 +7,62 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+## [1.5.0] - 2025-10-29
+
+### Added
+
+- **Exportação para Xray (Jira Test Management):**
+  - Nova função `gerar_csv_xray_from_df()` em `qa_core/utils.py`
+  - Interface de configuração com campo "Test Repository Folder" obrigatório
+  - Suporte a campos personalizados do Jira (Labels, Component, Fix Version, Priority, Assignee, Test Set)
+  - Configuração de campos customizados via formato "Campo=Valor"
+  - Botão de download "🧪 Xray (.csv)" na seção de exportações
+  - Validação: botão desabilitado se Test Repository Folder não for preenchido
+  - CSV compatível com Xray Test Case Importer
+  - Preservação de quebras de linha nos cenários Gherkin
+  - Codificação UTF-8 para caracteres especiais
+  - Test_Type definido automaticamente como "Cucumber"
+
+- **Testes automatizados para Xray:**
+  - Arquivo `tests/test_xray_export.py` com 10 casos de teste
+  - Cobertura completa da funcionalidade de exportação
+  - Validação de estrutura CSV, encoding e campos obrigatórios
+
+- **Documentação Xray:**
+  - `XRAY_EXPORT_GUIDE.md` - Guia completo de uso
+  - `XRAY_IMPLEMENTATION_SUMMARY.md` - Resumo técnico da implementação
+  - `RESUMO_FINAL_XRAY.md` - Documentação final
+  - `CAMPOS_PERSONALIZADOS_XRAY.md` - Guia de campos customizados
+
+### Changed
+
+- Interface de exportações expandida com seção dedicada ao Xray
+- Validação aprimorada para campos obrigatórios de exportação
+- Organização melhorada da seção de downloads
+
+### Added
+
+- **Guia de Setup Simplificado:**
+  - `SETUP_GUIDE.md` - Guia completo e didático de instalação
+  - `quick-setup.sh` - Script automático para Linux/Mac
+  - `quick-setup.bat` - Script automático para Windows
+  - `DEVELOPER_QUICK_START.md` - Guia rápido para desenvolvedores
+  - Setup interativo com configuração automática da API Key
+  - Verificação automática de dependências e instalação
+  - Instruções claras passo a passo
+
+### Changed
+
+- README principal atualizado com opções de setup simplificado
+- Scripts de setup mais amigáveis e informativos
+- Melhor organização da documentação de instalação
+
+### Fixed
+
+- Correção de merge conflicts no arquivo `app.py`
+- Resolução de problemas de indentação
+- Melhoria na estrutura de configuração de exportações
+
 ## [1.4.0] - 2025-01-20
 
 ### Added
