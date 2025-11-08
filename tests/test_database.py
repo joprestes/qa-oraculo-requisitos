@@ -20,6 +20,20 @@ from qa_core.database import (
 )
 
 
+class _NoCloseConnection:
+    """Wrapper para conexões que não devem ser fechadas automaticamente nos testes."""
+
+    def __init__(self, conn: sqlite3.Connection):
+        self._conn = conn
+
+    def __getattr__(self, item):
+        return getattr(self._conn, item)
+
+    def close(self):
+        """Override sem fechar a conexão real (fechada no tearDown)."""
+        pass
+
+
 class TestDatabaseInitialization(unittest.TestCase):
     DB_TEST_FILE = f"test_{DB_NAME}"
 
@@ -53,6 +67,7 @@ class TestDatabaseLogic(unittest.TestCase):
     def setUp(self):
         self.conn = sqlite3.connect(":memory:")
         self.conn.row_factory = sqlite3.Row
+        self.conn_wrapper = _NoCloseConnection(self.conn)
         cursor = self.conn.cursor()
         cursor.execute(
             "CREATE TABLE analysis_history (id INTEGER PRIMARY KEY, created_at TIMESTAMP, user_story TEXT, analysis_report TEXT, test_plan_report TEXT);"
@@ -64,7 +79,7 @@ class TestDatabaseLogic(unittest.TestCase):
 
     @patch("qa_core.database.get_db_connection")
     def test_save_and_get_by_id(self, mock_get_conn):
-        mock_get_conn.return_value = self.conn
+        mock_get_conn.return_value = self.conn_wrapper
         save_analysis_to_history("us", "analysis", "plan")
         retrieved = get_analysis_by_id(1)
         self.assertIsNotNone(retrieved)
@@ -72,7 +87,7 @@ class TestDatabaseLogic(unittest.TestCase):
 
     @patch("qa_core.database.get_db_connection")
     def test_get_all_analysis_history_order(self, mock_get_conn):
-        mock_get_conn.return_value = self.conn
+        mock_get_conn.return_value = self.conn_wrapper
         save_analysis_to_history("US 1", "A 1", "P 1")
         save_analysis_to_history("US 2", "A 2", "P 2")
         all_entries = get_all_analysis_history()
@@ -82,15 +97,14 @@ class TestDatabaseLogic(unittest.TestCase):
 
     @patch("qa_core.database.get_db_connection")
     def test_get_all_history_on_empty_db(self, mock_get_conn):
-
-        mock_get_conn.return_value = self.conn
+        mock_get_conn.return_value = self.conn_wrapper
         all_entries = get_all_analysis_history()
         self.assertEqual(len(all_entries), 0)
         self.assertIsInstance(all_entries, list)
 
     @patch("qa_core.database.get_db_connection")
     def test_get_nonexistent_entry(self, mock_get_conn):
-        mock_get_conn.return_value = self.conn
+        mock_get_conn.return_value = self.conn_wrapper
         retrieved = get_analysis_by_id(999)
         self.assertIsNone(retrieved)
 
@@ -114,7 +128,7 @@ class TestDatabaseLogic(unittest.TestCase):
         )
         connection.commit()
 
-        mock_get_conn.return_value = connection
+        mock_get_conn.return_value = _NoCloseConnection(connection)
 
         try:
             save_analysis_to_history(None, None, None)
@@ -137,6 +151,7 @@ class TestDatabaseDelete(unittest.TestCase):
     def setUp(self):
         self.conn = sqlite3.connect(":memory:")
         self.conn.row_factory = sqlite3.Row
+        self.conn_wrapper = _NoCloseConnection(self.conn)
         cursor = self.conn.cursor()
         cursor.execute(
             "CREATE TABLE analysis_history (id INTEGER PRIMARY KEY, created_at TIMESTAMP, user_story TEXT, analysis_report TEXT, test_plan_report TEXT);"
@@ -148,7 +163,7 @@ class TestDatabaseDelete(unittest.TestCase):
 
     @patch("qa_core.database.get_db_connection")
     def test_delete_analysis_by_id(self, mock_get_conn):
-        mock_get_conn.return_value = self.conn
+        mock_get_conn.return_value = self.conn_wrapper
         save_analysis_to_history("US Teste", "A", "P")
         delete_analysis_by_id(1)
         result = get_analysis_by_id(1)
@@ -156,7 +171,7 @@ class TestDatabaseDelete(unittest.TestCase):
 
     @patch("qa_core.database.get_db_connection")
     def test_clear_history(self, mock_get_conn):
-        mock_get_conn.return_value = self.conn
+        mock_get_conn.return_value = self.conn_wrapper
         save_analysis_to_history("US 1", "A", "P")
         save_analysis_to_history("US 2", "A", "P")
         clear_history()
@@ -207,17 +222,12 @@ def test_get_analysis_by_id_com_erro(monkeypatch):
 
 
 def test_get_analysis_by_id_com_id_invalido(monkeypatch):
-    class DummyContext:
-        def __enter__(self):
-            self.conn = sqlite3.connect(":memory:")
-            self.conn.row_factory = sqlite3.Row
-            return self.conn
+    def _make_conn():
+        conn = sqlite3.connect(":memory:")
+        conn.row_factory = sqlite3.Row
+        return conn
 
-        def __exit__(self, exc_type, exc, tb):
-            self.conn.close()
-            return False
-
-    monkeypatch.setattr(database, "get_db_connection", DummyContext)
+    monkeypatch.setattr(database, "get_db_connection", _make_conn)
 
     assert database.get_analysis_by_id("abc") is None
 

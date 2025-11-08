@@ -447,3 +447,107 @@ def gerar_csv_xray_from_df(
     csv_bytes = buffer.getvalue().encode("utf-8")
     buffer.close()
     return csv_bytes
+
+
+# ==========================================================
+#  EXPORTAÇÃO PARA TESTRAIL (CSV)
+# ==========================================================
+
+
+def gerar_csv_testrail_from_df(
+    df_original: pd.DataFrame,
+    section: str = "",
+    priority: str = "Medium",
+    template: str = "Test Case (Steps)",
+    references: str = "",
+) -> bytes:
+    """
+    Gera um CSV compatível com importação de casos no TestRail.
+
+    Colunas comuns aceitas pelo TestRail Import (CSV):
+    - Title (obrigatório)
+    - Section (opcional)
+    - Template (ex.: "Test Case (Steps)")
+    - Type (ex.: "Functional")
+    - Priority (ex.: "High", "Medium", "Low")
+    - Estimate (opcional)
+    - References (opcional)
+    - Steps (texto com quebras de linha para cada passo)
+    - Expected Result (texto com quebras de linha, alinhadas aos passos)
+
+    Observação: utilizamos um formato simples com Steps/Expected Result multiline.
+    """
+
+    header = [
+        "Title",
+        "Section",
+        "Template",
+        "Type",
+        "Priority",
+        "Estimate",
+        "References",
+        "Steps",
+        "Expected Result",
+    ]
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, delimiter=",", quoting=csv.QUOTE_ALL)
+    writer.writerow(header)
+
+    if df_original is None or df_original.empty:
+        return buffer.getvalue().encode("utf-8")
+
+    # Normaliza campos padrões
+    section = (section or "").strip()
+    priority = (priority or "").strip() or "Medium"
+    template = (template or "").strip() or "Test Case (Steps)"
+    references = (references or "").strip()
+
+    for index, row in df_original.iterrows():
+        title = row.get("titulo", f"Caso de Teste {index+1}")
+
+        steps_raw = row.get("cenario", [])
+        if isinstance(steps_raw, str):
+            steps_list = [s.strip() for s in steps_raw.split("\n") if s.strip()]
+        elif isinstance(steps_raw, list):
+            steps_list = [str(s).strip() for s in steps_raw if str(s).strip()]
+        else:
+            steps_list = []
+
+        # Para manter compatibilidade simples, não geramos expected separado por passo.
+        # O campo "Expected Result" será preenchido com linhas vazias correspondentes,
+        # ou, se houver "então" explícitos, tenta mapear de forma básica.
+        expected_list = []
+        for s in steps_list:
+            lower = s.lower()
+            if lower.startswith("quando"):
+                expected_list.append("")
+            elif lower.startswith(("então", "entao")):
+                # Usa o próprio passo como expected para parear com o último 'Quando' se existir
+                if expected_list:
+                    expected_list[-1] = s
+                else:
+                    expected_list.append(s)
+            else:
+                expected_list.append("")
+
+        steps_text = "\n".join(steps_list)
+        expected_text = "\n".join(expected_list) if expected_list else ""
+
+        writer.writerow(
+            [
+                title,
+                section,
+                template,
+                "Functional",
+                priority,
+                "",
+                references,
+                steps_text,
+                expected_text,
+            ]
+        )
+
+    csv_bytes = buffer.getvalue().encode("utf-8")
+    buffer.close()
+    return csv_bytes

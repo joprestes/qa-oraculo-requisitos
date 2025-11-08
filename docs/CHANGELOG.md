@@ -7,6 +7,24 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2025-10-30
+
+### Added
+
+- Exportação para **TestRail**:
+  - Nova função `gerar_csv_testrail_from_df()` em `qa_core/utils.py`
+  - Campos suportados: Title, Section, Template, Type, Priority, Estimate, References, Steps, Expected Result
+  - Botão de download "🧪 TestRail (.csv)" na seção de exportações
+  - Configurações de Section/Priority/References no expander de exportações
+
+### Tests
+
+- `tests/test_testrail_export.py`: valida estrutura básica do CSV e campos obrigatórios
+
+### Changed
+
+- UI de exportações atualizada para incluir seção TestRail junto de Azure/Zephyr/Xray
+
 ## [1.6.1] - 2025-10-29
 
 ### Fixed

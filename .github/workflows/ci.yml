@@ -96,36 +96,10 @@ jobs:
       # ---------------------------------------------------------------
       # 7️⃣ Executa testes e gera relatório de cobertura em XML
       # ---------------------------------------------------------------
-      - name: Run tests + coverage (XML)
+      - name: Run tests + coverage (XML + fail-under)
         run: |
           pytest \
-            --cov=app \
-            --cov=database \
-            --cov=graph \
-            --cov=pdf_generator \
-            --cov=state_manager \
-            --cov=utils \
-            --cov-report=xml
-
-      # ---------------------------------------------------------------
-      # 8️⃣ Verifica se a cobertura de testes é >= 90%
-      # Se não for, falha o workflow
-      # ---------------------------------------------------------------
-      - name: "Gate - verifica se cobertura é suficiente"
-        run: |
-          python - <<EOF
-          import xml.etree.ElementTree as ET
-
-          # Lê o arquivo coverage.xml gerado pelo pytest
-          r = ET.parse('coverage.xml').getroot().attrib
-
-          # Extrai o percentual de cobertura
-          cov = float(r['line-rate']) * 100
-          print(f'📊 Cobertura total: {cov:.2f}%')
-
-          if cov < 85.0:
-              print("❌ Cobertura abaixo do mínimo exigido (85%)")
-              exit(1)
-          else:
-              print("✅ Cobertura mínima atingida!")
-          EOF
+            --cov=qa_core \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-fail-under=90
