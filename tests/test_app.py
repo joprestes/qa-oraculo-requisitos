@@ -11,6 +11,7 @@ Este arquivo cobre:
 - Execução direta do script (if __name__ == "__main__")
 """
 
+import datetime
 import importlib
 import sqlite3
 import subprocess
@@ -192,6 +193,225 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
     )
 
 
+def _make_context():
+    ctx = MagicMock()
+    ctx.__enter__.return_value = MagicMock()
+    ctx.__exit__.return_value = False
+    return ctx
+
+
+def test_render_history_confirm_delete_sem_sucesso(mocked_st):
+    """Cobre o branch onde a exclusão individual falha e gera announce erro."""
+    mocked_st.session_state.clear()
+    mocked_st.session_state["confirm_delete_id"] = 7
+    mocked_st.query_params.get.return_value = None
+    mocked_st.container.side_effect = lambda *args, **kwargs: _make_context()
+
+    original_columns = mocked_st.columns.side_effect
+
+    def columns_side_effect(arg):
+        if arg == 2:
+            confirm_col, cancel_col = MagicMock(), MagicMock()
+            confirm_col.button.return_value = True
+            cancel_col.button.return_value = False
+            return (confirm_col, cancel_col)
+        return original_columns(arg)
+
+    mocked_st.columns.side_effect = columns_side_effect
+
+    with (
+        patch("qa_core.app.delete_analysis_by_id", return_value=False),
+        patch("qa_core.app.get_all_analysis_history", return_value=[]),
+        patch("qa_core.app.announce") as mock_announce,
+    ):
+        app.render_history_page()
+
+    mock_announce.assert_any_call(
+        "Não foi possível excluir a análise selecionada.", "error", st_api=mocked_st
+    )
+    mocked_st.columns.side_effect = original_columns
+
+
+def test_render_history_clear_all_sem_registros(mocked_st):
+    """Cobre o branch de confirmação geral quando nenhum registro é removido."""
+    mocked_st.session_state.clear()
+    mocked_st.session_state["confirm_clear_all"] = True
+    mocked_st.query_params.get.return_value = None
+    mocked_st.container.side_effect = lambda *args, **kwargs: _make_context()
+
+    original_columns = mocked_st.columns.side_effect
+
+    def columns_side_effect(arg):
+        if arg == 2:
+            confirm_col, cancel_col = MagicMock(), MagicMock()
+            confirm_col.button.return_value = True
+            cancel_col.button.return_value = False
+            return (confirm_col, cancel_col)
+        return original_columns(arg)
+
+    mocked_st.columns.side_effect = columns_side_effect
+
+    with (
+        patch("qa_core.app.clear_history", return_value=0),
+        patch("qa_core.app.get_all_analysis_history", return_value=[]),
+        patch("qa_core.app.announce") as mock_announce,
+    ):
+        app.render_history_page()
+
+    mock_announce.assert_any_call(
+        "Nenhuma análise foi removida.", "warning", st_api=mocked_st
+    )
+    mocked_st.columns.side_effect = original_columns
+
+
+def test_render_history_clear_all_cancelado(mocked_st):
+    """Cobre o caminho onde o usuário cancela a exclusão geral."""
+    mocked_st.session_state.clear()
+    mocked_st.session_state["confirm_clear_all"] = True
+    mocked_st.query_params.get.return_value = None
+    mocked_st.container.side_effect = lambda *args, **kwargs: _make_context()
+
+    original_columns = mocked_st.columns.side_effect
+
+    def columns_side_effect(arg):
+        if arg == 2:
+            confirm_col, cancel_col = MagicMock(), MagicMock()
+            confirm_col.button.return_value = False
+            cancel_col.button.return_value = True
+            return (confirm_col, cancel_col)
+        return original_columns(arg)
+
+    mocked_st.columns.side_effect = columns_side_effect
+
+    with (
+        patch("qa_core.app.get_all_analysis_history", return_value=[]),
+        patch("qa_core.app.announce") as mock_announce,
+    ):
+        app.render_history_page()
+
+    mock_announce.assert_any_call(
+        "Nenhuma exclusão foi realizada.", "info", st_api=mocked_st
+    )
+    mocked_st.columns.side_effect = original_columns
+
+
+def test_render_history_id_invalido_tratado(mocked_st):
+    """Garante que IDs inválidos não causam exceções na conversão."""
+    mocked_st.query_params.get.return_value = ["abc"]
+    with (
+        patch("qa_core.app.get_all_analysis_history", return_value=[]),
+        patch("qa_core.app.announce") as mock_announce,
+    ):
+        app.render_history_page()
+    mock_announce.assert_called_with(
+        "Ainda não há análises no histórico. Realize uma nova análise para começar.",
+        "info",
+        st_api=mocked_st,
+    )
+
+
+def test_render_history_sem_plano_exibe_aviso(mocked_st):
+    """Cobre o branch de detalhe quando não existe plano de testes salvo."""
+    mocked_st.query_params.get.return_value = ["1"]
+    mocked_st.container.side_effect = lambda *args, **kwargs: _make_context()
+    mocked_st.session_state.clear()
+
+    with (
+        patch(
+            "qa_core.app.get_analysis_by_id",
+            return_value={
+                "created_at": "2025-10-01",
+                "user_story": "História",
+                "analysis_report": "Relatório",
+            },
+        ),
+        patch("qa_core.app.get_all_analysis_history", return_value=[]),
+        patch("qa_core.app.announce") as mock_announce,
+    ):
+        app.render_history_page()
+    mock_announce.assert_any_call(
+        "Nenhum plano de testes foi gerado para esta análise.", "info", st_api=mocked_st
+    )
+
+
+def test_render_history_lista_formata_datas(mocked_st):
+    """Garante cobertura das ramificações de data no modo lista."""
+    mocked_st.query_params.get.return_value = None
+    history = [
+        {"id": 1, "created_at": "2025-10-01 10:00", "user_story": "Story 1"},
+        {
+            "id": 2,
+            "created_at": datetime.datetime(2025, 10, 2, 11, 30),
+            "user_story": "Story 2",
+        },
+        {"id": 3, "created_at": 123456, "user_story": "Story 3"},
+    ]
+    with patch("qa_core.app.get_all_analysis_history", return_value=history):
+        app.render_history_page()
+    # Para o datetime, deve ter formatado como dd/mm/YYYY HH:MM
+    mocked_st.markdown.assert_any_call("**🕒 Data:** 02/10/2025 11:30")
+    mocked_st.markdown.assert_any_call("**🕒 Data:** 123456")
+
+
+def test_render_history_analysis_entry_convertido_dict(mocked_st):
+    """Cobre a conversão de registros não-dict para dict no modo detalhado."""
+    mocked_st.query_params.get.return_value = ["5"]
+    mocked_st.container.side_effect = lambda *args, **kwargs: _make_context()
+    entry_as_list = [
+        ("id", 5),
+        ("created_at", datetime.datetime(2025, 10, 3, 14, 0)),
+        ("user_story", "História convertida"),
+        ("analysis_report", "Relatório detalhado"),
+        ("test_plan_report", "Plano convertido"),
+    ]
+
+    with (
+        patch("qa_core.app.get_analysis_by_id", return_value=entry_as_list),
+        patch("qa_core.app.get_all_analysis_history", return_value=[]),
+        patch("qa_core.app.accessible_button", return_value=False),
+    ):
+        app.render_history_page()
+
+    mocked_st.markdown.assert_any_call("### Análise de 2025-10-03")
+
+
+def test_render_history_selected_id_type_error(mocked_st):
+    """Cobre o tratamento de exceções ao buscar análise específica."""
+    mocked_st.query_params.get.return_value = ["7"]
+    mocked_st.container.side_effect = lambda *args, **kwargs: _make_context()
+
+    with (
+        patch("qa_core.app.get_analysis_by_id", side_effect=TypeError("boom")),
+        patch("qa_core.app.get_all_analysis_history", return_value=[]),
+        patch("qa_core.app.accessible_button", return_value=False),
+        patch("qa_core.app.announce") as mock_announce,
+    ):
+        app.render_history_page()
+
+    mock_announce.assert_any_call("Análise não encontrada.", "error", st_api=mocked_st)
+
+
+def test_render_history_page_test_mode_com_plano():
+    """Cobre o modo de teste simplificado com plano disponível."""
+    st_api = MagicMock()
+    st_api.session_state = {}
+    st_api.query_params = MagicMock(get=lambda key: ["1"])
+
+    with patch(
+        "qa_core.app.get_analysis_by_id",
+        return_value={
+            "created_at": "2025-10-02",
+            "user_story": "US",
+            "analysis_report": "Rel",
+            "test_plan_report": "Plano",
+        },
+    ):
+        app._render_history_page_test_mode(st_api)
+
+    st_api.markdown.assert_any_call("### Análise de 2025-10-02")
+    st_api.markdown.assert_any_call("Plano")
+
+
 def test_render_main_analysis_page_downloads_sem_dados():
     """Força finalização sem test_plan_df nem pdf."""
     with patch("qa_core.app.st") as mock_st:
@@ -328,6 +548,41 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
         mock_save.assert_called()
 
 
+def test_render_user_story_input_fluxo_sucesso(mocked_st):
+    """Garante que o fluxo feliz de entrada da user story aciona o grafo e re-renderiza."""
+    mocked_st.session_state.clear()
+    mocked_st.session_state["user_story_input"] = "Como tester, quero validar o fluxo"
+
+    with (
+        patch("qa_core.app.accessible_button", return_value=True),
+        patch(
+            "qa_core.app.run_analysis_graph",
+            return_value={
+                "analise_da_us": {"avaliacao": "ok"},
+                "relatorio_analise_inicial": "Relatório",
+            },
+        ) as mock_grafo,
+    ):
+        resultado = app._render_user_story_input()
+
+    assert resultado is True
+    mock_grafo.assert_called_once_with("Como tester, quero validar o fluxo")
+    assert (
+        mocked_st.session_state["analysis_state"]["analise_da_us"]["avaliacao"] == "ok"
+    )
+    assert mocked_st.session_state["show_generate_plan_button"] is False
+    mocked_st.rerun.assert_called()
+
+
+def test_save_analysis_to_history_wrapper_chama_privado():
+    """Valida cobertura da função pública que delega ao helper interno."""
+    with patch(
+        "qa_core.app._save_current_analysis_to_history", return_value="ok"
+    ) as mock_save:
+        assert app.save_analysis_to_history(update_existing=True) == "ok"
+    mock_save.assert_called_once_with(update_existing=True)
+
+
 def test_render_main_page_gera_plano_com_sucesso(mocked_st):
     """Cobre o fluxo feliz da geração de plano de testes pela IA."""
 
@@ -429,6 +684,72 @@ def test_render_main_page_sem_cenario_dispara_aviso(mocked_st):
         "info",
         st_api=mocked_st,
     )
+
+
+def test_render_export_section_com_campos_xray_e_testrail(mocked_st):
+    """Cobre a montagem de campos Xray/TestRail com valores preenchidos."""
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "Caso completo",
+                "prioridade": "Alta",
+                "cenario": ["Dado algo", "Então resultado"],
+            }
+        ]
+    )
+    mocked_st.session_state.update(
+        {
+            "test_plan_df": df,
+            "xray_test_folder": "QA/FOLDER",
+            "xray_labels": "Regression",
+            "xray_priority": "High",
+            "xray_component": "Core",
+            "xray_fix_version": "1.0.0",
+            "xray_assignee": "qa.user",
+            "xray_test_set": "Sprint 42",
+            "xray_custom_fields": "Epic Link=PROJ-1\nTeam=QA Core",
+            "testrail_section": "Backoffice",
+            "testrail_priority": "Medium",
+            "testrail_references": "PROJ-1",
+        }
+    )
+
+    col_azure = MagicMock()
+    col_zephyr = MagicMock()
+    col_xray = MagicMock()
+
+    with (
+        patch(
+            "qa_core.app._render_basic_exports",
+            return_value=(col_azure, col_zephyr, col_xray),
+        ),
+        patch("qa_core.app.gerar_csv_xray_from_df", return_value=b"xray") as mock_xray,
+        patch(
+            "qa_core.app.gerar_csv_testrail_from_df", return_value=b"testrail"
+        ) as mock_testrail,
+    ):
+        app._render_export_section()
+
+    custom_fields = mock_xray.call_args.kwargs["custom_fields"]
+    assert custom_fields == {
+        "Labels": "Regression",
+        "Priority": "High",
+        "Component": "Core",
+        "Fix Version": "1.0.0",
+        "Assignee": "qa.user",
+        "Test Set": "Sprint 42",
+        "Epic Link": "PROJ-1",
+        "Team": "QA Core",
+    }
+    mock_testrail.assert_called_once()
+    col_xray.download_button.assert_called_once()
+    label, payload = col_zephyr.download_button.call_args[0][:2]
+    kwargs = col_zephyr.download_button.call_args[1]
+    assert label == "🧪 TestRail (.csv)"
+    assert payload == b"testrail"
+    assert kwargs["mime"] == "text/csv"
+    assert kwargs["use_container_width"] is True
+    assert kwargs["file_name"].endswith("testrail.csv")
 
 
 # ---- Helpers e testes complementares do histórico ----
