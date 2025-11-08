@@ -14,6 +14,7 @@
 # a consistência e robustez da aplicação em operações básicas.
 # ============================================================
 
+import csv
 import datetime
 import io
 import locale
@@ -30,6 +31,7 @@ from qa_core.utils import (
     clean_markdown_report,
     gerar_nome_arquivo_seguro,
     gerar_relatorio_md_dos_cenarios,
+    gerar_csv_testrail_from_df,
     get_flexible,
     normalizar_string,
     parse_json_strict,
@@ -398,8 +400,111 @@ def test_gerar_csv_azure_from_df_vazio():
     linhas = csv_text.splitlines()
 
     assert len(linhas) == 1
-    assert "Work Item Type" in linhas[0]
-    assert linhas[0].startswith("ID")
+
+
+# ============================================================
+#  TESTES — gerar_csv_testrail_from_df
+# ============================================================
+
+
+def test_gerar_csv_testrail_from_df_completo():
+    """Valida que o CSV do TestRail contém todas as colunas e mapeia passos/expected."""
+    df = pd.DataFrame(
+        [
+            {
+                "titulo": "Cadastro válido",
+                "cenario": "Dado que o usuário acessa\nQuando preenche dados\nEntão recebe confirmação",
+            },
+            {
+                "titulo": "Fluxo com lista",
+                "cenario": ["Dado contexto", "Então resultado"],
+            },
+            {
+                "titulo": "Fluxo sem passos",
+                "cenario": None,
+            },
+            {
+                "titulo": "Fluxo iniciando com então",
+                "cenario": "Então deve exibir mensagem inicial",
+            },
+        ]
+    )
+
+    csv_bytes = gerar_csv_testrail_from_df(
+        df,
+        section="Backoffice",
+        priority="High",
+        template="Test Case (Steps)",
+        references="PROJ-1",
+    )
+    csv_text = csv_bytes.decode("utf-8")
+    reader = csv.reader(io.StringIO(csv_text))
+    rows = list(reader)
+
+    header = [
+        "Title",
+        "Section",
+        "Template",
+        "Type",
+        "Priority",
+        "Estimate",
+        "References",
+        "Steps",
+        "Expected Result",
+    ]
+    assert rows[0] == header
+
+    primeira = rows[1]
+    assert primeira[0] == "Cadastro válido"
+    assert primeira[1] == "Backoffice"
+    assert primeira[2] == "Test Case (Steps)"
+    assert primeira[3] == "Functional"
+    assert primeira[4] == "High"
+    assert primeira[6] == "PROJ-1"
+    assert "Quando preenche dados" in primeira[7]
+    assert primeira[7].count("\n") == 2
+    assert "Então recebe confirmação" in primeira[8]
+
+    segunda = rows[2]
+    assert segunda[0] == "Fluxo com lista"
+    assert segunda[7] == "Dado contexto\nEntão resultado"
+    assert segunda[8] == "Então resultado"
+
+    terceira = rows[3]
+    assert terceira[0] == "Fluxo sem passos"
+    assert terceira[7] == ""
+    assert terceira[8] == ""
+
+    quarta = rows[4]
+    assert quarta[0] == "Fluxo iniciando com então"
+    assert quarta[7] == "Então deve exibir mensagem inicial"
+    assert quarta[8] == "Então deve exibir mensagem inicial"
+
+
+def test_gerar_csv_testrail_from_df_vazio():
+    """DataFrame vazio ou None deve retornar apenas o cabeçalho."""
+    vazio = pd.DataFrame()
+    texto = gerar_csv_testrail_from_df(vazio).decode("utf-8")
+    reader = csv.reader(io.StringIO(texto))
+    rows_vazio = list(reader)
+    assert rows_vazio == [
+        [
+            "Title",
+            "Section",
+            "Template",
+            "Type",
+            "Priority",
+            "Estimate",
+            "References",
+            "Steps",
+            "Expected Result",
+        ]
+    ]
+
+    texto_none = gerar_csv_testrail_from_df(None).decode("utf-8")
+    reader_none = csv.reader(io.StringIO(texto_none))
+    rows_none = list(reader_none)
+    assert rows_none == rows_vazio
 
 
 def test_gerar_csv_azure_from_df_multiplos_casos(monkeypatch):

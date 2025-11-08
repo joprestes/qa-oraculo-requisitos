@@ -532,7 +532,7 @@ def check_accessibility_preferences():
 #  Função de teste
 # ==========================================================
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover - executado apenas manualmente
     print("✅ Módulo de acessibilidade carregado com sucesso!")
     print("\nFunções disponíveis:")
     print("  - apply_accessible_styles()")

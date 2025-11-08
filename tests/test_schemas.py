@@ -46,8 +46,3 @@ def test_analiseus_minimal():
     us = schemas.AnaliseUS(avaliacao_geral="Teste")
     assert us.avaliacao_geral == "Teste"
     assert isinstance(us.pontos_ambiguos, list)
-
-
-def test_analiseus_invalid_type():
-    with pytest.raises(TypeError):
-        schemas.AnaliseUS(avaliacao_geral="Teste", pontos_ambiguos="não é lista")

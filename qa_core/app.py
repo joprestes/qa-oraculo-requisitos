@@ -1568,7 +1568,7 @@ def main():
 # ==========================================================
 # Ponto de entrada do aplicativo
 # ==========================================================
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover - entrada manual via streamlit
     # NOTA: Para executar o app, use `streamlit run main.py` na raiz do projeto.
     # Não execute este arquivo diretamente (`streamlit run qa_core/app.py`).
     #
