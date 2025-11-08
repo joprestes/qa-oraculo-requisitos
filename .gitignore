@@ -276,3 +276,12 @@ Thumbs.db
 # === Configurações locais ===
 config.local.json
 settings.local.json
+
+# === Artefatos duplicados / gerados ===
+DEVELOPER_QUICK_START.md
+PR_TEMPLATE.md
+SETUP_GUIDE.md
+pyrightconfig.json
+quick-setup.sh
+quick-setup.bat
+tests/test_testrail_export.py
