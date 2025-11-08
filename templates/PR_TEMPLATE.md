@@ -1,139 +1,33 @@
-# 🚀 Melhoria da Organização do Projeto e Experiência de Setup
+# 🚀 Resumo da Pull Request
 
-## 📋 Resumo
+- Descreva em 2–3 frases o objetivo e o impacto principal da mudança.
+- Destaque qualquer decisão relevante para o time de QA que dará suporte ao código.
 
-Esta PR implementa melhorias significativas na organização do projeto e na experiência de setup, tornando o QA Oráculo mais acessível e profissional para novos usuários e desenvolvedores.
+## ✨ Detalhes da Implementação
 
-## ✨ Principais Mudanças
+- **Contexto**: explique o problema ou oportunidade.
+- **Solução**: descreva os principais pontos da implementação (componentes tocados, fluxos afetados).
+- **Notas para QA**: informações importantes para suporte, rollback ou monitoramento.
 
-### 📁 **Reorganização da Estrutura**
+## 🧪 Testes Realizados
 
-- ✅ **Documentação centralizada** na pasta `docs/`
-- ✅ **Estrutura limpa** com separação clara de responsabilidades
-- ✅ **Navegação melhorada** com `docs/INDEX.md` como ponto de entrada
+- `pytest --cov`
+- `ruff check .`
+- `black --check .`
+- Outros (descreva comandos, cenários manuais, capturas se aplicável)
 
-### 🚀 **Setup Simplificado**
+## 📚 Documentação
 
-- ✅ **Scripts automáticos** (`quick-setup.sh`, `quick-setup.bat`)
-- ✅ **Guias completos** de instalação (`SETUP_GUIDE.md`)
-- ✅ **Setup interativo** com configuração automática da API Key
-- ✅ **Verificação automática** de dependências
+- [ ] Atualizei a documentação relevante (`README`, `docs/*`, guias internos).
+- [ ] Não foi necessário atualizar documentação (explique brevemente):
 
-### 📖 **Documentação Renovada**
+## ✅ Checklist de Qualidade
 
-- ✅ **README.md redesenhado** com layout moderno e profissional
-- ✅ **Guia para desenvolvedores** (`DEVELOPER_QUICK_START.md`)
-- ✅ **Documentação técnica** reorganizada (`docs/README.md`)
-- ✅ **Índice de documentação** (`docs/INDEX.md`)
+- [ ] Cobertura de testes ≥ 90% (validada no CI e localmente).
+- [ ] Layout revisado em viewport mobile (Mobile First).
+- [ ] Checklist de acessibilidade cumprido (`docs/ACESSIBILIDADE.md`).
+- [ ] Comentários adicionados/ajustados são didáticos e explicam o “porquê”.
+- [ ] Padrões arquiteturais respeitados (responsabilidades bem definidas).
+- [ ] `make dev-check` (ou comandos equivalentes) executado sem erros.
 
-### 🔧 **Melhorias Técnicas**
-
-- ✅ **Conflitos de merge resolvidos** no `app.py`
-- ✅ **Problemas de indentação corrigidos**
-- ✅ **Links internos atualizados** para nova estrutura
-- ✅ **Configuração de IDE** melhorada
-
-## 📊 Estatísticas
-
-- **17 arquivos alterados**
-- **1.433 adições, 217 remoções**
-- **8 novos arquivos criados**
-- **9 arquivos movidos/reorganizados**
-
-## 🎯 Benefícios
-
-### 👥 **Para Usuários Novos**
-
-- Setup em 1 comando
-- Guias passo a passo claros
-- Troubleshooting detalhado
-- Interface mais amigável
-
-### 👨‍💻 **Para Desenvolvedores**
-
-- Estrutura de projeto clara
-- Guias de contribuição organizados
-- Documentação técnica completa
-- Setup de desenvolvimento simplificado
-
-### 🏢 **Para o Projeto**
-
-- Organização profissional
-- Manutenibilidade melhorada
-- Onboarding mais eficiente
-- Documentação estruturada
-
-## 🧪 Testes
-
-- ✅ **Todos os testes passando**
-- ✅ **Cobertura mantida** (90%+)
-- ✅ **Lint e formatação** verificados
-- ✅ **Scripts de setup testados**
-
-## 📚 Documentação Atualizada
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `README.md` | Redesign completo com layout moderno |
-| `docs/SETUP_GUIDE.md` | Guia completo de instalação |
-| `docs/DEVELOPER_QUICK_START.md` | Guia para desenvolvedores |
-| `docs/INDEX.md` | Índice geral da documentação |
-| `docs/README.md` | Documentação técnica reorganizada |
-| `PROJECT_STRUCTURE.md` | Estrutura do projeto documentada |
-
-## 🚀 Como Testar
-
-### Setup Automático
-
-```bash
-# Linux/Mac
-./quick-setup.sh
-
-# Windows
-quick-setup.bat
-```
-
-### Setup Manual
-
-```bash
-# Siga o guia completo
-cat docs/SETUP_GUIDE.md
-```
-
-### Verificação
-
-```bash
-# Execute testes
-pytest
-
-# Verifique qualidade
-ruff check .
-black --check .
-```
-
-## 📸 Screenshots
-
-### Adicione screenshots da nova interface se aplicável
-
-## 🔗 Links Relacionados
-
-- [Guia de Setup](docs/SETUP_GUIDE.md)
-- [Guia para Desenvolvedores](docs/DEVELOPER_QUICK_START.md)
-- [Estrutura do Projeto](PROJECT_STRUCTURE.md)
-
-## ✅ Checklist
-
-- [x] Código testado e funcionando
-- [x] Documentação atualizada
-- [x] Links internos verificados
-- [x] Scripts de setup testados
-- [x] Estrutura de pastas organizada
-- [x] README redesenhado
-- [x] Guias de instalação criados
-- [x] Conflitos de merge resolvidos
-
----
-
-## 🎉 Conclusão
-
-Esta PR melhora significativamente a experiência de onboarding e a organização do projeto!
+Se algum item não puder ser marcado, explique na seção de detalhes para alinharmos um plano de ação.

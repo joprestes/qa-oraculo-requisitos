@@ -29,7 +29,7 @@ qa-oraculo-requisitos/
 │   ├── SETUP_GUIDE.md           # Guia de instalação
 │   ├── DEVELOPER_QUICK_START.md # Guia para desenvolvedores
 │   ├── CHANGELOG.md             # Histórico de mudanças
-│   ├── acessibilidade.md        # Documentação de acessibilidade
+│   ├── ACESSIBILIDADE.md        # Documentação de acessibilidade
 │   ├── CAMPOS_PERSONALIZADOS_XRAY.md # Campos Xray
 │   ├── DOCUMENTACAO_TECNICA.md  # Documentação técnica detalhada
 │   ├── RESUMO_FINAL_XRAY.md     # Resumo Xray

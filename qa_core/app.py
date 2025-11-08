@@ -57,6 +57,7 @@ from .utils import (
     clean_markdown_report,
     gerar_csv_azure_from_df,
     gerar_csv_xray_from_df,
+    gerar_csv_testrail_from_df,
     gerar_nome_arquivo_seguro,
     get_flexible,
     preparar_df_para_zephyr_xlsx,
@@ -158,7 +159,9 @@ def _save_current_analysis_to_history(update_existing: bool = False):
 
         from .database import get_db_connection  # evita dependência circular
 
-        with get_db_connection() as conn:
+        from contextlib import closing
+
+        with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
             timestamp = datetime.datetime.now()
 
@@ -790,6 +793,23 @@ def _render_export_section():  # noqa: C901, PLR0915
 
             st.divider()
 
+            # TestRail
+            st.markdown("##### TestRail")
+            tr_col1, tr_col2 = st.columns(2)
+            tr_col1.text_input("Section:", key="testrail_section")
+            tr_col2.selectbox(
+                "Prioridade:",
+                ["Medium", "High", "Low"],
+                key="testrail_priority",
+            )
+            st.text_input(
+                "References:",
+                key="testrail_references",
+                placeholder="PROJ-123,PROJ-456",
+            )
+
+            st.divider()
+
             # ======================================================================
             # Xray (Jira Test Management) - COM ACESSIBILIDADE COMPLETA
             # ======================================================================
@@ -932,6 +952,25 @@ def _render_export_section():  # noqa: C901, PLR0915
                 st.session_state.get("user_story_input", ""), "zephyr.xlsx"
             ),
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True,
+        )
+
+        # TestRail CSV
+        csv_testrail = gerar_csv_testrail_from_df(
+            df_para_ferramentas,
+            st.session_state.get("testrail_section", ""),
+            st.session_state.get("testrail_priority", "Medium"),
+            "Test Case (Steps)",
+            st.session_state.get("testrail_references", ""),
+        )
+
+        col_zephyr.download_button(
+            "🧪 TestRail (.csv)",
+            _ensure_bytes(csv_testrail),
+            file_name=gerar_nome_arquivo_seguro(
+                st.session_state.get("user_story_input", ""), "testrail.csv"
+            ),
+            mime="text/csv",
             use_container_width=True,
         )
 

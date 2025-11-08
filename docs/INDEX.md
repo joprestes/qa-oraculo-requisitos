@@ -21,7 +21,7 @@ Bem-vindo à documentação completa do QA Oráculo! Aqui você encontrará todo
 | Documento | Descrição | Público-Alvo |
 |-----------|-----------|--------------|
 | [**XRAY_EXPORT_GUIDE.md**](XRAY_EXPORT_GUIDE.md) | Guia completo de exportação para Xray | Usuários QA |
-| [**acessibilidade.md**](acessibilidade.md) | Guia de recursos de acessibilidade | Usuários e Devs |
+| [**ACESSIBILIDADE.md**](ACESSIBILIDADE.md) | Guia de recursos de acessibilidade | Usuários e Devs |
 
 ## 📋 Documentação Xray
 
@@ -49,7 +49,7 @@ Bem-vindo à documentação completa do QA Oráculo! Aqui você encontrará todo
 3. Teste a exportação
 
 ### ♿ **Me preocupo com acessibilidade**
-1. Consulte o [**acessibilidade.md**](acessibilidade.md)
+1. Consulte o [**ACESSIBILIDADE.md**](ACESSIBILIDADE.md)
 2. Explore os recursos WCAG 2.1
 3. Teste com leitores de tela
 

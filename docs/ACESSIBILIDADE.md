@@ -19,6 +19,11 @@ As diretrizes seguem os quatro princípios da WCAG:
 
 ## Diretrizes Gerais
 
+### Mobile First + Semântica
+
+- Inicie desenhando e codificando para telas pequenas (≤768 px) e expanda progressivamente.
+- Garanta que componentes responsivos preservem hierarquia e leitura lógica em leitores de tela.
+
 ### Estrutura Semântica
 
 - Utilizar elementos HTML semânticos (por exemplo, `main`, `header`, `nav`, `section`, `article`, `footer`).
@@ -85,10 +90,11 @@ As diretrizes seguem os quatro princípios da WCAG:
 - [ ] Focus visible
 - [ ] Texto alternativo em mídias
 - [ ] Contraste mínimo atendido
-- [ ] Formularios com labels associados
+- [ ] Formulários com labels associados
 - [ ] Mensagens de erro compreensíveis
 - [ ] Uso correto de landmarks e semântica
 - [ ] Componentes dinâmicos com `aria-live` quando necessário
+- [ ] Layout verificado em viewport mobile antes do desktop
 - [ ] Testes com ferramentas automatizadas e manuais realizados
 
 ## Ferramentas Recomendadas

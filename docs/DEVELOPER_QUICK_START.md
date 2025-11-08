@@ -37,6 +37,18 @@ qa-oraculo-requisitos/
 └── requirements.txt        # Dependências
 ```
 
+## 🧭 Princípios Obrigatórios
+
+Sempre valide suas contribuições contra estas regras do projeto:
+
+- **Cobertura mínima de 90%** em `pytest --cov` (PRs falham abaixo disso).
+- **Acessibilidade primeiro**: todos os componentes devem seguir o checklist WCAG 2.1 AA descrito em `docs/ACESSIBILIDADE.md`.
+- **Mobile First**: desenhe fluxos iniciando em resoluções menores e valide em ≤768 px antes de desktop.
+- **Boa Arquitetura**: separe responsabilidades (UI, serviços, persistência) e prefira componentes reutilizáveis.
+- **Comentários didáticos**: explique o “porquê” e como o QA pode manter o código.
+
+Use o template de PR para confirmar cada item e peça revisão quando algo não puder ser atendido.
+
 ## 🧪 Desenvolvimento
 
 ### Ambiente de Desenvolvimento
@@ -60,10 +72,11 @@ black --check .
 1. **Fork** o repositório
 2. **Clone** seu fork
 3. **Crie** uma branch: `git checkout -b feature/nova-funcionalidade`
-4. **Desenvolva** e teste
-5. **Commit**: `git commit -m "feat: adiciona nova funcionalidade"`
-6. **Push**: `git push origin feature/nova-funcionalidade`
-7. **Abra** um Pull Request
+4. **Implemente** guiando-se pelos princípios acima
+5. **Valide**: `make dev-check` ou os comandos individuais (lint, testes, cobertura)
+6. **Commit**: `git commit -m "feat: adiciona nova funcionalidade"`
+7. **Push**: `git push origin feature/nova-funcionalidade`
+8. **Abra** um Pull Request e preencha o checklist
 
 ## 🔧 Comandos Úteis
 

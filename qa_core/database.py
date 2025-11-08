@@ -19,6 +19,7 @@
 # ==========================================================
 import datetime
 import sqlite3
+from contextlib import closing
 
 # Adaptador: Python datetime -> str
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat())
@@ -53,7 +54,7 @@ def init_db():
     Cria a tabela de histórico de análises se não existir.
     """
     try:
-        with get_db_connection() as conn:
+        with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -87,7 +88,7 @@ def save_analysis_to_history(
             or "⚠️ Plano de Testes não disponível ou não pôde ser gerado."
         )
 
-        with get_db_connection() as conn:
+        with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
             timestamp = datetime.datetime.now()  # TIMESTAMP real, não string
             cursor.execute(
@@ -108,7 +109,7 @@ def get_all_analysis_history():
     Retorna todas as análises do histórico, ordenadas por data de criação.
     """
     try:
-        with get_db_connection() as conn:
+        with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT id, created_at, user_story FROM analysis_history ORDER BY created_at DESC;"
@@ -124,7 +125,7 @@ def get_analysis_by_id(analysis_id: int):
     Busca uma análise específica pelo ID.
     """
     try:
-        with get_db_connection() as conn:
+        with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
             # 🔧 converte para inteiro de forma segura
             cursor.execute(
@@ -149,7 +150,7 @@ def delete_analysis_by_id(entry_id: int) -> bool:
     Retorna True se algo foi deletado, False caso contrário.
     """
     try:
-        with get_db_connection() as conn:
+        with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM analysis_history WHERE id = ?", (entry_id,))
             conn.commit()
@@ -165,7 +166,7 @@ def clear_history() -> int:
     Retorna o número de registros apagados.
     """
     try:
-        with get_db_connection() as conn:
+        with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM analysis_history")
             conn.commit()

@@ -8,6 +8,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.39+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-green.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#-testes)
+[![Cobertura](https://img.shields.io/badge/Cobertura-90%25%2B-brightgreen.svg)](#-testes)
 
 *Transforme User Stories em planos de teste estruturados com o poder da IA*
 
@@ -131,7 +132,8 @@ make help
 | **PDF** | `.pdf` | ✅ |
 | **Azure DevOps** | `.csv` | ✅ |
 | **Jira Zephyr** | `.xlsx` | ✅ |
-| **Xray Test Management** | `.csv` | 🆕 |
+| **Xray Test Management** | `.csv` | ✅ |
+| **TestRail** | `.csv` | 🆕 |
 
 ### 📖 Histórico e Gestão
 - **Salve análises** para referência futura
@@ -141,7 +143,18 @@ make help
 
 ---
 
-## 🆕 Destaque: Exportação Xray
+## 🆕 Destaque: Exportação TestRail
+
+Exporte seus cenários em formato compatível com o **TestRail**:
+
+### ✨ Recursos
+- ✅ CSV com colunas: Title, Section, Template, Type, Priority, References, Steps, Expected Result
+- ✅ Passos e resultados esperados preservados em múltiplas linhas
+- ✅ Configurações simples na UI (Section, Priority, References)
+
+---
+
+## Destaque: Exportação Xray
 
 Exporte seus cenários Cucumber diretamente para o **Xray (Jira Test Management)**:
 
@@ -224,7 +237,7 @@ graph TB
 | [**docs/README.md**](docs/README.md) | Documentação técnica completa |
 | [**docs/XRAY_EXPORT_GUIDE.md**](docs/XRAY_EXPORT_GUIDE.md) | Guia de exportação Xray |
 | [**docs/CHANGELOG.md**](docs/CHANGELOG.md) | Histórico de mudanças |
-| [**docs/acessibilidade.md**](docs/acessibilidade.md) | Guia de acessibilidade |
+| [**docs/ACESSIBILIDADE.md**](docs/ACESSIBILIDADE.md) | Guia de acessibilidade |
 
 ---
 
