@@ -14,6 +14,9 @@ echo "=================================================================="
 
 # 1️ Criação do ambiente virtual
 if [ ! -d ".venv" ]; then
+  if [ -d "venv" ]; then
+    echo "⚠️  Ambiente virtual legado detectado em ./venv. Utilize 'make clean-venv' para remover ou migre para .venv."
+  fi
   echo "📦 Criando ambiente virtual (.venv)..."
   python3 -m venv .venv
 else

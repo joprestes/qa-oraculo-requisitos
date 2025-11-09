@@ -26,6 +26,8 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ### Changed
 
+- Padronização do ambiente virtual para `.venv/`, com avisos automáticos em `Makefile`, `quick-setup.(sh|bat)` e scripts de setup sobre ambientes legados `venv/`.
+- `requirements.txt`, `requirements-dev.txt` e `setup.py` agora compartilham as mesmas versões mínimas de `google-generativeai` e `langgraph`, garantindo alinhamento entre runtime e desenvolvimento.
 - Confirmação de exclusão de cenários reposicionada para dentro do expander do respectivo caso de teste, melhorando contexto e acessibilidade.
 - Tela de histórico passa a exibir resumo, tabela e cenários Gherkin completos reutilizando os dados persistidos (`test_plan_summary`, `test_plan_df_json`).
 - Workflow CI (`.github/workflows/ci.yml`) reescrito para o monorepo, com execução na pasta `qa-oraculo-requisitos` e upload de cobertura alinhado ao novo caminho.
@@ -59,7 +61,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
   - Corrigido teste `test_render_main_analysis_page_exportadores` para verificar chamada da função correta
 
 - **Correção de inconsistência de caminhos do ambiente virtual:**
-  - Padronizado uso de `venv/` (sem ponto) em todos os scripts e configurações
+  - *(Substituído: ver seção Unreleased para o padrão atual)* Padronizado uso de `venv/` (sem ponto) em todos os scripts e configurações
   - Corrigidos scripts `quick-setup.sh` e `quick-setup.bat` para criar `venv/` em vez de `.venv/`
   - Atualizado `.gitignore` para remover referências duplicadas a `.venv/`
   - Garantida compatibilidade entre Makefile, VS Code e scripts de setup

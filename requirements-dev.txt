@@ -2,6 +2,9 @@
 # QA Oráculo - Dependências de Desenvolvimento
 # =======================================================
 
+# --- Base de runtime ---
+-r requirements.txt
+
 # --- Formatação e Qualidade ---
 black
 ruff
@@ -11,20 +14,7 @@ pytest
 pytest-cov
 pytest-mock
 
-# --- IA e Grafos ---
-google-generativeai>=0.7
-langgraph>=0.2
-
-# --- WebApp / UI ---
-streamlit>=1.33
-
-
-# --- Dados e Exportações ---
-pandas>=2.2
-openpyxl>=3.1
-
 # --- PDF ---
-fpdf2>=2.7
 reportlab>=3.6
 
 # --- Outros utilitários ---

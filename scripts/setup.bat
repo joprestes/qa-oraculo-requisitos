@@ -12,6 +12,9 @@ ECHO ================================================================
 
 :: 1️Criação do ambiente virtual
 IF NOT EXIST .venv (
+    IF EXIST venv (
+        ECHO ⚠️  Ambiente virtual legado detectado em venv\. Remova com "make clean-venv" ou padronize para .venv.
+    )
     ECHO 📦 Criando ambiente virtual (.venv)...
     python -m venv .venv
 ) ELSE (
