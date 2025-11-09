@@ -29,6 +29,7 @@ qa-oraculo-requisitos/
 │   ├── utils.py            # Utilitários + exportações
 │   ├── pdf_generator.py    # Geração de PDFs
 │   ├── a11y.py            # Acessibilidade
+│   ├── observability.py    # Logs estruturados e trace_id de execução
 │   └── ...
 ├── tests/                  # Testes unitários
 ├── docs/                   # Documentação
@@ -125,9 +126,24 @@ sqlite3 qa_oraculo_history.db ".tables"
 
 ### Logs
 ```bash
-# Executar com debug
+# Executar com log detalhado no Streamlit
 streamlit run main.py --logger.level debug
+
+# Ou rodar via Python puro (útil para pipelines)
+python -m qa_core.app
 ```
+
+### Observabilidade LangGraph
+- Cada execução gera um `trace_id` (UUID) disponível no dicionário de estado.
+- O helper `qa_core.observability.log_graph_event` emite logs JSON com:
+  - `event`: ex. `node.start`, `model.call.success`.
+  - `trace_id` e `node` para correlação.
+  - `data`: métricas como duração em ms, retries, erros e tamanho do contexto.
+- Os logs aparecem no console padrão; redirecione para arquivo se preferir:
+  ```bash
+  streamlit run main.py 2>&1 | tee observability.log
+  ```
+- Integrações com Loki, Datadog, ELK ou OpenTelemetry podem consumir esses mesmos logs estruturados.
 
 ### Problemas Comuns
 1. **Import errors**: Ative o ambiente virtual

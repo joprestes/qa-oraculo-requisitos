@@ -45,6 +45,7 @@ from .database import (
 
 # Grafos de IA (LangGraph) — invocados nas funções cacheadas
 from .graph import grafo_analise, grafo_plano_testes
+from .observability import generate_trace_id
 
 # Gerador de PDF — consolida análise e plano de testes em um relatório
 from .pdf_generator import generate_pdf_report
@@ -238,7 +239,11 @@ def run_analysis_graph(user_story: str):
       - 'analise_da_us': blocos estruturados (avaliacao/pontos/riscos/criterios/perguntas)
       - 'relatorio_analise_inicial': texto consolidado em Markdown
     """
-    return grafo_analise.invoke({"user_story": user_story})
+    estado_inicial = {
+        "user_story": user_story,
+        "trace_id": generate_trace_id(),
+    }
+    return grafo_analise.invoke(estado_inicial)
 
 
 @st.cache_data(show_spinner=False)
@@ -250,7 +255,9 @@ def run_test_plan_graph(analysis_state: dict):
       - 'plano_e_casos_de_teste' com 'casos_de_teste_gherkin' (lista de cenários)
       - 'relatorio_plano_de_testes' (Markdown)
     """
-    return grafo_plano_testes.invoke(analysis_state)
+    estado_inicial = {**analysis_state}
+    estado_inicial.setdefault("trace_id", generate_trace_id())
+    return grafo_plano_testes.invoke(estado_inicial)
 
 
 # ==========================================================
