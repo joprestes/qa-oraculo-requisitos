@@ -1,18 +1,15 @@
-<div align="center">
-
 # 🔮 QA Oráculo
+<!-- markdownlint-disable MD022 MD031 MD032 MD036 MD041 MD051 -->
 
-**Ferramenta de análise inteligente de User Stories com geração automática de planos de teste e cenários Gherkin**
+Ferramenta de análise inteligente de User Stories com geração automática de planos de teste e cenários Gherkin.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.39+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-green.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
-[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#-testes)
-[![Cobertura](https://img.shields.io/badge/Cobertura-90%25%2B-brightgreen.svg)](#-testes)
+[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#-testes-e-qualidade)
+[![Cobertura](https://img.shields.io/badge/Cobertura-90%25%2B-brightgreen.svg)](#-testes-e-qualidade)
 
-*Transforme User Stories em planos de teste estruturados com o poder da IA*
-
-</div>
+> Transforme User Stories em planos de teste estruturados com o poder da IA.
 
 ---
 
@@ -92,15 +89,11 @@ make help
 
 ## 🎬 Demonstração
 
-<div align="center">
+### Como funciona em 3 passos
 
-### Como funciona em 3 passos:
-
-**1️⃣ Cole sua User Story**  
-**2️⃣ Revise a análise da IA**  
-**3️⃣ Exporte para suas ferramentas**
-
-</div>
+1. Cole sua User Story.
+2. Revise a análise da IA.
+3. Exporte para suas ferramentas.
 
 ---
 
@@ -209,8 +202,6 @@ black --check .
 
 ## 🏗️ Arquitetura
 
-<div align="center">
-
 ```mermaid
 graph TB
     A[User Story] --> B[IA Analysis]
@@ -223,8 +214,6 @@ graph TB
     E --> I[PDF Report]
     E --> J[Markdown]
 ```
-
-</div>
 
 ### 🧩 Componentes Principais
 - **`qa_core/app.py`** - Interface Streamlit
@@ -280,10 +269,8 @@ Este projeto está licenciado sob a [**CC BY-NC 4.0**](https://creativecommons.o
 
 ---
 
-<div align="center">
-
 ### 🚀 Pronto para revolucionar sua análise de User Stories?
 
 **[Comece agora →](docs/SETUP_GUIDE.md)**
 
-</div>
+<!-- markdownlint-enable MD022 MD031 MD032 MD036 MD041 MD051 -->

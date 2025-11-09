@@ -20,7 +20,7 @@ streamlit run main.py
 
 ## 🏗️ Estrutura do Projeto
 
-```
+```text
 qa-oraculo-requisitos/
 ├── qa_core/                 # Código principal
 │   ├── app.py              # Interface Streamlit
@@ -53,6 +53,7 @@ Use o template de PR para confirmar cada item e peça revisão quando algo não 
 ## 🧪 Desenvolvimento
 
 ### Ambiente de Desenvolvimento
+
 ```bash
 # Ativar ambiente
 source .venv/bin/activate  # Linux/Mac
@@ -70,6 +71,7 @@ black --check .
 ```
 
 ### Fluxo de Desenvolvimento
+
 1. **Fork** o repositório
 2. **Clone** seu fork
 3. **Crie** uma branch: `git checkout -b feature/nova-funcionalidade`
@@ -82,11 +84,13 @@ black --check .
 ## 🔧 Comandos Úteis
 
 ### Executar Aplicação
+
 ```bash
 streamlit run main.py
 ```
 
 ### Executar Testes
+
 ```bash
 # Todos os testes
 pytest
@@ -102,6 +106,7 @@ pytest -v
 ```
 
 ### Qualidade de Código
+
 ```bash
 # Lint
 ruff check .
@@ -114,6 +119,7 @@ black --check .
 ```
 
 ### Banco de Dados
+
 ```bash
 # Reset do banco (desenvolvimento)
 rm qa_oraculo_history.db
@@ -125,6 +131,7 @@ sqlite3 qa_oraculo_history.db ".tables"
 ## 🐛 Debug
 
 ### Logs
+
 ```bash
 # Executar com log detalhado no Streamlit
 streamlit run main.py --logger.level debug
@@ -134,23 +141,28 @@ python -m qa_core.app
 ```
 
 ### Observabilidade LangGraph
+
 - Cada execução gera um `trace_id` (UUID) disponível no dicionário de estado.
 - O helper `qa_core.observability.log_graph_event` emite logs JSON com:
   - `event`: ex. `node.start`, `model.call.success`.
   - `trace_id` e `node` para correlação.
   - `data`: métricas como duração em ms, retries, erros e tamanho do contexto.
 - Os logs aparecem no console padrão; redirecione para arquivo se preferir:
+
   ```bash
   streamlit run main.py 2>&1 | tee observability.log
   ```
+
 - Integrações com Loki, Datadog, ELK ou OpenTelemetry podem consumir esses mesmos logs estruturados.
 
 ### Problemas Comuns
+
 1. **Import errors**: Ative o ambiente virtual
 2. **API Key**: Verifique o arquivo `.env`
 3. **Porta ocupada**: Use `--server.port 8502`
 
 ### Estrutura de Testes
+
 ```bash
 # Executar testes específicos
 pytest tests/test_xray_export.py
@@ -168,12 +180,14 @@ pytest tests/test_utils.py
 ## 🎯 Contribuindo
 
 ### Antes de Contribuir
+
 1. Leia o [CHANGELOG.md](docs/CHANGELOG.md)
 2. Execute todos os testes: `pytest`
 3. Verifique a qualidade: `ruff check . && black --check .`
 4. Teste a aplicação: `streamlit run main.py`
 
 ### Padrões de Código
+
 - **Python**: PEP 8 + Black
 - **Lint**: Ruff
 - **Testes**: Pytest
@@ -181,7 +195,8 @@ pytest tests/test_utils.py
 - **Commits**: Conventional Commits
 
 ### Estrutura de Commits
-```
+
+```text
 feat: adiciona nova funcionalidade
 fix: corrige bug na exportação
 docs: atualiza documentação
@@ -192,11 +207,13 @@ refactor: reorganiza módulo utils
 ## 🚀 Deploy
 
 ### Local
+
 ```bash
 streamlit run main.py
 ```
 
 ### Produção
+
 ```bash
 # Instalar dependências
 pip install -r requirements.txt
@@ -211,8 +228,8 @@ streamlit run main.py --server.port 8501 --server.address 0.0.0.0
 ## 📞 Suporte
 
 - **Issues**: [GitHub Issues](https://github.com/seu-usuario/qa-oraculo/issues)
-- **Documentação**: [docs/](docs/)
-- **Email**: seu-email@exemplo.com
+- **Documentação**: [docs/](./docs/README.md)
+- **Email**: [joprestes@hotmail.com](mailto:joprestes@hotmail.com)
 
 ---
 
