@@ -211,6 +211,7 @@ def test_a11y_main_block_imprime_comandos(capsys):
 def test_apply_accessible_styles_injeta_css():
     """Valida que apply_accessible_styles injeta CSS no Streamlit."""
     with patch("qa_core.a11y.st") as mock_st:
+        a11y._STYLES_APPLIED = False
         a11y.apply_accessible_styles()
 
         # Deve chamar st.markdown com CSS
@@ -231,6 +232,7 @@ def test_apply_accessible_styles_injeta_css():
 def test_apply_accessible_styles_contem_seletores_importantes():
     """Valida que o CSS contém seletores essenciais."""
     with patch("qa_core.a11y.st") as mock_st:
+        a11y._STYLES_APPLIED = False
         a11y.apply_accessible_styles()
 
         css = mock_st.markdown.call_args[0][0]
@@ -292,20 +294,45 @@ def test_render_accessibility_info():
 
 
 def test_check_accessibility_preferences_injeta_script_e_retorna_padrao():
-    """Garante que o script de detecção é injetado e retorna valores padrão."""
-    with patch("qa_core.a11y.st") as mock_st:
-        resultado = a11y.check_accessibility_preferences()
+    """Garante que o componente é renderizado e retorna valores padrão."""
+    a11y._A11Y_PREFS_CACHE = None
+    with patch("qa_core.a11y.components_html") as mock_component, patch(
+        "qa_core.a11y.st"
+    ):
+        mock_component.return_value = None
+        resultado = a11y.check_accessibility_preferences(force_refresh=True)
 
-        # Script deve ser injetado com unsafe_allow_html=True
-        mock_st.markdown.assert_called_once()
-        args, kwargs = mock_st.markdown.call_args
-        assert "<script>" in args[0]
-        assert "prefers-reduced-motion" in args[0]
-        assert kwargs["unsafe_allow_html"] is True
+        mock_component.assert_called_once()
+        script_arg = (
+            mock_component.call_args.kwargs.get("body")
+            or mock_component.call_args.args[0]
+        )
+        assert "<script>" in script_arg
+        assert "prefers-reduced-motion" in script_arg
 
-        # Resultado padrão documentado
+        # Sem valores detectados retorna fallback
         assert resultado == {
             "reduced_motion": False,
             "high_contrast": False,
-            "dark_mode": True,
+            "dark_mode": False,
         }
+
+
+def test_check_accessibility_preferences_retornado_detectado():
+    """Quando o front-end devolve valores, eles são normalizados e cacheados."""
+    a11y._A11Y_PREFS_CACHE = None
+    payload = {"reducedMotion": True, "highContrast": True, "darkMode": False}
+
+    with patch(
+        "qa_core.a11y.components_html", return_value=payload
+    ) as mock_component, patch("qa_core.a11y.st") as mock_st:
+        mock_st.session_state = {}
+        resultado = a11y.check_accessibility_preferences(force_refresh=True)
+
+    mock_component.assert_called_once()
+    assert resultado == {
+        "reduced_motion": True,
+        "high_contrast": True,
+        "dark_mode": False,
+    }
+    assert a11y._A11Y_PREFS_CACHE == resultado
