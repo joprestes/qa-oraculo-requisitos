@@ -1,12 +1,13 @@
 # 🔮 QA Oráculo
+<!-- markdownlint-disable MD022 MD031 MD032 MD036 MD041 MD051 -->
 
 Ferramenta de análise inteligente de User Stories com geração automática de planos de teste e cenários Gherkin.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.39+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-green.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
-[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#-testes)
-[![Cobertura](https://img.shields.io/badge/Cobertura-90%25%2B-brightgreen.svg)](#-testes)
+[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#-testes-e-qualidade)
+[![Cobertura](https://img.shields.io/badge/Cobertura-90%25%2B-brightgreen.svg)](#-testes-e-qualidade)
 
 > Transforme User Stories em planos de teste estruturados com o poder da IA.
 
@@ -268,10 +269,8 @@ Este projeto está licenciado sob a [**CC BY-NC 4.0**](https://creativecommons.o
 
 ---
 
-<div align="center">
-
 ### 🚀 Pronto para revolucionar sua análise de User Stories?
 
 **[Comece agora →](docs/SETUP_GUIDE.md)**
 
-</div>
+<!-- markdownlint-enable MD022 MD031 MD032 MD036 MD041 MD051 -->

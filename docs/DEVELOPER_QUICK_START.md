@@ -229,7 +229,7 @@ streamlit run main.py --server.port 8501 --server.address 0.0.0.0
 
 - **Issues**: [GitHub Issues](https://github.com/seu-usuario/qa-oraculo/issues)
 - **Documentação**: [docs/](./docs/README.md)
-- **Email**: seu-email@exemplo.com
+- **Email**: [joprestes@hotmail.com](mailto:joprestes@hotmail.com)
 
 ---
 
