@@ -1,11 +1,8 @@
-# ==========================================================
-# test_constants.py — Constantes para Testes
-# ==========================================================
-# 📘 Constantes e dados de teste reutilizáveis para evitar
-# valores hardcoded nos testes e melhorar manutenibilidade.
-# ==========================================================
+from __future__ import annotations
 
-# === Dados de Teste ===
+import copy
+from typing import Any, Dict, List
+
 TEST_USER_STORY = "Como usuário, quero fazer login no sistema"
 TEST_ANALYSIS_REPORT = "Relatório de análise de teste"
 TEST_PLAN_REPORT = "Plano de testes gerado"
@@ -13,7 +10,6 @@ TEST_PDF_BYTES = b"fake_pdf_content"
 TEST_EXCEL_BYTES = b"fake_excel_content"
 TEST_FILENAME = "fake.xlsx"
 
-# === Dados de Sessão ===
 TEST_ANALYSIS_STATE = {
     "user_story": TEST_USER_STORY,
     "analise_da_us": {
@@ -44,7 +40,6 @@ TEST_SESSION_STATE_FINISHED = {
     "assigned_to_input": "Joelma",
 }
 
-# === DataFrames de Teste ===
 TEST_DF_BASIC = [
     {
         "titulo": "CT 1",
@@ -56,28 +51,24 @@ TEST_DF_BASIC = [
     },
 ]
 
-# === Configurações de Mock ===
 MOCK_COLUMNS_COUNT = {
     "DOWNLOADS": 5,
     "AZURE": 2,
     "FALLBACK": 3,
 }
 
-# === Mensagens de Teste ===
 TEST_MESSAGES = {
     "WARNING": "Atenção: User story não fornecida",
     "SUCCESS": "Análise concluída com sucesso",
     "ERROR": "Erro ao processar análise",
 }
 
-# === Configurações de Exportação ===
 TEST_EXPORT_CONFIG = {
     "filename": TEST_FILENAME,
     "excel_content": TEST_EXCEL_BYTES,
     "pdf_content": TEST_PDF_BYTES,
 }
 
-# === Estados de Edição ===
 TEST_EDIT_STATE = {
     "edit_avaliacao": "Nova avaliação editada",
     "edit_pontos": "Novos pontos editados",
@@ -86,9 +77,33 @@ TEST_EDIT_STATE = {
     "edit_riscos": "Novos riscos editados",
 }
 
-# === Configurações de Teste ===
 TEST_CONFIG = {
     "TIMEOUT": 30,
     "RETRY_COUNT": 3,
     "MOCK_RETURN_VALUE": True,
 }
+
+
+def clone(data: Any) -> Any:
+    """Retorna uma cópia profunda do objeto informado."""
+    return copy.deepcopy(data)
+
+
+def make_analysis_state() -> Dict[str, Any]:
+    """Retorna um estado de análise independente para uso no teste."""
+    return clone(TEST_ANALYSIS_STATE)
+
+
+def make_session_state_basic() -> Dict[str, Any]:
+    """Retorna uma cópia do estado de sessão básico."""
+    return clone(TEST_SESSION_STATE_BASIC)
+
+
+def make_session_state_finished() -> Dict[str, Any]:
+    """Retorna uma cópia do estado de sessão finalizado."""
+    return clone(TEST_SESSION_STATE_FINISHED)
+
+
+def make_test_plan_records() -> List[Dict[str, Any]]:
+    """Retorna registros básicos de plano de teste."""
+    return clone(TEST_DF_BASIC)

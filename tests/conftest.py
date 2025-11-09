@@ -8,6 +8,8 @@ import streamlit as st
 
 from qa_core.database import DB_NAME, clear_history
 
+pytest_plugins = ["tests.fixtures.streamlit"]
+
 
 # --------------------------
 # FIXTURE GLOBAL DE LIMPEZA
