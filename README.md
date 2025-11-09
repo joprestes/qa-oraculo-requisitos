@@ -1,8 +1,6 @@
-<div align="center">
-
 # 🔮 QA Oráculo
 
-**Ferramenta de análise inteligente de User Stories com geração automática de planos de teste e cenários Gherkin**
+Ferramenta de análise inteligente de User Stories com geração automática de planos de teste e cenários Gherkin.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.39+-red.svg)](https://streamlit.io)
@@ -10,9 +8,7 @@
 [![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#-testes)
 [![Cobertura](https://img.shields.io/badge/Cobertura-90%25%2B-brightgreen.svg)](#-testes)
 
-*Transforme User Stories em planos de teste estruturados com o poder da IA*
-
-</div>
+> Transforme User Stories em planos de teste estruturados com o poder da IA.
 
 ---
 
@@ -92,15 +88,11 @@ make help
 
 ## 🎬 Demonstração
 
-<div align="center">
+### Como funciona em 3 passos
 
-### Como funciona em 3 passos:
-
-**1️⃣ Cole sua User Story**  
-**2️⃣ Revise a análise da IA**  
-**3️⃣ Exporte para suas ferramentas**
-
-</div>
+1. Cole sua User Story.
+2. Revise a análise da IA.
+3. Exporte para suas ferramentas.
 
 ---
 
@@ -209,8 +201,6 @@ black --check .
 
 ## 🏗️ Arquitetura
 
-<div align="center">
-
 ```mermaid
 graph TB
     A[User Story] --> B[IA Analysis]
@@ -223,8 +213,6 @@ graph TB
     E --> I[PDF Report]
     E --> J[Markdown]
 ```
-
-</div>
 
 ### 🧩 Componentes Principais
 - **`qa_core/app.py`** - Interface Streamlit
