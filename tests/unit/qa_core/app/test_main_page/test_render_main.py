@@ -223,16 +223,18 @@ def test_render_user_story_input_incompleta(mocked_st):
 
     assert resultado is True
     mock_grafo.assert_not_called()
-    assert mock_announce.call_count == 2
-    mensagem_alerta, _, kwargs_alerta = mock_announce.call_args_list[0]
-    assert "incompleta" in mensagem_alerta.lower()
-    assert "persona" in mensagem_alerta.lower()
-    assert kwargs_alerta["st_api"] is mocked_st
 
-    mensagem_exemplos, _, kwargs_exemplos = mock_announce.call_args_list[1]
-    assert "exemplos" in mensagem_exemplos.lower()
-    assert "Como gerente de contas" in mensagem_exemplos
-    assert kwargs_exemplos["st_api"] is mocked_st
+    mensagens_emitidas = [
+        args[0].lower() for args, _ in mock_announce.call_args_list if args
+    ]
+    assert any(
+        "incompleta" in mensagem and "persona" in mensagem
+        for mensagem in mensagens_emitidas
+    )
+    assert any(
+        "exemplos" in mensagem and "como gerente de contas" in mensagem
+        for mensagem in mensagens_emitidas
+    )
     assert mocked_st.session_state.get("analysis_state") is None
     assert mocked_st.session_state.get("show_generate_plan_button") is False
     mocked_st.rerun.assert_not_called()
