@@ -38,6 +38,28 @@ class LLMSettings:
             if google_api_key:
                 extra["google_api_key"] = google_api_key
 
+        elif provider in {"openai", "gpt"}:
+            api_key = api_key or os.getenv("OPENAI_API_KEY")
+            base_url = os.getenv("OPENAI_BASE_URL")
+            organization = os.getenv("OPENAI_ORGANIZATION")
+            extra.update(
+                {
+                    "base_url": base_url,
+                    "organization": organization,
+                }
+            )
+
+        elif provider == "llama":
+            api_key = api_key or os.getenv("LLAMA_API_KEY")
+            endpoint = os.getenv("LLAMA_ENDPOINT")
+            project_id = os.getenv("LLAMA_PROJECT_ID")
+            extra.update(
+                {
+                    "endpoint": endpoint,
+                    "project_id": project_id,
+                }
+            )
+
         # Garante que não devolvemos strings vazias
         api_key = api_key or None
 

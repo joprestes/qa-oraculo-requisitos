@@ -41,3 +41,17 @@ def test_google_client_requires_api_key():
     settings = LLMSettings(provider="google", model="m", api_key=None, extra={})
     with pytest.raises(LLMError):
         get_llm_client(settings)
+
+
+def test_openai_client_requires_api_key():
+    settings = LLMSettings(provider="openai", model="m", api_key=None, extra={})
+    with pytest.raises(LLMError) as exc:
+        get_llm_client(settings)
+    assert "OpenAI" in str(exc.value)
+
+
+def test_llama_client_requires_api_key():
+    settings = LLMSettings(provider="llama", model="m", api_key=None, extra={})
+    with pytest.raises(LLMError) as exc:
+        get_llm_client(settings)
+    assert "LLaMA" in str(exc.value)

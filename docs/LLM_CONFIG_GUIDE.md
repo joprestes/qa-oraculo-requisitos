@@ -65,9 +65,21 @@ A arquitetura permite escolher o provedor via `LLM_PROVIDER`. A tabela abaixo li
 
 | Provedor (`LLM_PROVIDER`) | Status | Variáveis necessárias | Onde pegar essas informações |
 |---------------------------|--------|------------------------|------------------------------|
-| `google` (padrão) | ✅ Ativo | `GOOGLE_API_KEY` <br> `LLM_MODEL` (opcional, default Gemini) | **Google AI Studio** (Dashboard → API Keys) |
-| `azure` / `azure_openai` | ⚠️ Em preparação | `AZURE_OPENAI_API_KEY` <br> `AZURE_OPENAI_ENDPOINT` <br> `AZURE_OPENAI_DEPLOYMENT` <br> `AZURE_OPENAI_API_VERSION` | **Portal Azure** → Azure OpenAI → `Keys & Endpoint` / `Deployments` |
-| `openai` / `gpt` | ⚠️ Em preparação | `OPENAI_API_KEY` <br> `OPENAI_BASE_URL` (opcional) <br> `OPENAI_ORGANIZATION` (opcional) | **OpenAI Platform** → User menu → `View API keys` / Organization settings |
+| `google` (padrão) | ✅ Ativo | `GOOGLE_API_KEY` <br> `LLM_MODEL` (opcional) | **Google AI Studio** → [Documentação](https://ai.google.dev/gemini-api/docs) |
+| `azure` / `azure_openai` | ⚠️ Em preparação | `AZURE_OPENAI_API_KEY` <br> `AZURE_OPENAI_ENDPOINT` <br> `AZURE_OPENAI_DEPLOYMENT` <br> `AZURE_OPENAI_API_VERSION` | **Portal Azure** → [Documentação oficial](https://learn.microsoft.com/azure/ai-services/openai/) |
+| `openai` / `gpt` | ⚠️ Em preparação | `OPENAI_API_KEY` <br> `OPENAI_BASE_URL` (opcional) <br> `OPENAI_ORGANIZATION` (opcional) | **OpenAI Platform** → [Documentação oficial](https://platform.openai.com/docs) |
+| `llama` | ⚠️ Em preparação | `LLAMA_API_KEY` <br> `LLAMA_ENDPOINT` (opcional) <br> `LLAMA_PROJECT_ID` (opcional) | **Meta AI** → [Documentação do LLaMA](https://ai.meta.com/llama/) |
+
+### LLaMA (Meta) – estrutura pronta, integração em desenvolvimento
+```bash
+LLM_PROVIDER="llama"
+LLM_MODEL="llama-3.1-405b"
+LLAMA_API_KEY="chave_da_meta"
+# LLAMA_ENDPOINT="https://api.meta.ai/v1"     # opcional, conforme fornecedor
+# LLAMA_PROJECT_ID="seu_projeto_meta"         # opcional
+```
+- **Onde obter:** Portal ou parceiro oficial do programa LLaMA → [https://ai.meta.com/llama/](https://ai.meta.com/llama/).
+- **Status atual:** O QA Oráculo valida se `LLAMA_API_KEY` e demais variáveis foram preenchidas e informa o roadmap caso o driver ainda não esteja liberado.
 
 > Mesmo para provedores ainda não suportados, configurar o `.env` com antecedência ajuda a identificar o que falta quando o suporte for liberado.
 
