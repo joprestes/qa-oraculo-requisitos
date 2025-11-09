@@ -9,6 +9,11 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ### Added
 
+- **Gestão avançada do plano de testes**:
+  - Exclusão individual de cenários diretamente na interface principal, com confirmação contextual dentro do expander correspondente.
+  - Recalculo automático do relatório Markdown, do PDF e do histórico após edições/exclusões.
+  - Persistência do sumário (`test_plan_summary`) e da representação tabular (`test_plan_df_json`) dos cenários para reconstrução futura.
+
 - **Observabilidade dos grafos LangGraph**:
   - Novo módulo `qa_core/observability.py` com `log_graph_event` e `generate_trace_id`.
   - Logs estruturados (JSON) para cada nó do LangGraph, incluindo métricas de duração, retries e erros.
@@ -16,11 +21,13 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
   - Testes automatizados garantindo que os eventos sejam disparados (`tests/test_graph.py`, `tests/test_app.py`).
 
 - **Documentação atualizada**:
-  - `README.md` com seção “Observabilidade Inteligente”.
+  - `README.md` com seção “Observabilidade Inteligente” e descrição das novas ações de exclusão de cenários.
   - `docs/DEVELOPER_QUICK_START.md` detalhando como consumir os logs estruturados.
 
 ### Changed
 
+- Confirmação de exclusão de cenários reposicionada para dentro do expander do respectivo caso de teste, melhorando contexto e acessibilidade.
+- Tela de histórico passa a exibir resumo, tabela e cenários Gherkin completos reutilizando os dados persistidos (`test_plan_summary`, `test_plan_df_json`).
 - Workflow CI (`.github/workflows/ci.yml`) reescrito para o monorepo, com execução na pasta `qa-oraculo-requisitos` e upload de cobertura alinhado ao novo caminho.
 
 ## [1.7.0] - 2025-10-30

@@ -110,6 +110,7 @@ make help
 - **Adicione suas próprias observações**
 - **Personalize critérios** de aceite
 - **Ajuste cenários** de teste
+- **Exclua cenários** rapidamente com confirmação contextual
 
 ### 🧪 Geração de Cenários Gherkin
 - **Cenários estruturados** em formato Given-When-Then
@@ -136,9 +137,10 @@ make help
 
 ### 📖 Histórico e Gestão
 - **Salve análises** para referência futura
-- **Visualize histórico** completo
+- **Visualize histórico** completo (sumário + cenários estruturados)
 - **Exclua análises** individuais ou em lote
 - **Busque análises** anteriores
+- **Sincronize alterações**: exclusões/edições refletem automaticamente no histórico
 
 ---
 
