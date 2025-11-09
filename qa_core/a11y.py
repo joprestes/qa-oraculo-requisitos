@@ -14,12 +14,22 @@
 # ==========================================================
 
 
-from typing import Any
+from typing import Any, Mapping
 
 import streamlit as st
+from streamlit.components.v1 import html as components_html
+
+_STYLES_APPLIED = False
+_A11Y_PREFS_CACHE: dict[str, bool] | None = None
+_A11Y_SESSION_KEY = "_qa_oraculo_a11y_prefs"
+_DEFAULT_PREFS = {
+    "reduced_motion": False,
+    "high_contrast": False,
+    "dark_mode": False,
+}
 
 
-def apply_accessible_styles():
+def apply_accessible_styles(force: bool = False):
     """
     Injeta CSS global para melhorar acessibilidade.
 
@@ -36,6 +46,11 @@ def apply_accessible_styles():
     - Safari + VoiceOver (macOS)
     - Firefox + JAWS (Windows)
     """
+    global _STYLES_APPLIED
+
+    if _STYLES_APPLIED and not force:
+        return
+
     st.markdown(
         """
     <style>
@@ -278,6 +293,8 @@ def apply_accessible_styles():
         unsafe_allow_html=True,
     )
 
+    _STYLES_APPLIED = True
+
 
 def accessible_text_area(  # noqa: PLR0913
     label: str | None = None,
@@ -487,7 +504,7 @@ def render_accessibility_info():
         )
 
 
-def check_accessibility_preferences():
+def check_accessibility_preferences(force_refresh: bool = False):
     """
     Detecta preferências de acessibilidade do navegador.
 
@@ -495,6 +512,10 @@ def check_accessibility_preferences():
         - reduced_motion: bool
         - high_contrast: bool
         - dark_mode: bool
+
+    Args:
+        force_refresh: Quando True força uma nova detecção, ignorando valores
+            previamente armazenados em cache.
 
     NOTA: Esta função usa JavaScript via st.components.
     A detecção acontece no lado do cliente.
@@ -505,27 +526,100 @@ def check_accessibility_preferences():
         ...     # Desabilita animações
     """
     # Injeta JavaScript para detectar preferências
+    global _A11Y_PREFS_CACHE
+
+    if force_refresh:
+        _A11Y_PREFS_CACHE = None
+
     detection_script = """
     <script>
-    const prefs = {
-        reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-        highContrast: window.matchMedia('(prefers-contrast: high)').matches,
-        darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches
-    };
-    
-    // Envia para o Streamlit (não funciona diretamente, mas documenta a intenção)
-    console.log('Preferências de acessibilidade:', prefs);
+    (function () {
+        const queries = [
+            window.matchMedia('(prefers-reduced-motion: reduce)'),
+            window.matchMedia('(prefers-contrast: high)'),
+            window.matchMedia('(prefers-color-scheme: dark)')
+        ];
+
+        function snapshot() {
+            return {
+                reduced_motion: queries[0] ? queries[0].matches : false,
+                high_contrast: queries[1] ? queries[1].matches : false,
+                dark_mode: queries[2] ? queries[2].matches : false
+            };
+        }
+
+        function send() {
+            const prefs = snapshot();
+            if (window.Streamlit && window.Streamlit.setComponentValue) {
+                window.Streamlit.setComponentValue(prefs);
+            }
+        }
+
+        send();
+
+        queries.forEach((mq) => {
+            if (!mq) {
+                return;
+            }
+
+            if (typeof mq.addEventListener === "function") {
+                mq.addEventListener("change", send);
+            } else if (typeof mq.addListener === "function") {
+                mq.addListener(send);
+            }
+        });
+
+        window.addEventListener("load", send);
+    }());
     </script>
     """
 
-    st.markdown(detection_script, unsafe_allow_html=True)
+    result = components_html(
+        detection_script,
+        height=0,
+    )
 
-    # Retorna valores padrão (detecção real requer componente customizado)
+    if isinstance(result, Mapping):
+        normalized = _normalize_preferences(result)
+        _A11Y_PREFS_CACHE = normalized
+        _persist_preferences(normalized)
+        return normalized
+
+    if _A11Y_PREFS_CACHE is not None:
+        return _A11Y_PREFS_CACHE
+
+    default_prefs = _DEFAULT_PREFS.copy()
+    _persist_preferences(default_prefs)
+    return default_prefs
+
+
+def _normalize_preferences(raw: Mapping[str, Any]) -> dict[str, bool]:
+    """
+    Normaliza o payload retornado pelo componente JavaScript.
+    """
+
     return {
-        "reduced_motion": False,
-        "high_contrast": False,
-        "dark_mode": True,  # Streamlit usa dark mode por padrão
+        "reduced_motion": bool(
+            raw.get("reduced_motion", raw.get("reducedMotion", False))
+        ),
+        "high_contrast": bool(raw.get("high_contrast", raw.get("highContrast", False))),
+        "dark_mode": bool(raw.get("dark_mode", raw.get("darkMode", False))),
     }
+
+
+def _persist_preferences(preferences: dict[str, bool]) -> None:
+    """
+    Persiste as preferências no session_state (quando disponível) para
+    reutilização em outros módulos do app.
+    """
+
+    try:
+        session_state = getattr(st, "session_state", None)
+        if session_state is not None:
+            session_state[_A11Y_SESSION_KEY] = preferences
+    except Exception:
+        # Evita que qualquer erro de session_state quebre o fluxo
+        pass
 
 
 # ==========================================================
