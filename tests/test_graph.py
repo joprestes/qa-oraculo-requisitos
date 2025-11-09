@@ -85,6 +85,28 @@ class TestHelperFunctions(BaseGraphTestCase):
         self.assertEqual(mock_model_instance.generate_content.call_count, 2)
         mock_sleep.assert_called_once_with(60)
 
+    @patch("qa_core.graph.log_graph_event")
+    @patch("qa_core.graph.time.sleep", return_value=None)
+    def test_chamar_modelo_com_retry_registra_eventos(self, mock_sleep, mock_log_event):
+        mock_model_instance = MagicMock()
+        mock_model_instance.generate_content.return_value = MagicMock(text="OK")
+
+        chamar_modelo_com_retry(
+            mock_model_instance,
+            "prompt",
+            tentativas=1,
+            trace_id="trace-123",
+            node="teste",
+        )
+
+        eventos = [call.args[0] for call in mock_log_event.call_args_list]
+        self.assertIn("model.call.start", eventos)
+        self.assertIn("model.call.success", eventos)
+        self.assertEqual(
+            mock_log_event.call_args_list[0].kwargs["trace_id"], "trace-123"
+        )
+        self.assertEqual(mock_log_event.call_args_list[0].kwargs["node"], "teste")
+
     @patch("qa_core.graph.time.sleep", return_value=None)
     def test_chamar_modelo_com_falha_total_de_cota(self, mock_sleep):
         mock_model_instance = MagicMock()
@@ -131,6 +153,20 @@ class TestGraphNodes(BaseGraphTestCase):
                 resultado = node_analisar_historia(self.estado_inicial_mock)
                 self.assertIn("erro", resultado["analise_da_us"])
                 self.assertIn(msg_erro, resultado["analise_da_us"]["erro"])
+
+    @patch("qa_core.graph.log_graph_event")
+    @patch("qa_core.graph.chamar_modelo_com_retry")
+    def test_node_analisar_historia_dispara_logs(
+        self, mock_chamar_modelo, mock_log_event
+    ):
+        mock_chamar_modelo.return_value = MagicMock(text='{"ok": true}')
+        node_analisar_historia({"user_story": "US", "trace_id": "trace-456"})
+        eventos = [call.args[0] for call in mock_log_event.call_args_list]
+        self.assertIn("node.start", eventos)
+        self.assertIn("node.finish", eventos)
+        self.assertEqual(
+            mock_log_event.call_args_list[0].kwargs["trace_id"], "trace-456"
+        )
 
     @patch("qa_core.graph.chamar_modelo_com_retry")
     def test_node_criar_plano_e_casos_de_teste_resiliencia(self, mock_chamar_modelo):

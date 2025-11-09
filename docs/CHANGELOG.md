@@ -7,6 +7,22 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Observabilidade dos grafos LangGraph**:
+  - Novo módulo `qa_core/observability.py` com `log_graph_event` e `generate_trace_id`.
+  - Logs estruturados (JSON) para cada nó do LangGraph, incluindo métricas de duração, retries e erros.
+  - Traços (`trace_id`) propagados pela aplicação (`app.py`) para correlacionar análise e plano de testes.
+  - Testes automatizados garantindo que os eventos sejam disparados (`tests/test_graph.py`, `tests/test_app.py`).
+
+- **Documentação atualizada**:
+  - `README.md` com seção “Observabilidade Inteligente”.
+  - `docs/DEVELOPER_QUICK_START.md` detalhando como consumir os logs estruturados.
+
+### Changed
+
+- Workflow CI (`.github/workflows/ci.yml`) reescrito para o monorepo, com execução na pasta `qa-oraculo-requisitos` e upload de cobertura alinhado ao novo caminho.
+
 ## [1.7.0] - 2025-10-30
 
 ### Added

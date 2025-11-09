@@ -124,6 +124,12 @@ make help
 - **Priorização automática** de cenários
 - **Justificativas de acessibilidade** incluídas
 
+### 📡 Observabilidade Inteligente (novo)
+- **Trace único por análise**: cada execução ganha um `trace_id` para correlação
+- **Logs estruturados** por nó do LangGraph (tempo, erros, retries)
+- **Monitoramento de limites**: detecção e aviso quando a API entra em throttling
+- **Métricas prontas** para exportar a sistemas como Loki, Datadog ou OpenTelemetry
+
 ### 📥 Exportação Multi-Plataforma
 
 | Ferramenta | Formato | Status |
@@ -197,6 +203,7 @@ black --check .
 - **90%+ de cobertura** garantida
 - **Testes automatizados** em CI/CD
 - **Validação contínua** de qualidade
+- **Logs estruturados** salvos no console com `qa_core/observability.log_graph_event`
 
 ---
 
