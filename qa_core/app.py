@@ -15,6 +15,7 @@
 # ==========================================================
 
 import datetime
+import json
 import sqlite3
 
 import pandas as pd
@@ -60,6 +61,7 @@ from .utils import (
     gerar_csv_xray_from_df,
     gerar_csv_testrail_from_df,
     gerar_nome_arquivo_seguro,
+    gerar_relatorio_md_dos_cenarios,
     get_flexible,
     preparar_df_para_zephyr_xlsx,
     to_excel,
@@ -145,6 +147,18 @@ def _save_current_analysis_to_history(update_existing: bool = False):
 
         test_plan_report = st.session_state.get("test_plan_report")
         test_plan_report_to_save = (test_plan_report or "").strip()
+        test_plan_summary_to_save = _extract_plan_summary(
+            st.session_state.get("test_plan_report_intro", test_plan_report_to_save)
+        )
+
+        test_plan_df_json_to_save = st.session_state.get("test_plan_df_json")
+        if not test_plan_df_json_to_save:
+            records = st.session_state.get("test_plan_df_records")
+            if records:
+                try:
+                    test_plan_df_json_to_save = json.dumps(records, ensure_ascii=False)
+                except (TypeError, ValueError):
+                    test_plan_df_json_to_save = None
 
         # 🔍 Validação mínima
         if not any(
@@ -171,7 +185,7 @@ def _save_current_analysis_to_history(update_existing: bool = False):
                 cursor.execute(
                     """
                     UPDATE analysis_history
-                    SET created_at = ?, user_story = ?, analysis_report = ?, test_plan_report = ?
+                    SET created_at = ?, user_story = ?, analysis_report = ?, test_plan_report = ?, test_plan_summary = ?, test_plan_df_json = ?
                     WHERE id = ?;
                     """,
                     (
@@ -179,6 +193,8 @@ def _save_current_analysis_to_history(update_existing: bool = False):
                         user_story_to_save,
                         analysis_report_to_save,
                         test_plan_report_to_save,
+                        test_plan_summary_to_save,
+                        test_plan_df_json_to_save,
                         st.session_state["last_saved_id"],
                     ),
                 )
@@ -189,14 +205,23 @@ def _save_current_analysis_to_history(update_existing: bool = False):
                 # Caso contrário, cria um novo registro
                 cursor.execute(
                     """
-                    INSERT INTO analysis_history (created_at, user_story, analysis_report, test_plan_report)
-                    VALUES (?, ?, ?, ?);
+                    INSERT INTO analysis_history (
+                        created_at,
+                        user_story,
+                        analysis_report,
+                        test_plan_report,
+                        test_plan_summary,
+                        test_plan_df_json
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?);
                     """,
                     (
                         timestamp,
                         user_story_to_save,
                         analysis_report_to_save,
                         test_plan_report_to_save,
+                        test_plan_summary_to_save,
+                        test_plan_df_json_to_save,
                     ),
                 )
                 st.session_state["last_saved_id"] = cursor.lastrowid
@@ -524,6 +549,18 @@ def _render_test_plan_generation():
                 )
                 df_clean.fillna("", inplace=True)
                 st.session_state["test_plan_df"] = df_clean
+                st.session_state["test_plan_report_intro"] = (
+                    st.session_state.get("test_plan_report") or ""
+                )
+                records = df_clean.to_dict(orient="records")
+                st.session_state["test_plan_df_records"] = records
+                st.session_state["test_plan_df_json"] = (
+                    json.dumps(records, ensure_ascii=False) if records else None
+                )
+                st.session_state["test_plan_report"] = _compose_test_plan_report(
+                    st.session_state.get("test_plan_report_intro", ""),
+                    df_clean,
+                )
 
                 pdf_bytes = generate_pdf_report(
                     st.session_state.get("analysis_state", {}).get(
@@ -552,6 +589,9 @@ def _render_test_plan_generation():
                 # Limpa qualquer resquício de plano de teste para não exibir dados errados
                 st.session_state["test_plan_report"] = ""
                 st.session_state["test_plan_df"] = None
+                st.session_state.pop("test_plan_df_records", None)
+                st.session_state.pop("test_plan_df_json", None)
+                st.session_state.pop("test_plan_report_intro", None)
                 _save_current_analysis_to_history()
                 st.rerun()
 
@@ -564,9 +604,189 @@ def _render_test_plan_generation():
         st.rerun()
 
 
+def _compose_test_plan_report(summary_text: str, df: pd.DataFrame) -> str:
+    """
+    Combina o sumário original do plano de testes com os cenários atuais.
+
+    Motivações:
+    • O sumário inicial é gerado pela IA com objetivo, escopo e estratégia.
+    • Os cenários Gherkin retornam em uma estrutura tabular (DataFrame).
+    • Durante edições/exclusões, precisamos atualizar apenas a seção de cenários
+      sem perder as partes redigidas pela IA.
+    """
+
+    summary = (summary_text or "").strip()
+    scenarios_md = (gerar_relatorio_md_dos_cenarios(df) or "").strip()
+
+    if not summary:
+        return scenarios_md
+    if not scenarios_md:
+        return summary
+
+    marker = "### 🧩"
+    if marker in summary:
+        header = summary.split(marker, 1)[0].rstrip()
+        if header:
+            return f"{header}\n\n{scenarios_md}"
+        return scenarios_md
+
+    return f"{summary}\n\n---\n\n{scenarios_md}"
+
+
+def _extract_plan_summary(report_text: str) -> str:
+    """
+    Extrai apenas o cabeçalho/introdução do plano de testes.
+
+    Motivo:
+    • Evitar que os cenários apareçam duplicados no resumo principal.
+    • Permitir salvar o sumário gerado pela IA separadamente no banco (test_plan_summary).
+    """
+    if not report_text:
+        return ""
+
+    marker = "### 🧩"
+    if marker in report_text:
+        return report_text.split(marker, 1)[0].rstrip()
+    return report_text.strip()
+
+
+def _get_plan_summary_from_state() -> str:
+    """
+    Obtém o sumário do plano armazenado no session_state.
+
+    Estratégia:
+    • Usa `test_plan_report_intro` quando disponível (persistido na geração inicial via IA).
+    • Caso contrário, extrai do `test_plan_report` já existente.
+    • Armazena o resultado para acessos subsequentes (evita retrabalho).
+    """
+    summary = st.session_state.get("test_plan_report_intro")
+    if summary:
+        return summary
+    full_report = st.session_state.get("test_plan_report", "")
+    summary = _extract_plan_summary(full_report)
+    st.session_state["test_plan_report_intro"] = summary
+    return summary
+
+
+def _update_test_plan_outputs(updated_df: pd.DataFrame):
+    """
+    Atualiza DataFrame, relatório Markdown e PDF após modificações nos cenários.
+
+    Responsabilidades principais:
+    • Persistir DataFrame atualizado em memoria/JSON (para histórico/exportações).
+    • Remontar o markdown do plano sem perder o sumário introdutório.
+    • Regenerar o PDF para downloads imediatos.
+    • Deixar `test_plan_df_json` pronto para salvar no histórico.
+    """
+    st.session_state["test_plan_df"] = updated_df
+    records = updated_df.fillna("").to_dict(orient="records")
+    st.session_state["test_plan_df_records"] = records
+    st.session_state["test_plan_df_json"] = (
+        json.dumps(records, ensure_ascii=False) if records else None
+    )
+    intro = _get_plan_summary_from_state()
+    st.session_state["test_plan_report"] = _compose_test_plan_report(intro, updated_df)
+
+    analysis_report = st.session_state.get("analysis_state", {}).get(
+        "relatorio_analise_inicial", ""
+    )
+    try:
+        st.session_state["pdf_report_bytes"] = generate_pdf_report(
+            analysis_report, updated_df
+        )
+    except Exception as pdf_error:
+        print(f"❌ Erro ao regenerar PDF após atualização do plano: {pdf_error}")
+        st.session_state["pdf_report_bytes"] = b""
+
+
+def _delete_test_case(pending_case: dict):
+    """
+    Remove um cenário específico do DataFrame e atualiza derivados.
+
+    Funciona por múltiplas pistas:
+    • Índice da linha (row_index) — mais rápido quando disponível.
+    • ID amigável do caso (ex.: "CT-1") — apoio quando índices mudam.
+    • Título — fallback em situações onde não há ID estável.
+
+    Após a remoção:
+    • Reconstrói DF/Markdown/PDF.
+    • Atualiza o registro no histórico (update_existing=True).
+    • Exibe feedback acessível (announce + toast).
+    """
+    df_original = st.session_state.get("test_plan_df")
+
+    if df_original is None or df_original.empty:
+        announce(
+            "Nenhum cenário disponível para exclusão no momento.",
+            "warning",
+            st_api=st,
+        )
+        st.session_state.pop("pending_case_deletion", None)
+        st.rerun()
+        return
+
+    row_index = pending_case.get("row_index")
+    index_label = None
+
+    if row_index is not None and row_index in df_original.index:
+        index_label = row_index
+    else:
+        # Tenta converter para posição numérica (ex.: strings "0", numpy.int64, etc.)
+        try:
+            row_position = int(row_index)  # type: ignore[arg-type]
+            if 0 <= row_position < len(df_original.index):
+                index_label = df_original.index[row_position]
+        except (TypeError, ValueError):
+            index_label = None
+
+    if index_label is None:
+        test_id = pending_case.get("test_id")
+        if test_id is not None and "id" in df_original.columns:
+            matches = df_original.index[df_original["id"].astype(str) == str(test_id)]
+            if len(matches) == 1:
+                index_label = matches[0]
+
+    if index_label is None:
+        title = pending_case.get("title")
+        if title is not None and "titulo" in df_original.columns:
+            matches = df_original.index[df_original["titulo"] == title]
+            if len(matches) == 1:
+                index_label = matches[0]
+
+    if index_label is None:
+        announce(
+            "Não foi possível localizar o cenário selecionado para exclusão.",
+            "error",
+            st_api=st,
+        )
+        st.session_state.pop("pending_case_deletion", None)
+        st.rerun()
+        return
+
+    updated_df = df_original.drop(index=index_label).reset_index(drop=True)
+
+    _update_test_plan_outputs(updated_df)
+    st.session_state.pop("pending_case_deletion", None)
+
+    _save_current_analysis_to_history(update_existing=True)
+    announce(
+        "Cenário removido do plano de testes e histórico atualizado.",
+        "success",
+        st_api=st,
+    )
+    st.toast("🗑️ Cenário excluído com sucesso.")
+    st.rerun()
+
+
 def _render_test_cases_table():
     """
     Renderiza a tabela de casos de teste com expanderes individuais.
+
+    Destaques da UX:
+    • Resumo tabular para leitura rápida.
+    • Expanders com edição de cenários e botões de excluir.
+    • Quando há exclusão pendente, a confirmação aparece dentro do expander
+      correspondente (contexto visual + acessibilidade).
     """
     if (
         st.session_state.get("test_plan_df") is None
@@ -601,11 +821,13 @@ def _render_test_cases_table():
     )
 
     st.markdown("### 📊 Resumo dos Casos de Teste")
-    st.dataframe(df_resumo, use_container_width=True)
+    st.dataframe(df_resumo, width="stretch")
     st.markdown(
         '<div data-testid="tabela-casos-teste"></div>',
         unsafe_allow_html=True,
     )
+
+    pending_case = st.session_state.get("pending_case_deletion")
 
     #  Dropdowns individuais (detalhes)
     with st.expander("📁 Casos de Teste (Expandir para ver todos)", expanded=False):
@@ -615,6 +837,56 @@ def _render_test_cases_table():
             with st.expander(
                 f"📋 {test_id} — {row.get('titulo', '-')}", expanded=False
             ):
+                is_pending_case = False
+                if pending_case:
+                    is_pending_case = any(
+                        [
+                            pending_case.get("row_index") == row.name,
+                            pending_case.get("test_id")
+                            and str(pending_case["test_id"]) == str(row.get("id")),
+                            pending_case.get("title") == row.get("titulo"),
+                        ]
+                    )
+
+                if is_pending_case:
+                    with st.container(border=True):
+                        announce(
+                            f"Tem certeza que deseja remover o cenário '{pending_case.get('label', '-')}' do plano de testes?",
+                            "warning",
+                            st_api=st,
+                        )
+                        col_confirm, col_cancel = st.columns(2)
+
+                        with col_confirm:
+                            if accessible_button(
+                                label="✅ Sim, remover cenário",
+                                key=f"confirm_delete_case_{row.name}",
+                                context="Confirma a exclusão permanente do cenário selecionado.",
+                                type="primary",
+                                use_container_width=True,
+                                st_api=col_confirm,
+                            ):
+                                _delete_test_case(pending_case)
+                                return
+
+                        with col_cancel:
+                            if accessible_button(
+                                label="❌ Não, manter cenário",
+                                key=f"cancel_delete_case_{row.name}",
+                                context="Cancela a exclusão e mantém o cenário no plano de testes.",
+                                type="secondary",
+                                use_container_width=True,
+                                st_api=col_cancel,
+                            ):
+                                st.session_state.pop("pending_case_deletion", None)
+                                announce(
+                                    "Cenário mantido no plano de testes.",
+                                    "info",
+                                    st_api=st,
+                                )
+                                st.rerun()
+                                return
+
                 st.markdown(f"**Prioridade:** {row.get('prioridade', '-')}")
                 st.markdown(
                     f"**Critério de Aceitação Relacionado:** {row.get('criterio_de_aceitacao_relacionado','-')}"
@@ -646,11 +918,12 @@ def _render_test_cases_table():
                             index, "cenario"
                         ] = cenario_editado
 
-                        #  Regera o relatório de plano de testes (Markdown consolidado)
-                        from .utils import gerar_relatorio_md_dos_cenarios
-
-                        novo_relatorio = gerar_relatorio_md_dos_cenarios(
-                            st.session_state["test_plan_df"]
+                        novo_relatorio = _compose_test_plan_report(
+                            st.session_state.get(
+                                "test_plan_report_intro",
+                                st.session_state.get("test_plan_report", ""),
+                            ),
+                            st.session_state["test_plan_df"],
                         )
                         st.session_state["test_plan_report"] = novo_relatorio
 
@@ -665,6 +938,144 @@ def _render_test_cases_table():
                         "info",
                         st_api=st,
                     )
+
+                if accessible_button(
+                    label="🗑️ Excluir cenário",
+                    key=f"delete_case_{row.name}",
+                    context=(
+                        "Remove o cenário atual do plano de testes e atualiza o histórico automaticamente."
+                    ),
+                    type="secondary",
+                    use_container_width=True,
+                    st_api=st,
+                ):
+                    st.session_state["pending_case_deletion"] = {
+                        "row_index": row.name,
+                        "label": f"{test_id} — {row.get('titulo', '-')}",
+                        "test_id": row.get("id"),
+                        "title": row.get("titulo"),
+                    }
+                    st.rerun()
+                    return
+
+
+def _render_history_test_cases_table(df: pd.DataFrame):
+    """
+    Renderiza os casos de teste em modo somente leitura (histórico).
+
+    Objetivos:
+    • Reaproveitar o mesmo layout principal do fluxo ativo.
+    • Permitir consulta aos cenários (incluindo Gherkin) diretamente no histórico.
+    • Evitar ações editáveis — aqui o usuário apenas visualiza.
+    """
+    if df is None or df.empty:
+        return
+
+    df = df.copy().fillna("")
+    colunas_resumo = [
+        "id",
+        "titulo",
+        "prioridade",
+        "criterio_de_aceitacao_relacionado",
+        "justificativa_acessibilidade",
+    ]
+    df_resumo = (
+        df[[c for c in colunas_resumo if c in df.columns]]
+        .rename(
+            columns={
+                "id": "ID",
+                "titulo": "Título",
+                "prioridade": "Prioridade",
+                "criterio_de_aceitacao_relacionado": "Critério de Aceitação Relacionado",
+                "justificativa_acessibilidade": "Justificativa de Acessibilidade",
+            }
+        )
+        .fillna("")
+    )
+
+    st.markdown("### 📊 Resumo dos Casos de Teste")
+    st.dataframe(df_resumo, width="stretch")
+    st.markdown(
+        '<div data-testid="tabela-casos-teste-historico"></div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("📁 Casos de Teste (Expandir para ver todos)", expanded=False):
+        for index, row in df.iterrows():
+            test_id = row.get("id", f"CT-{index + 1:03d}")
+            titulo = row.get("titulo", "-")
+            with st.expander(f"📋 {test_id} — {titulo}", expanded=False):
+                st.markdown(f"**Prioridade:** {row.get('prioridade', '-')}")
+                st.markdown(
+                    f"**Critério de Aceitação Relacionado:** {row.get('criterio_de_aceitacao_relacionado','-')}"
+                )
+                st.markdown(
+                    f"**Justificativa de Acessibilidade:** {row.get('justificativa_acessibilidade','-')}"
+                )
+                cenario = row.get("cenario", "")
+                if isinstance(cenario, list):
+                    cenario = "\n".join(str(item) for item in cenario)
+                cenario = str(cenario).strip()
+                if cenario:
+                    st.markdown("**Cenário Gherkin:**")
+                    st.code(cenario, language="gherkin")
+                else:
+                    announce(
+                        "Este caso de teste não possui cenário Gherkin salvo.",
+                        "info",
+                        st_api=st,
+                    )
+
+
+def _render_history_test_plan(analysis_entry: dict):
+    """
+    Exibe o plano de testes armazenado no histórico com resumo e cenários.
+
+    Contém:
+    • Sumário em Markdown (introdução do plano).
+    • Tabela + expanders somente leitura, quando dispomos dos dados em JSON.
+    • Como fallback, mostra o markdown completo salvo, garantindo compatibilidade
+      com registros antigos (anteriores à migração).
+    """
+    summary_text = analysis_entry.get("test_plan_summary") or _extract_plan_summary(
+        analysis_entry.get("test_plan_report", "")
+    )
+
+    if summary_text:
+        with st.expander(
+            "🧪 Plano de Testes Gerado (Resumo em Markdown)", expanded=False
+        ):
+            st.markdown(
+                clean_markdown_report(summary_text),
+                unsafe_allow_html=True,
+            )
+
+    df_json = analysis_entry.get("test_plan_df_json")
+    records: list[dict] = []
+    if df_json:
+        try:
+            records = json.loads(df_json)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            records = []
+
+    if records:
+        df = pd.DataFrame(records)
+        _render_history_test_cases_table(df)
+        return
+
+    plano_report = analysis_entry.get("test_plan_report", "")
+    if plano_report:
+        with st.expander("🧪 Plano de Testes (Markdown Completo)", expanded=False):
+            st.markdown(
+                clean_markdown_report(plano_report),
+                unsafe_allow_html=True,
+            )
+    else:
+        announce(
+            "Nenhum plano de testes foi gerado para esta análise.",
+            "info",
+            st_api=st,
+        )
 
 
 def _render_results_section():
@@ -692,10 +1103,17 @@ def _render_results_section():
             with st.expander(
                 "🧪 Plano de Testes Gerado (Resumo em Markdown)", expanded=True
             ):
-                st.markdown(
-                    clean_markdown_report(st.session_state.get("test_plan_report", "")),
-                    unsafe_allow_html=True,
-                )
+                summary_md = _get_plan_summary_from_state()
+                if summary_md:
+                    st.markdown(
+                        clean_markdown_report(summary_md),
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.info(
+                        "Resumo do plano de testes não disponível. Consulte os cenários abaixo.",
+                        icon="ℹ️",
+                    )
 
         # ==================================================
         # 📂 CASOS DE TESTE (TABELA RESUMO + DETALHES)
@@ -1075,9 +1493,9 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     """
     Fluxo da página principal (refatorado em funções menores):
 
-    1) Entrada da User Story (text_area) + Execução da análise de IA.
+    1) Entrada da User Story (text_area) + Execução da análise via IA.
     2) Edição humana dos blocos sugeridos (form).
-    3) Geração do Plano de Testes (IA) com base na análise refinada.
+    3) Geração do Plano de Testes com base na análise refinada (IA).
     4) Exportações (MD, PDF, CSV Azure, XLSX Zephyr).
     5) Botão para iniciar uma nova análise (reset).
     """
@@ -1316,19 +1734,7 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
                 )
 
             #  Plano de Testes
-            plano_report = analysis_entry.get("test_plan_report", "")
-            with st.expander("🧪 Plano de Testes Gerado", expanded=False):
-                if plano_report:
-                    st.markdown(
-                        clean_markdown_report(plano_report),
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    announce(
-                        "Nenhum plano de testes foi gerado para esta análise.",
-                        "info",
-                        st_api=st,
-                    )
+            _render_history_test_plan(analysis_entry)
 
             st.divider()
 

@@ -128,6 +128,11 @@ rm qa_oraculo_history.db
 sqlite3 qa_oraculo_history.db ".tables"
 ```
 
+> **Nota:** a tabela `analysis_history` agora possui as colunas opcionais
+> `test_plan_summary` e `test_plan_df_json`. O helper `init_db()` garante a
+> criação automática (ALTER TABLE) para bases antigas — não é necessário
+> rodar migração manual.
+
 ## 🐛 Debug
 
 ### Logs

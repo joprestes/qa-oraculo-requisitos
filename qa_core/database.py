@@ -63,20 +63,57 @@ def init_db():
                 created_at TIMESTAMP NOT NULL,
                 user_story TEXT NOT NULL,
                 analysis_report TEXT,
-                test_plan_report TEXT
+                test_plan_report TEXT,
+                test_plan_summary TEXT,
+                test_plan_df_json TEXT
             );
             """
             )
+            _ensure_analysis_history_columns(cursor)
             conn.commit()
     except sqlite3.Error as e:
         print(f"[DB ERROR] Falha ao inicializar DB: {e}")
 
 
+def _ensure_analysis_history_columns(cursor: sqlite3.Cursor):
+    """
+    Garante que colunas opcionais existam mesmo em bases antigas.
+    """
+    try:
+        cursor.execute("PRAGMA table_info(analysis_history);")
+        existing_columns = {row[1] for row in cursor.fetchall()}
+        required_columns = {
+            "test_plan_summary": "TEXT",
+            "test_plan_df_json": "TEXT",
+        }
+        for column_name, column_type in required_columns.items():
+            if column_name not in existing_columns:
+                cursor.execute(
+                    f"ALTER TABLE analysis_history ADD COLUMN {column_name} {column_type};"
+                )
+    except sqlite3.Error as e:
+        print(f"[DB ERROR] Falha ao ajustar colunas: {e}")
+
+
 def save_analysis_to_history(
-    user_story: str, analysis_report: str, test_plan_report: str
+    user_story: str,
+    analysis_report: str,
+    test_plan_report: str,
+    test_plan_summary: str | None = None,
+    test_plan_df_json: str | None = None,
 ):
     """
     Salva uma nova análise no histórico.
+
+    • Além do markdown do plano (`test_plan_report`), também persistimos um
+      sumário (`test_plan_summary`) e a representação em JSON dos cenários
+      (`test_plan_df_json`).
+
+    • Isso permite reconstruir a tabela e os expanders na tela de histórico,
+      mantendo o mesmo layout informativo do fluxo principal.
+
+    • As colunas são opcionais: `_ensure_analysis_history_columns` garante a
+      existência delas mesmo para bases criadas antes desta evolução.
 
     """
     try:
@@ -90,13 +127,28 @@ def save_analysis_to_history(
 
         with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
+            _ensure_analysis_history_columns(cursor)
             timestamp = datetime.datetime.now()  # TIMESTAMP real, não string
             cursor.execute(
                 """
-            INSERT INTO analysis_history (created_at, user_story, analysis_report, test_plan_report)
-            VALUES (?, ?, ?, ?);
+            INSERT INTO analysis_history (
+                created_at,
+                user_story,
+                analysis_report,
+                test_plan_report,
+                test_plan_summary,
+                test_plan_df_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?);
             """,
-                (timestamp, user_story, analysis_report, test_plan_report),
+                (
+                    timestamp,
+                    user_story,
+                    analysis_report,
+                    test_plan_report,
+                    test_plan_summary or test_plan_report,
+                    test_plan_df_json,
+                ),
             )
             conn.commit()
             print(f"💾 Análise salva no histórico em {timestamp}")
@@ -112,7 +164,15 @@ def get_all_analysis_history():
         with closing(get_db_connection()) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, created_at, user_story FROM analysis_history ORDER BY created_at DESC;"
+                """
+                SELECT
+                    id,
+                    created_at,
+                    user_story,
+                    test_plan_summary
+                FROM analysis_history
+                ORDER BY created_at DESC;
+                """
             )
             return cursor.fetchall()
     except sqlite3.Error as e:

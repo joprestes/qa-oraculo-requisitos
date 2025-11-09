@@ -12,6 +12,7 @@ Este arquivo cobre:
 """
 
 import datetime
+import json
 import importlib
 import sqlite3
 import subprocess
@@ -105,6 +106,7 @@ def mocked_st():
     """Fixture que simula o módulo streamlit com estado isolado."""
     with patch("qa_core.app.st") as mock_st:
         mock_st.session_state = {}
+        mock_st.button.return_value = False
 
         def fake_columns(arg):
             if isinstance(arg, int):
@@ -524,6 +526,30 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
                 ]
             ),
             "test_plan_report": "### 🧩 Login válido\n```gherkin\nCenário antigo\n```",
+            "test_plan_report_intro": "Resumo original",
+            "test_plan_df_records": [
+                {
+                    "id": 1,
+                    "titulo": "Login válido",
+                    "prioridade": "Alta",
+                    "criterio_de_aceitacao_relacionado": "Usuário autenticado",
+                    "justificativa_acessibilidade": "",
+                    "cenario": "Cenário antigo",
+                }
+            ],
+            "test_plan_df_json": json.dumps(
+                [
+                    {
+                        "id": 1,
+                        "titulo": "Login válido",
+                        "prioridade": "Alta",
+                        "criterio_de_aceitacao_relacionado": "Usuário autenticado",
+                        "justificativa_acessibilidade": "",
+                        "cenario": "Cenário antigo",
+                    }
+                ],
+                ensure_ascii=False,
+            ),
             "user_story_input": "US de login",
             "analysis_state": {"relatorio_analise_inicial": "Análise mock"},
         }
@@ -535,10 +561,7 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
     # --- Mocka salvamento e regeneração de relatório ---
     with (
         patch("qa_core.app._save_current_analysis_to_history") as mock_save,
-        patch(
-            "qa_core.utils.gerar_relatorio_md_dos_cenarios",
-            return_value="### 🧩 Login válido\n```gherkin\nCenário editado\n```",
-        ),
+        patch("qa_core.app._compose_test_plan_report", return_value="RELATÓRIO NOVO"),
     ):
         # Força o valor atual e o novo a diferirem
         mocked_st.session_state["test_plan_report"] = (
@@ -549,7 +572,7 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
 
         # Verifica atualização
         novo_relatorio = mocked_st.session_state["test_plan_report"]
-        assert "Cenário editado" in novo_relatorio
+        assert novo_relatorio == "RELATÓRIO NOVO"
         # Salvamento pode ser opcional (não obrigatório em UI)
         mock_save.assert_called()
 
@@ -692,6 +715,122 @@ def test_render_main_page_sem_cenario_dispara_aviso(mocked_st):
     )
 
 
+def test_render_main_page_dispara_confirmacao_exclusao(mocked_st):
+    """Ao solicitar exclusão, deve exibir fluxo de confirmação acessível."""
+    df = pd.DataFrame(
+        [
+            {
+                "id": "CT-1",
+                "titulo": "Caso 1",
+                "prioridade": "Alta",
+                "criterio_de_aceitacao_relacionado": "",
+                "justificativa_acessibilidade": "",
+                "cenario": "Dado algo\nEntão resultado",
+            }
+        ]
+    )
+
+    mocked_st.session_state.update(
+        {
+            "analysis_finished": True,
+            "analysis_state": {"relatorio_analise_inicial": "Relatório"},
+            "test_plan_df": df,
+            "test_plan_report": "Relatório",
+            "test_plan_report_intro": "Relatório",
+            "test_plan_df_records": df.to_dict(orient="records"),
+            "test_plan_df_json": json.dumps(
+                df.to_dict(orient="records"), ensure_ascii=False
+            ),
+            "pdf_report_bytes": b"bytes",
+        }
+    )
+
+    def button_side_effect(label=None, **kwargs):
+        return kwargs.get("key") == "delete_case_0"
+
+    mocked_st.button.side_effect = button_side_effect
+
+    app.render_main_analysis_page()
+
+    pending = mocked_st.session_state.get("pending_case_deletion")
+    assert pending is not None
+    assert pending["row_index"] == 0
+    assert "Caso 1" in pending["label"]
+    assert pending["test_id"] == "CT-1"
+    assert pending["title"] == "Caso 1"
+
+
+def test_render_main_page_confirma_exclusao_remove_cenario(mocked_st):
+    """Fluxo completo de exclusão deve atualizar DF, relatório e histórico."""
+    df = pd.DataFrame(
+        [
+            {
+                "id": "CT-1",
+                "titulo": "Caso 1",
+                "prioridade": "Alta",
+                "criterio_de_aceitacao_relacionado": "",
+                "justificativa_acessibilidade": "",
+                "cenario": "Dado\nQuando\nEntão",
+            },
+            {
+                "id": "CT-2",
+                "titulo": "Caso 2",
+                "prioridade": "Média",
+                "criterio_de_aceitacao_relacionado": "",
+                "justificativa_acessibilidade": "",
+                "cenario": "Dado outro\nEntão outro",
+            },
+        ]
+    )
+
+    mocked_st.session_state.update(
+        {
+            "analysis_finished": True,
+            "analysis_state": {"relatorio_analise_inicial": "Relatório"},
+            "test_plan_df": df,
+            "test_plan_report": "Relatório",
+            "test_plan_report_intro": "Relatório",
+            "test_plan_df_records": df.to_dict(orient="records"),
+            "test_plan_df_json": json.dumps(
+                df.to_dict(orient="records"), ensure_ascii=False
+            ),
+            "pdf_report_bytes": b"bytes",
+            "pending_case_deletion": {
+                "row_index": 0,
+                "label": "CT-1 — Caso 1",
+                "test_id": "CT-1",
+                "title": "Caso 1",
+            },
+        }
+    )
+
+    def button_side_effect(label=None, **kwargs):
+        return kwargs.get("key") == "confirm_delete_case_0"
+
+    mocked_st.button.side_effect = button_side_effect
+
+    with (
+        patch("qa_core.app.generate_pdf_report", return_value=b"novo_pdf") as mock_pdf,
+        patch("qa_core.app._save_current_analysis_to_history") as mock_save,
+    ):
+        app.render_main_analysis_page()
+
+    updated_df = mocked_st.session_state["test_plan_df"]
+    assert len(updated_df) == 1
+    assert updated_df.iloc[0]["id"] == "CT-2"
+    assert mocked_st.session_state.get("pending_case_deletion") is None
+    mock_save.assert_called_once_with(update_existing=True)
+    mock_pdf.assert_called_once()
+    assert mocked_st.session_state["pdf_report_bytes"] == b"novo_pdf"
+    assert mocked_st.session_state["test_plan_df_records"] == [
+        df.to_dict(orient="records")[1]
+    ]
+    assert "### 🧩" in mocked_st.session_state["test_plan_report"]
+    assert "Caso 2" in mocked_st.session_state["test_plan_report"]
+    mocked_st.toast.assert_called_with("🗑️ Cenário excluído com sucesso.")
+    mocked_st.rerun.assert_called()
+
+
 def test_render_export_section_com_campos_xray_e_testrail(mocked_st):
     """Cobre a montagem de campos Xray/TestRail com valores preenchidos."""
     df = pd.DataFrame(
@@ -760,6 +899,9 @@ def test_render_export_section_com_campos_xray_e_testrail(mocked_st):
 
 # ---- Helpers e testes complementares do histórico ----
 def _build_session_state_para_historia_valida():
+    registros = [
+        {"id": "CT-1", "titulo": "Caso padrão", "cenario": "Dado X\nQuando Y\nEntão Z"}
+    ]
     return {
         "user_story_input": "  Como tester quero validar  ",
         "analysis_state": {
@@ -767,6 +909,9 @@ def _build_session_state_para_historia_valida():
             "relatorio_analise_inicial": "  Relatório inicial  ",
         },
         "test_plan_report": "  Plano completo  ",
+        "test_plan_report_intro": "Plano completo",
+        "test_plan_df_records": registros,
+        "test_plan_df_json": json.dumps(registros, ensure_ascii=False),
         "history_saved": False,
     }
 
@@ -819,6 +964,8 @@ def test_save_current_analysis_to_history_atualiza_existente(mock_st, mock_get_c
     assert params[1] == "Como tester quero validar"
     assert params[2] == "Relatório inicial"
     assert params[3] == "Plano completo"
+    assert params[4] == "Plano completo"
+    assert params[5] == session_state["test_plan_df_json"]
 
     # Garante que não foi feito INSERT
     assert all(
