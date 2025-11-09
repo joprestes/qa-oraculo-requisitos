@@ -99,6 +99,9 @@ streamlit run main.py
 # Todos os testes
 pytest
 
+# Validação da User Story incompleta
+pytest tests/unit/qa_core/app/test_main_page/test_render_main.py -k user_story_input
+
 # Com cobertura
 pytest --cov
 
@@ -178,6 +181,7 @@ python -m qa_core.app
 # Executar subconjuntos específicos
 pytest tests/unit/qa_core/app/test_wrappers.py
 pytest tests/integrations/streamlit/test_navigation.py
+pytest tests/unit/qa_core/app/test_main_page/test_render_main.py -k user_story_input
 pytest -m "not integration"  # Exemplo com markers
 ```
 

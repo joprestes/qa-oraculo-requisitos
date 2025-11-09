@@ -36,7 +36,7 @@ Bem-vindo à documentação completa do QA Oráculo! Aqui você encontrará todo
 ### 👤 **Sou novo no projeto**
 1. Leia o [**SETUP_GUIDE.md**](SETUP_GUIDE.md)
 2. Execute o setup automático
-3. Teste com uma User Story simples
+3. Teste com uma User Story simples (ex.: `Como gerente de contas, quero validar faturas atrasadas para priorizar cobranças, garantindo pagamentos em dia`)
 
 ### 👨‍💻 **Sou desenvolvedor**
 1. Veja o [**DEVELOPER_QUICK_START.md**](DEVELOPER_QUICK_START.md)
