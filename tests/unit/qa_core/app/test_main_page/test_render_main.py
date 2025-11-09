@@ -179,9 +179,15 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
     mock_save.assert_called()
 
 
+VALID_USER_STORY = (
+    "Como tester, quero validar o fluxo para garantir a qualidade do produto"
+)
+INCOMPLETE_USER_STORY = "Quero validar o fluxo"
+
+
 def test_render_user_story_input_fluxo_sucesso(mocked_st):
     mocked_st.session_state.clear()
-    mocked_st.session_state["user_story_input"] = "Como tester, quero validar o fluxo"
+    mocked_st.session_state["user_story_input"] = VALID_USER_STORY
 
     with (
         patch("qa_core.app.accessible_button", return_value=True),
@@ -196,12 +202,40 @@ def test_render_user_story_input_fluxo_sucesso(mocked_st):
         resultado = app._render_user_story_input()
 
     assert resultado is True
-    mock_grafo.assert_called_once_with("Como tester, quero validar o fluxo")
+    mock_grafo.assert_called_once_with(VALID_USER_STORY)
     assert (
         mocked_st.session_state["analysis_state"]["analise_da_us"]["avaliacao"] == "ok"
     )
     assert mocked_st.session_state["show_generate_plan_button"] is False
     mocked_st.rerun.assert_called()
+
+
+def test_render_user_story_input_incompleta(mocked_st):
+    mocked_st.session_state.clear()
+    mocked_st.session_state["user_story_input"] = INCOMPLETE_USER_STORY
+
+    with (
+        patch("qa_core.app.accessible_button", return_value=True),
+        patch("qa_core.app.run_analysis_graph") as mock_grafo,
+        patch("qa_core.app.announce") as mock_announce,
+    ):
+        resultado = app._render_user_story_input()
+
+    assert resultado is True
+    mock_grafo.assert_not_called()
+    assert mock_announce.call_count == 2
+    mensagem_alerta, _, kwargs_alerta = mock_announce.call_args_list[0]
+    assert "incompleta" in mensagem_alerta.lower()
+    assert "persona" in mensagem_alerta.lower()
+    assert kwargs_alerta["st_api"] is mocked_st
+
+    mensagem_exemplos, _, kwargs_exemplos = mock_announce.call_args_list[1]
+    assert "exemplos" in mensagem_exemplos.lower()
+    assert "Como gerente de contas" in mensagem_exemplos
+    assert kwargs_exemplos["st_api"] is mocked_st
+    assert mocked_st.session_state.get("analysis_state") is None
+    assert mocked_st.session_state.get("show_generate_plan_button") is False
+    mocked_st.rerun.assert_not_called()
 
 
 def test_render_main_page_gera_plano_com_sucesso(mocked_st):

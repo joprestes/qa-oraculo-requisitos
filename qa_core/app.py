@@ -290,6 +290,51 @@ def run_test_plan_graph(analysis_state: dict):
 # ==========================================================
 
 
+def _evaluate_user_story_completeness(user_story: str) -> tuple[bool, list[str]]:
+    """
+    Avalia se a User Story possui informações mínimas para análise automática.
+
+    Args:
+        user_story: Texto informado pelo usuário.
+
+    Returns:
+        tuple[bool, list[str]]: (está_completa, lista_de_partes_em_falta)
+    """
+    text = (user_story or "").strip()
+    missing_parts: list[str] = []
+
+    if not text:
+        return False, [
+            'persona ("Como …")',
+            'ação ("quero/preciso …")',
+            'objetivo ("para …")',
+        ]
+
+    normalized = text.lower()
+    if "como " not in normalized:
+        missing_parts.append('persona ("Como …")')
+
+    if not any(
+        token in normalized
+        for token in [" quero ", " desejo ", " preciso ", " gostaria "]
+    ):
+        missing_parts.append('ação ("quero/preciso …")')
+
+    if not any(
+        token in normalized
+        for token in [" para ", " pra ", " para que", " para poder", " para poder "]
+    ):
+        missing_parts.append('objetivo ("para …")')
+
+    word_count = len(
+        [word for word in text.replace(",", " ").replace(".", " ").split() if word]
+    )
+    if word_count < 8 or len(text) < 40:
+        missing_parts.append("detalhes complementares (ao menos 8 palavras)")
+
+    return len(missing_parts) == 0, missing_parts
+
+
 def _render_user_story_input():
     """
     Renderiza o campo de entrada da User Story e o botão de análise.
@@ -325,6 +370,34 @@ def _render_user_story_input():
         user_story_txt = st.session_state.get("user_story_input", "")
 
         if user_story_txt.strip():
+            is_complete, missing_sections = _evaluate_user_story_completeness(
+                user_story_txt
+            )
+            if not is_complete:
+                missing_msg = ", ".join(missing_sections)
+                exemplos_recomendados = (
+                    "- Como gerente de contas, quero validar faturas atrasadas para priorizar cobranças.\n"
+                    "- Como usuário do app bancário, quero redefinir minha senha via email para recuperar acesso.\n"
+                    "- Como analista de QA, quero exportar relatórios em CSV para enviar ao time de negócios."
+                )
+                announce(
+                    (
+                        "A User Story parece incompleta. "
+                        f"Informe {missing_msg} para iniciar a análise automática."
+                    ),
+                    "warning",
+                    st_api=st,
+                )
+                announce(
+                    "Exemplos esperados para uma boa análise:\n"
+                    f"{exemplos_recomendados}",
+                    "info",
+                    st_api=st,
+                )
+                st.session_state.pop("analysis_state", None)
+                st.session_state["show_generate_plan_button"] = False
+                return True
+
             with st.spinner("🔮 O Oráculo está realizando a análise inicial..."):
                 resultado_analise = run_analysis_graph(user_story_txt)
 
