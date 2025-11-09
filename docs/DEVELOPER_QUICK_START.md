@@ -31,7 +31,11 @@ qa-oraculo-requisitos/
 │   ├── a11y.py            # Acessibilidade
 │   ├── observability.py    # Logs estruturados e trace_id de execução
 │   └── ...
-├── tests/                  # Testes unitários
+├── tests/                  # Testes automatizados
+│   ├── unit/               # Unitários organizados por domínio
+│   ├── integrations/       # Fluxos com Streamlit e serviços externos
+│   ├── regression/         # Cenários de regressão e smoke
+│   └── fixtures/           # Fixtures e datasets compartilhados
 ├── docs/                   # Documentação
 ├── main.py                 # Entry point
 ├── quick-setup.sh         # Setup automático
@@ -99,7 +103,9 @@ pytest
 pytest --cov
 
 # Teste específico
-pytest tests/test_app.py
+pytest tests/unit/qa_core/app/test_wrappers.py
+pytest tests/integrations/streamlit/test_navigation.py
+pytest -m "not integration"  # Exemplo com markers
 
 # Teste com verbose
 pytest -v
@@ -169,10 +175,10 @@ python -m qa_core.app
 ### Estrutura de Testes
 
 ```bash
-# Executar testes específicos
-pytest tests/test_xray_export.py
-pytest tests/test_app_history_delete.py
-pytest tests/test_utils.py
+# Executar subconjuntos específicos
+pytest tests/unit/qa_core/app/test_wrappers.py
+pytest tests/integrations/streamlit/test_navigation.py
+pytest -m "not integration"  # Exemplo com markers
 ```
 
 ## 📚 Documentação
