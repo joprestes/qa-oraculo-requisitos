@@ -6,7 +6,6 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-from google.api_core.exceptions import ResourceExhausted
 from langchain.globals import set_llm_cache
 
 from qa_core.graph import (
@@ -19,6 +18,7 @@ from qa_core.graph import (
     node_gerar_relatorio_analise,
     node_gerar_relatorio_plano_de_testes,
 )
+from qa_core.llm.providers.base import LLMRateLimitError
 
 
 def mock_print(*args, **kwargs):
@@ -35,6 +35,11 @@ class BaseGraphTestCase(unittest.TestCase):
     def setUp(self):
         """Desativa o cache ANTES de cada teste."""
         set_llm_cache(None)
+        from qa_core import graph as graph_module
+
+        self._graph_module = graph_module
+        graph_module._llm_client = MagicMock()
+        self.addCleanup(lambda: setattr(graph_module, "_llm_client", None))
         super().setUp()
 
     def tearDown(self):
@@ -77,7 +82,7 @@ class TestHelperFunctions(BaseGraphTestCase):
     def test_chamar_modelo_com_retry_e_falha_parcial(self, mock_sleep):
         mock_model_instance = MagicMock()
         mock_model_instance.generate_content.side_effect = [
-            ResourceExhausted("Cota esgotada"),
+            LLMRateLimitError("Cota esgotada"),
             MagicMock(text="Sucesso"),
         ]
         resultado = chamar_modelo_com_retry(mock_model_instance, "prompt", tentativas=2)
@@ -110,7 +115,7 @@ class TestHelperFunctions(BaseGraphTestCase):
     @patch("qa_core.graph.time.sleep", return_value=None)
     def test_chamar_modelo_com_falha_total_de_cota(self, mock_sleep):
         mock_model_instance = MagicMock()
-        mock_model_instance.generate_content.side_effect = ResourceExhausted(
+        mock_model_instance.generate_content.side_effect = LLMRateLimitError(
             "Cota esgotada"
         )
         resultado = chamar_modelo_com_retry(mock_model_instance, "prompt", tentativas=3)
