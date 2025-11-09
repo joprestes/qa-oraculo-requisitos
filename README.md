@@ -62,8 +62,12 @@ source .venv/bin/activate  # Linux/Mac
 # 3. Instale as dependências
 pip install -r requirements.txt
 
-# 4. Configure sua API Key
-echo 'GOOGLE_API_KEY="sua_chave_aqui"' > .env
+# 4. Configure o provedor de LLM (padrão: Google Gemini)
+cat <<'EOF' > .env
+LLM_PROVIDER="google"
+LLM_MODEL="gemini-2.0-flash-lite-001"
+GOOGLE_API_KEY="sua_chave_aqui"
+EOF
 
 # 5. Execute o aplicativo
 streamlit run main.py
@@ -72,6 +76,7 @@ streamlit run main.py
 > ⚠️ **Atenção**
 > - O ambiente virtual oficial do projeto é `.venv/`. Se você possuir uma pasta `venv/` residual, remova-a com `make clean-venv` antes de continuar.
 > - Repositórios antigos podem conter o diretório legado `qa-oracolo-requisitos/`. Ele foi descontinuado e deve ser removido para evitar conflitos com ferramentas de automação.
+> - Para alternar o provedor de LLM no futuro, ajuste `LLM_PROVIDER`, `LLM_MODEL` e as chaves específicas no arquivo `.env`. Veja o [Guia de Configuração de LLMs](docs/LLM_CONFIG_GUIDE.md) para exemplos de Google, Azure e OpenAI.
 
 ### 🛠️ Comandos de Desenvolvimento
 

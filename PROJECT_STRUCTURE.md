@@ -42,6 +42,7 @@ qa-oraculo-requisitos/
 │   ├── config.py                # Configurações da aplicação
 │   ├── database.py              # Módulo de banco de dados
 │   ├── graph.py                 # Lógica de grafos e fluxos
+│   ├── llm/                     # Abstrações e provedores de LLM
 │   ├── pdf_generator.py         # Geração de PDFs
 │   ├── prompts.py               # Prompts para IA
 │   ├── schemas.py               # Esquemas de dados
