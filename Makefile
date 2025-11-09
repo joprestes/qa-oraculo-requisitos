@@ -10,7 +10,7 @@
 # === Configuração ===
 PYTHON := python3
 PIP := pip3
-VENV := venv
+VENV := .venv
 PYTHON_VENV := $(VENV)/bin/python
 PIP_VENV := $(VENV)/bin/pip
 
@@ -37,6 +37,9 @@ install-dev: ## Instala dependências de desenvolvimento
 
 setup: ## Configura ambiente de desenvolvimento completo
 	@echo "$(GREEN)Configurando ambiente de desenvolvimento...$(NC)"
+	@if [ -d "venv" ] && [ ! -d "$(VENV)" ]; then \
+		echo "$(YELLOW)Detectado ambiente virtual legado em venv/. Considere removê-lo com 'make clean-venv'.$(NC)"; \
+	fi
 	@if [ ! -d "$(VENV)" ]; then \
 		echo "$(YELLOW)Criando ambiente virtual...$(NC)"; \
 		$(PYTHON) -m venv $(VENV); \
@@ -102,6 +105,7 @@ clean: ## Remove arquivos temporários e caches
 clean-venv: ## Remove ambiente virtual
 	@echo "$(RED)Removendo ambiente virtual...$(NC)"
 	rm -rf $(VENV)
+	rm -rf venv
 	@echo "$(GREEN)Ambiente virtual removido!$(NC)"
 
 # === Documentação ===

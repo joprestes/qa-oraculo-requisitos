@@ -54,15 +54,24 @@ scripts/quick-setup.bat
 git clone https://github.com/seu-usuario/qa-oraculo.git
 cd qa-oraculo/qa-oraculo-requisitos
 
-# 2. Instale as dependências
+# 2. Crie e ative o ambiente virtual (padrão .venv)
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate  # Windows
+
+# 3. Instale as dependências
 pip install -r requirements.txt
 
-# 3. Configure sua API Key
+# 4. Configure sua API Key
 echo 'GOOGLE_API_KEY="sua_chave_aqui"' > .env
 
-# 4. Execute o aplicativo
+# 5. Execute o aplicativo
 streamlit run main.py
 ```
+
+> ⚠️ **Atenção**
+> - O ambiente virtual oficial do projeto é `.venv/`. Se você possuir uma pasta `venv/` residual, remova-a com `make clean-venv` antes de continuar.
+> - Repositórios antigos podem conter o diretório legado `qa-oracolo-requisitos/`. Ele foi descontinuado e deve ser removido para evitar conflitos com ferramentas de automação.
 
 ### 🛠️ Comandos de Desenvolvimento
 
