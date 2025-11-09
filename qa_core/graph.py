@@ -1,22 +1,17 @@
-# ==============================
-# graph.py
-# Implementação dos grafos de estados usando LangGraph e Google Gemini
-# ==============================
+# Implementação dos grafos de estados usando LangGraph e provedores LLM configuráveis
 
 import logging
 import json
-import os
 import re
 import time
 from typing import Any, NotRequired, TypedDict
 
-import google.generativeai as genai
 import streamlit as st
-from dotenv import load_dotenv
-from google.api_core.exceptions import ResourceExhausted
 from langgraph.graph import END, StateGraph
 
-from .config import CONFIG_GERACAO_ANALISE, CONFIG_GERACAO_RELATORIO, NOME_MODELO
+from .config import CONFIG_GERACAO_ANALISE, CONFIG_GERACAO_RELATORIO
+from .llm import LLMSettings, get_llm_client
+from .llm.providers.base import LLMClient, LLMError, LLMRateLimitError
 from .prompts import (
     PROMPT_ANALISE_US,
     PROMPT_CRIAR_PLANO_DE_TESTES,
@@ -25,11 +20,19 @@ from .prompts import (
 )
 from .observability import log_graph_event
 
-load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
 
 # --- Funções Auxiliares e Estrutura de Dados ---
+_llm_client: LLMClient | None = None
+
+
+def _get_llm_client() -> LLMClient:
+    global _llm_client
+    if _llm_client is None:
+        settings = LLMSettings.from_env()
+        _llm_client = get_llm_client(settings)
+    return _llm_client
+
+
 def extrair_json_da_resposta(texto_resposta: str) -> str | None:
     """Função de segurança para extrair JSON de uma string, caso a API não retorne JSON puro."""
     match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", texto_resposta)
@@ -42,11 +45,12 @@ def extrair_json_da_resposta(texto_resposta: str) -> str | None:
 
 
 def chamar_modelo_com_retry(
-    model,
-    prompt_completo,
-    tentativas=3,
-    espera=60,
+    client: LLMClient,
+    prompt_completo: str,
+    tentativas: int = 3,
+    espera: int = 60,
     *,
+    config: dict[str, Any] | None = None,
     trace_id: str | None = None,
     node: str | None = None,
 ):
@@ -61,7 +65,12 @@ def chamar_modelo_com_retry(
     for tentativa in range(tentativas):
         tentativa_at = time.perf_counter()
         try:
-            resposta = model.generate_content(prompt_completo)
+            resposta = client.generate_content(
+                prompt_completo,
+                config=config,
+                trace_id=trace_id,
+                node=node,
+            )
             log_graph_event(
                 "model.call.success",
                 trace_id=trace_id,
@@ -75,7 +84,7 @@ def chamar_modelo_com_retry(
                 },
             )
             return resposta
-        except ResourceExhausted:
+        except LLMRateLimitError:
             print(
                 f"⚠️ Limite de Requisições (Tentativa {tentativa + 1}/{tentativas}). Aguardando {espera}s..."
             )
@@ -93,7 +102,20 @@ def chamar_modelo_com_retry(
                 time.sleep(espera)
             else:
                 print("❌ Esgotado o número de tentativas.")
-        except Exception as e:
+        except LLMError as e:
+            print(f"❌ Erro ao chamar provedor LLM: {e}")
+            log_graph_event(
+                "model.call.error",
+                trace_id=trace_id,
+                node=node,
+                payload={
+                    "tentativa": tentativa + 1,
+                    "erro": repr(e),
+                },
+                level=logging.ERROR,
+            )
+            return None
+        except Exception as e:  # pragma: no cover - salvaguarda final
             print(f"❌ Erro inesperado na comunicação: {e}")
             log_graph_event(
                 "model.call.error",
@@ -143,10 +165,14 @@ def node_analisar_historia(state: AgentState) -> AgentState:
     )
     started_at = time.perf_counter()
     us = state["user_story"]
-    model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_ANALISE)
+    client = _get_llm_client()
     prompt_completo = f"{PROMPT_ANALISE_US}\n\nUser Story para Análise:\n---\n{us}"
     response = chamar_modelo_com_retry(
-        model, prompt_completo, trace_id=trace_id, node=node_name
+        client,
+        prompt_completo,
+        config=CONFIG_GERACAO_ANALISE,
+        trace_id=trace_id,
+        node=node_name,
     )
 
     if not response or not response.text:
@@ -200,12 +226,14 @@ def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
         "analise": state.get("analise_da_us", {}),
     }
     contexto_str = json.dumps(contexto, indent=2, ensure_ascii=False)
-    model = genai.GenerativeModel(
-        NOME_MODELO, generation_config=CONFIG_GERACAO_RELATORIO
-    )
+    client = _get_llm_client()
     prompt_completo = f"{PROMPT_GERAR_RELATORIO_ANALISE}\n\nDados:\n---\n{contexto_str}"
     response = chamar_modelo_com_retry(
-        model, prompt_completo, trace_id=trace_id, node=node_name
+        client,
+        prompt_completo,
+        config=CONFIG_GERACAO_RELATORIO,
+        trace_id=trace_id,
+        node=node_name,
     )
     resultado = {
         "relatorio_analise_inicial": (
@@ -234,12 +262,16 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
         "analise_ambiguidade": state["analise_da_us"].get("analise_ambiguidade", {}),
     }
     contexto_str = json.dumps(contexto_para_plano, indent=2, ensure_ascii=False)
-    model = genai.GenerativeModel(NOME_MODELO, generation_config=CONFIG_GERACAO_ANALISE)
+    client = _get_llm_client()
     prompt_completo = (
         f"{PROMPT_CRIAR_PLANO_DE_TESTES}\n\nContexto:\n---\n{contexto_str}"
     )
     response = chamar_modelo_com_retry(
-        model, prompt_completo, trace_id=trace_id, node=node_name
+        client,
+        prompt_completo,
+        config=CONFIG_GERACAO_ANALISE,
+        trace_id=trace_id,
+        node=node_name,
     )
 
     if not response or not response.text:
@@ -321,14 +353,16 @@ def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
     print(f"Tamanho do contexto enviado: {len(contexto_str)} caracteres")
 
     # Chamada ao modelo
-    model = genai.GenerativeModel(
-        NOME_MODELO, generation_config=CONFIG_GERACAO_RELATORIO
-    )
+    client = _get_llm_client()
     prompt_completo = (
         f"{PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES}\n\nDados:\n---\n{contexto_str}"
     )
     response = chamar_modelo_com_retry(
-        model, prompt_completo, trace_id=trace_id, node=node_name
+        client,
+        prompt_completo,
+        config=CONFIG_GERACAO_RELATORIO,
+        trace_id=trace_id,
+        node=node_name,
     )
 
     # Fallback local em caso de falha

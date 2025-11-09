@@ -19,6 +19,10 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
   - Logs estruturados (JSON) para cada nó do LangGraph, incluindo métricas de duração, retries e erros.
   - Traços (`trace_id`) propagados pela aplicação (`app.py`) para correlacionar análise e plano de testes.
   - Testes automatizados garantindo que os eventos sejam disparados (`tests/test_graph.py`, `tests/test_app.py`).
+- **Infraestrutura de LLM configurável**:
+  - Novo pacote `qa_core.llm` com contrato de clientes, fábrica e implementação inicial para Google Gemini.
+  - Estrutura preparada para Azure OpenAI e OpenAI GPT, incluindo validação de variáveis de ambiente e mensagens guiando a configuração.
+  - Variáveis de ambiente (`LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`) documentadas e compatíveis com `.env`.
 
 - **Documentação atualizada**:
   - `README.md` com seção “Observabilidade Inteligente” e descrição das novas ações de exclusão de cenários.

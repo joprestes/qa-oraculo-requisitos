@@ -6,6 +6,7 @@ __all__ = [
     "config",
     "database",
     "graph",
+    "llm",
     "pdf_generator",
     "prompts",
     "schemas",

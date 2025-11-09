@@ -22,6 +22,7 @@ Bem-vindo à documentação completa do QA Oráculo! Aqui você encontrará todo
 |-----------|-----------|--------------|
 | [**XRAY_EXPORT_GUIDE.md**](XRAY_EXPORT_GUIDE.md) | Guia completo de exportação para Xray | Usuários QA |
 | [**ACESSIBILIDADE.md**](ACESSIBILIDADE.md) | Guia de recursos de acessibilidade | Usuários e Devs |
+| [**LLM_CONFIG_GUIDE.md**](LLM_CONFIG_GUIDE.md) | Guia de configuração dos provedores de LLM (Google, Azure, OpenAI) | QAs |
 
 ## 📋 Documentação Xray
 
