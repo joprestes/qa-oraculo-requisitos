@@ -6,12 +6,9 @@ from qa_core.llm.providers.google import GoogleLLMClient
 def test_google_from_settings_creates_client():
     """Testa que from_settings cria o cliente corretamente."""
     settings = LLMSettings(
-        provider="google",
-        model="gemini-2.0-flash",
-        api_key="test-key",
-        extra={}
+        provider="google", model="gemini-2.0-flash", api_key="test-key", extra={}
     )
-    
+
     with patch("qa_core.llm.providers.google.genai.configure"):
         with patch("qa_core.llm.providers.google.genai.GenerativeModel") as _:
             client = GoogleLLMClient.from_settings(settings)
@@ -22,16 +19,18 @@ def test_google_from_settings_creates_client():
 def test_google_generate_content_success():
     """Testa geração de conteúdo com sucesso."""
     with patch("qa_core.llm.providers.google.genai.configure"):
-        with patch("qa_core.llm.providers.google.genai.GenerativeModel") as mock_model_class:
+        with patch(
+            "qa_core.llm.providers.google.genai.GenerativeModel"
+        ) as mock_model_class:
             mock_model = Mock()
             mock_response = Mock()
             mock_response.text = "Test response"
             mock_model.generate_content.return_value = mock_response
             mock_model_class.return_value = mock_model
-            
+
             client = GoogleLLMClient(model="gemini-2.0-flash", api_key="test-key")
             result = client.generate_content("test prompt")
-            
+
             assert result.text == "Test response"
             mock_model.generate_content.assert_called_once()
 
@@ -39,32 +38,38 @@ def test_google_generate_content_success():
 def test_google_generate_content_with_config():
     """Testa geração com configuração customizada."""
     with patch("qa_core.llm.providers.google.genai.configure"):
-        with patch("qa_core.llm.providers.google.genai.GenerativeModel") as mock_model_class:
+        with patch(
+            "qa_core.llm.providers.google.genai.GenerativeModel"
+        ) as mock_model_class:
             mock_model = Mock()
             mock_response = Mock()
             mock_response.text = "Response"
             mock_model.generate_content.return_value = mock_response
             mock_model_class.return_value = mock_model
-            
+
             client = GoogleLLMClient(model="gemini-2.0-flash", api_key="test-key")
             config = {"temperature": 0.5, "max_tokens": 1000}
             result = client.generate_content("prompt", config=config)
-            
+
             assert result.text == "Response"
 
 
 def test_google_generate_content_with_trace_id():
     """Testa geração com trace_id para observabilidade."""
     with patch("qa_core.llm.providers.google.genai.configure"):
-        with patch("qa_core.llm.providers.google.genai.GenerativeModel") as mock_model_class:
+        with patch(
+            "qa_core.llm.providers.google.genai.GenerativeModel"
+        ) as mock_model_class:
             mock_model = Mock()
             mock_response = Mock()
             mock_response.text = "Response"
             mock_model.generate_content.return_value = mock_response
             mock_model_class.return_value = mock_model
-            
+
             client = GoogleLLMClient(model="gemini-2.0-flash", api_key="test-key")
-            result = client.generate_content("prompt", trace_id="trace-123", node="test-node")
-            
+            result = client.generate_content(
+                "prompt", trace_id="trace-123", node="test-node"
+            )
+
             # Verifica que a resposta foi retornada
             assert result.text == "Response"
