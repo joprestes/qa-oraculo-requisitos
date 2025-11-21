@@ -93,3 +93,49 @@ def sanitize_filename(filename: str) -> str:
         sanitized = name[:250] + ("." + ext if ext else "")
 
     return sanitized or "arquivo"
+
+
+class RateLimiter:
+    """
+    Implementação simples de Rate Limiting (Token Bucket ou Janela Fixa).
+    Para este MVP, usaremos uma janela fixa em memória.
+    """
+
+    def __init__(self, max_calls: int, period_seconds: int):
+        self.max_calls = max_calls
+        self.period_seconds = period_seconds
+        self.calls = []
+
+    def is_allowed(self) -> bool:
+        import time
+
+        now = time.time()
+        # Remove chamadas antigas fora da janela
+        self.calls = [t for t in self.calls if now - t < self.period_seconds]
+
+        if len(self.calls) < self.max_calls:
+            self.calls.append(now)
+            return True
+        
+        return False
+
+
+class SanitizedLogger:
+    """
+    Wrapper de logger que sanitiza mensagens antes de emitir.
+    """
+    def __init__(self, logger_instance: logging.Logger):
+        self.logger = logger_instance
+
+    def info(self, msg: str, *args, **kwargs):
+        self.logger.info(sanitize_for_logging(msg), *args, **kwargs)
+
+    def warning(self, msg: str, *args, **kwargs):
+        self.logger.warning(sanitize_for_logging(msg), *args, **kwargs)
+
+    def error(self, msg: str, *args, **kwargs):
+        self.logger.error(sanitize_for_logging(msg), *args, **kwargs)
+    
+    def debug(self, msg: str, *args, **kwargs):
+        self.logger.debug(sanitize_for_logging(msg), *args, **kwargs)
+

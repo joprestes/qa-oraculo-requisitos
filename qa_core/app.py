@@ -364,7 +364,21 @@ def _render_user_story_input():
     if submitted:
         user_story_txt = st.session_state.get("user_story_input", "")
 
-        if user_story_txt.strip():
+        # Validação com Pydantic
+        from .schemas import UserStoryInput
+        from pydantic import ValidationError
+
+        try:
+            # Valida e sanitiza
+            validated_input = UserStoryInput(content=user_story_txt)
+            user_story_txt = validated_input.content
+        except ValidationError as e:
+            # Extrai mensagem amigável
+            error_msg = e.errors()[0]["msg"] if e.errors() else str(e)
+            announce(f"Erro na User Story: {error_msg}", "warning", st_api=st)
+            return True
+
+        if user_story_txt:
             is_complete, missing_sections = _evaluate_user_story_completeness(
                 user_story_txt
             )
@@ -455,35 +469,32 @@ def _save_edited_analysis_fields():
     st.session_state["analysis_state"].setdefault("analise_da_us", {})
     bloco = st.session_state["analysis_state"]["analise_da_us"]
 
-    # Salva os campos editados — sempre normalizando para lista onde necessário
-    bloco["avaliacao_geral"] = st.session_state.get("edit_avaliacao", "")
+    # Validação com Pydantic
+    from .schemas import AnalysisEditInput
+    from pydantic import ValidationError
 
-    bloco["pontos_ambiguos"] = [
-        linha.strip()
-        for linha in st.session_state.get("edit_pontos", "").split("\n")
-        if linha.strip()
-    ]
+    try:
+        validated_data = AnalysisEditInput(
+            avaliacao_geral=st.session_state.get("edit_avaliacao", ""),
+            pontos_ambiguos=[line.strip() for line in st.session_state.get("edit_pontos", "").split("\n") if line.strip()],
+            perguntas_para_po=[line.strip() for line in st.session_state.get("edit_perguntas", "").split("\n") if line.strip()],
+            sugestao_criterios_aceite=[line.strip() for line in st.session_state.get("edit_criterios", "").split("\n") if line.strip()],
+            riscos_e_dependencias=[line.strip() for line in st.session_state.get("edit_riscos", "").split("\n") if line.strip()]
+        )
 
-    bloco["perguntas_para_po"] = [
-        linha.strip()
-        for linha in st.session_state.get("edit_perguntas", "").split("\n")
-        if linha.strip()
-    ]
+        # Atualiza o bloco com dados validados e sanitizados
+        bloco["avaliacao_geral"] = validated_data.avaliacao_geral
+        bloco["pontos_ambiguos"] = validated_data.pontos_ambiguos
+        bloco["perguntas_para_po"] = validated_data.perguntas_para_po
+        bloco["sugestao_criterios_aceite"] = validated_data.sugestao_criterios_aceite
+        bloco["riscos_e_dependencias"] = validated_data.riscos_e_dependencias
 
-    bloco["sugestao_criterios_aceite"] = [
-        linha.strip()
-        for linha in st.session_state.get("edit_criterios", "").split("\n")
-        if linha.strip()
-    ]
+        # Agora podemos avançar para a geração de plano
+        st.session_state["show_generate_plan_button"] = True
 
-    bloco["riscos_e_dependencias"] = [
-        linha.strip()
-        for linha in st.session_state.get("edit_riscos", "").split("\n")
-        if linha.strip()
-    ]
+    except ValidationError as e:
+        announce(f"Erro de validação: {e}", "error", st_api=st)
 
-    # Agora podemos avançar para a geração de plano
-    st.session_state["show_generate_plan_button"] = True
 
 
 def _render_analysis_edit_form():

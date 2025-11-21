@@ -35,7 +35,7 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
 
     app.render_main_analysis_page()
     mocked_st.warning.assert_called_once_with(
-        "Por favor, insira uma User Story antes de analisar."
+        "Erro na User Story: String should have at least 10 characters"
     )
 
 

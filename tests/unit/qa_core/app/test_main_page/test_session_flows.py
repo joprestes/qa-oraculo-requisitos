@@ -115,7 +115,7 @@ def test_sem_user_story_mostra_warning(mock_streamlit):
 
     app.render_main_analysis_page()
     mock_streamlit.warning.assert_called_once_with(
-        "Por favor, insira uma User Story antes de analisar."
+        "Erro na User Story: String should have at least 10 characters"
     )
 
 
