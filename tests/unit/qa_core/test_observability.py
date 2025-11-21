@@ -62,9 +62,7 @@ def test_log_graph_event_with_non_serializable_payload():
             def __repr__(self):
                 return "<CustomObject>"
 
-        log_graph_event(
-            "test.event", trace_id="xyz", payload={"obj": CustomObject()}
-        )
+        log_graph_event("test.event", trace_id="xyz", payload={"obj": CustomObject()})
         mock_logger.log.assert_called_once()
 
 

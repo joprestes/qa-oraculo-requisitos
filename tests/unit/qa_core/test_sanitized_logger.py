@@ -1,5 +1,5 @@
 import logging
-from qa_core.security import RateLimiter, SanitizedLogger, sanitize_for_logging
+from qa_core.security import SanitizedLogger
 
 
 def test_sanitized_logger_info():

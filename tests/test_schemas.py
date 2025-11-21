@@ -51,7 +51,9 @@ def test_user_story_input_with_como_keyword():
     """Testa que UserStoryInput aceita user stories com 'como'."""
     from qa_core.schemas import UserStoryInput
 
-    us = UserStoryInput(content="Como usuário, quero fazer login para acessar o sistema")
+    us = UserStoryInput(
+        content="Como usuário, quero fazer login para acessar o sistema"
+    )
     assert "Como usuário" in us.content
 
 
