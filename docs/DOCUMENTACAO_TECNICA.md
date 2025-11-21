@@ -60,6 +60,8 @@ qa-oraculo-requisitos/
 │   ├── config.py          # Configurações, variáveis de ambiente e feature flags
 │   ├── database.py        # Persistência (SQLite + helpers de histórico)
 │   ├── graph.py           # Fluxos de IA (LangGraph + Gemini)
+│   ├── llm/               # Abstração de provedores de IA (Google, Azure, OpenAI)
+│   ├── observability.py   # Logs estruturados e rastreamento (trace_id)
 │   ├── pdf_generator.py   # Geração de relatórios PDF
 │   ├── prompts.py         # Prompt base e templates dinâmicos
 │   ├── schemas.py         # Schemas Pydantic (contratos de entrada/saída)
@@ -111,6 +113,8 @@ graph TB
 - `qa_core/app.py`: porta de entrada com Streamlit, integração de IA e exportações.
 - `qa_core/config.py`: resolve variáveis de ambiente, chaves externas e toggles de recursos.
 - `qa_core/graph.py`: centraliza o fluxo de raciocínio da IA com LangGraph.
+- `qa_core/llm/`: pacote com factory e implementações de clientes LLM.
+- `qa_core/observability.py`: módulo de logs estruturados e telemetria.
 - `qa_core/prompts.py`: mantém prompts versionados para análise e plano de testes.
 - `qa_core/database.py`: persistência local e caching leve para histórico de análises.
 - `qa_core/state_manager.py`: abstrai o estado da sessão e resets seguros.
@@ -184,8 +188,9 @@ graph TB
 
 - `qa_core/config.py` concentra os parâmetros de geração (modelo, temperatura,
   `max_output_tokens`) consumidos pelos fluxos de IA.
-- `qa_core/graph.py` carrega o `.env` e lê a variável `GOOGLE_API_KEY`, necessária para
-  autenticar chamadas ao Google Gemini.
+- `qa_core/llm` gerencia a conexão com os provedores (Google, Azure, OpenAI) através de uma Factory,
+  permitindo troca transparente de modelos via variáveis de ambiente.
+- `qa_core/graph.py` utiliza o cliente instanciado pela factory para executar os nós do LangGraph.
 - `qa_core/prompts.py` contém o prompt mestre e auxiliares; as funções retornam versões
   interpoladas conforme a user story em análise.
 - `qa_core/graph.py` monta o LangGraph com nós para análise, plano de testes e ajustes;
@@ -223,6 +228,7 @@ graph TB
 
 | Versão | Data | Alterações |
 |--------|------|-------------|
+| **1.7.0** | Nov/2025 | Arquitetura de LLM multi-provedor e Observabilidade |
 | **1.3.0** | Outubro/2025 | Novo diagrama, seção de segurança e créditos técnicos |
 | **1.2.0** | Jul/2025 | Melhorias de setup e estrutura |
 | **1.0.0** | Abr/2025 | Primeira versão técnica documentada |

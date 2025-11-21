@@ -7,6 +7,7 @@ from .providers.base import LLMClient
 from .providers.azure_openai import AzureOpenAILLMClient
 from .providers.google import GoogleLLMClient
 from .providers.llama import LlamaLLMClient
+from .providers.mock import MockLLMClient
 from .providers.openai import OpenAILLMClient
 
 ProviderBuilder = Callable[[LLMSettings], LLMClient]
@@ -18,6 +19,7 @@ _PROVIDER_BUILDERS: Dict[str, ProviderBuilder] = {
     "openai": OpenAILLMClient.from_settings,
     "gpt": OpenAILLMClient.from_settings,
     "llama": LlamaLLMClient.from_settings,
+    "mock": MockLLMClient.from_settings,
 }
 
 
