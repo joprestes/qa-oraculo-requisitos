@@ -8,7 +8,7 @@
 .PHONY: help install install-dev setup run test lint format clean docs
 
 # === Configuração ===
-PYTHON := python3
+PYTHON := python3.12
 PIP := pip3
 VENV := .venv
 PYTHON_VENV := $(VENV)/bin/python
