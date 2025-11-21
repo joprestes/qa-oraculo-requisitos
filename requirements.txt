@@ -16,3 +16,4 @@ langgraph>=0.2.0
 # === Suporte e utilitários ===
 python-dotenv>=1.0.1
 matplotlib>=3.9.0
+PyGithub>=2.1.1
