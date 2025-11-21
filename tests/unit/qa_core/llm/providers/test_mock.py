@@ -1,6 +1,5 @@
 """Testes unitários para o provedor Mock."""
 
-
 from qa_core.llm.config import LLMSettings
 from qa_core.llm.providers.mock import MockLLMClient
 

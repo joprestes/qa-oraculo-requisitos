@@ -49,6 +49,9 @@ def get_db_connection():
         DB_NAME, check_same_thread=False, detect_types=sqlite3.PARSE_DECLTYPES
     )
     conn.row_factory = sqlite3.Row
+    # Otimizações de performance para SQLite
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
     return conn
 
 

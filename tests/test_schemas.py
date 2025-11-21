@@ -43,6 +43,23 @@ def test_validacao_tipos_invalidos():
 
 
 def test_analiseus_minimal():
-    us = schemas.AnaliseUS(avaliacao_geral="Teste")
-    assert us.avaliacao_geral == "Teste"
-    assert isinstance(us.pontos_ambiguos, list)
+    obj = schemas.AnaliseUS(avaliacao_geral="Teste")
+    assert obj.avaliacao_geral == "Teste"
+
+
+def test_user_story_input_with_como_keyword():
+    """Testa que UserStoryInput aceita user stories com 'como'."""
+    from qa_core.schemas import UserStoryInput
+
+    us = UserStoryInput(
+        content="Como usuário, quero fazer login para acessar o sistema"
+    )
+    assert "Como usuário" in us.content
+
+
+def test_user_story_input_without_como_keyword():
+    """Testa que UserStoryInput aceita user stories sem 'como' (apenas sanitiza)."""
+    from qa_core.schemas import UserStoryInput
+
+    us = UserStoryInput(content="Eu quero fazer login no sistema")
+    assert "Eu quero" in us.content

@@ -1,6 +1,5 @@
 """Testes para utilitários de segurança."""
 
-
 from qa_core.security import (
     sanitize_for_logging,
     validate_user_input_length,
