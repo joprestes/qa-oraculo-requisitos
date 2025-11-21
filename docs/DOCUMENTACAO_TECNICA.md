@@ -128,7 +128,7 @@ graph TB
 
 - Framework: **Pytest**  
 - Banco de testes: **SQLite in-memory**  
-- Cobertura mínima: **90 % (meta: 97 %)**  
+- Cobertura mínima: **90 % (atual: 97 %)**  
 - Execução:
   ```bash
   pytest --cov --cov-report=term-missing
@@ -211,6 +211,9 @@ graph TB
 
 - As **User Stories** não são armazenadas fora do ambiente local.  
 - As chamadas à API Gemini utilizam chave segura via `.env`.  
+- **Rate Limiting**: Implementado via Token Bucket para evitar abuso da API LLM.
+- **Sanitização de Logs**: `SanitizedLogger` remove automaticamente chaves de API e dados sensíveis dos logs.
+- **Auditoria**: CI/CD verifica vazamento de secrets (Gitleaks) e vulnerabilidades em dependências.
 - Nenhum dado sensível é persistido permanentemente.  
 
 ---
@@ -228,6 +231,7 @@ graph TB
 
 | Versão | Data | Alterações |
 |--------|------|-------------|
+| **1.9.0** | Nov/2025 | Performance (Cache, WAL), Segurança (Rate Limit, Sanitização) e Cobertura 97% |
 | **1.7.0** | Nov/2025 | Arquitetura de LLM multi-provedor e Observabilidade |
 | **1.3.0** | Outubro/2025 | Novo diagrama, seção de segurança e créditos técnicos |
 | **1.2.0** | Jul/2025 | Melhorias de setup e estrutura |
