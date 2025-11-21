@@ -1,6 +1,5 @@
 """Testes para utilitários de segurança."""
 
-import pytest
 
 from qa_core.security import (
     sanitize_for_logging,

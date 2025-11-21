@@ -1,6 +1,5 @@
 """Testes unitários para o provedor Mock."""
 
-import pytest
 
 from qa_core.llm.config import LLMSettings
 from qa_core.llm.providers.mock import MockLLMClient
@@ -47,10 +46,10 @@ class TestMockLLMClient:
             api_key=None,
             extra={},
         )
-        
+
         class MockResponse:
             text = "Mock response"
-        
+
         response = client.generate_content("test prompt")
         assert response is not None
         assert hasattr(response, "text")
@@ -63,7 +62,7 @@ class TestMockLLMClient:
             api_key=None,
             extra={},
         )
-        
+
         response = client.generate_content(
             "test prompt",
             config={"temperature": 0.5},
@@ -77,7 +76,7 @@ class TestMockLLMClient:
             api_key=None,
             extra={},
         )
-        
+
         response = client.generate_content(
             "test prompt",
             trace_id="test-trace-123",
@@ -91,7 +90,7 @@ class TestMockLLMClient:
             api_key=None,
             extra={},
         )
-        
+
         response = client.generate_content(
             "test prompt",
             node="test-node",
