@@ -20,6 +20,8 @@ from .prompts import (
 )
 from .observability import log_graph_event
 
+logger = logging.getLogger(__name__)
+
 
 # --- Funções Auxiliares e Estrutura de Dados ---
 _llm_client: LLMClient | None = None
@@ -158,9 +160,9 @@ def chamar_modelo_com_retry(
             if tentativa < tentativas - 1:
                 time.sleep(espera)
             else:
-                print("❌ Esgotado o número de tentativas.")
+                logger.error("Esgotado o número de tentativas após rate limiting")
         except LLMError as e:
-            print(f"❌ Erro ao chamar provedor LLM: {e}")
+            logger.error(f"Erro ao chamar provedor LLM: {e}", exc_info=True)
             log_graph_event(
                 "model.call.error",
                 trace_id=trace_id,
@@ -173,7 +175,7 @@ def chamar_modelo_com_retry(
             )
             return None
         except Exception as e:  # pragma: no cover - salvaguarda final
-            print(f"❌ Erro inesperado na comunicação: {e}")
+            logger.error(f"Erro inesperado na comunicação com LLM: {e}", exc_info=True)
             log_graph_event(
                 "model.call.error",
                 trace_id=trace_id,

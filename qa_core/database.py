@@ -18,8 +18,11 @@
 #    - Todas as funções lidam com exceções de forma segura.
 # ==========================================================
 import datetime
+import logging
 import sqlite3
 from contextlib import closing
+
+logger = logging.getLogger(__name__)
 
 # Adaptador: Python datetime -> str
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat())
@@ -72,7 +75,7 @@ def init_db():
             _ensure_analysis_history_columns(cursor)
             conn.commit()
     except sqlite3.Error as e:
-        print(f"[DB ERROR] Falha ao inicializar DB: {e}")
+        logger.error(f"Falha ao inicializar DB: {e}", exc_info=True)
 
 
 def _ensure_analysis_history_columns(cursor: sqlite3.Cursor):
@@ -92,7 +95,7 @@ def _ensure_analysis_history_columns(cursor: sqlite3.Cursor):
                     f"ALTER TABLE analysis_history ADD COLUMN {column_name} {column_type};"
                 )
     except sqlite3.Error as e:
-        print(f"[DB ERROR] Falha ao ajustar colunas: {e}")
+        logger.error(f"Falha ao ajustar colunas: {e}", exc_info=True)
 
 
 def save_analysis_to_history(
@@ -151,9 +154,9 @@ def save_analysis_to_history(
                 ),
             )
             conn.commit()
-            print(f"💾 Análise salva no histórico em {timestamp}")
+            logger.info(f"Análise salva no histórico em {timestamp}")
     except sqlite3.Error as e:
-        print(f"[DB ERROR] Falha ao salvar análise: {e}")
+        logger.error(f"Falha ao salvar análise: {e}", exc_info=True)
 
 
 def get_all_analysis_history():
@@ -176,7 +179,7 @@ def get_all_analysis_history():
             )
             return cursor.fetchall()
     except sqlite3.Error as e:
-        print(f"[DB ERROR] Falha ao buscar histórico: {e}")
+        logger.error(f"Falha ao buscar histórico: {e}", exc_info=True)
         return []
 
 
@@ -197,10 +200,10 @@ def get_analysis_by_id(analysis_id: int):
             return None
 
     except sqlite3.Error as e:
-        print(f"[DB ERROR] Falha ao buscar análise {analysis_id}: {e}")
+        logger.error(f"Falha ao buscar análise {analysis_id}: {e}", exc_info=True)
         return None
     except (ValueError, TypeError):
-        print(f"[DB ERROR] ID inválido fornecido: {analysis_id}")
+        logger.error(f"ID inválido fornecido: {analysis_id}")
         return None
 
 
@@ -216,7 +219,7 @@ def delete_analysis_by_id(entry_id: int) -> bool:
             conn.commit()
             return cursor.rowcount > 0
     except sqlite3.Error as e:
-        print(f"[DB ERROR] Falha ao deletar análise {entry_id}: {e}")
+        logger.error(f"Falha ao deletar análise {entry_id}: {e}", exc_info=True)
         return False
 
 
@@ -232,5 +235,5 @@ def clear_history() -> int:
             conn.commit()
             return cursor.rowcount
     except sqlite3.Error as e:
-        print(f"[DB ERROR] Falha ao limpar histórico: {e}")
+        logger.error(f"Falha ao limpar histórico: {e}", exc_info=True)
         return 0
