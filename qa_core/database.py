@@ -72,6 +72,13 @@ def init_db():
             );
             """
             )
+            # Adiciona índices para otimizar queries frequentes
+            cursor.execute(
+                """
+            CREATE INDEX IF NOT EXISTS idx_analysis_history_created_at
+            ON analysis_history(created_at DESC);
+            """
+            )
             _ensure_analysis_history_columns(cursor)
             conn.commit()
     except sqlite3.Error as e:
