@@ -23,7 +23,6 @@ _PROVIDER_BUILDERS: Dict[str, ProviderBuilder] = {
 }
 
 
-
 class CachedLLMClient:
     """Wrapper simples para cache em memória de chamadas LLM."""
 
@@ -46,9 +45,7 @@ class CachedLLMClient:
     ) -> Any:
         # Cria uma chave de cache baseada no prompt e config
         # Convertemos config para tupla de itens ordenados para ser hashable
-        config_key = (
-            tuple(sorted(config.items())) if config else None
-        )
+        config_key = tuple(sorted(config.items())) if config else None
         cache_key = (prompt, config_key)
 
         if cache_key in self._cache:
@@ -89,7 +86,6 @@ def get_llm_client(settings: LLMSettings) -> LLMClient:
         KeyError
     ) as exc:  # pragma: no cover - proteção contra provedores desconhecidos
         raise ValueError(f"LLM provider '{settings.provider}' não suportado.") from exc
-    
+
     client = builder(settings)
     return CachedLLMClient(client)
-

@@ -116,7 +116,7 @@ class RateLimiter:
         if len(self.calls) < self.max_calls:
             self.calls.append(now)
             return True
-        
+
         return False
 
 
@@ -124,6 +124,7 @@ class SanitizedLogger:
     """
     Wrapper de logger que sanitiza mensagens antes de emitir.
     """
+
     def __init__(self, logger_instance: logging.Logger):
         self.logger = logger_instance
 
@@ -135,7 +136,6 @@ class SanitizedLogger:
 
     def error(self, msg: str, *args, **kwargs):
         self.logger.error(sanitize_for_logging(msg), *args, **kwargs)
-    
+
     def debug(self, msg: str, *args, **kwargs):
         self.logger.debug(sanitize_for_logging(msg), *args, **kwargs)
-

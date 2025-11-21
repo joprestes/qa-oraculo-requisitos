@@ -5,12 +5,10 @@ from qa_core.llm.providers.google import GoogleLLMClient
 from qa_core.llm.providers.mock import MockLLMClient
 from qa_core.llm.providers.base import LLMClient
 
+
 def test_factory_returns_google_client():
     settings = LLMSettings(
-        provider="google",
-        model="gemini-pro",
-        api_key="secret",
-        extra={}
+        provider="google", model="gemini-pro", api_key="secret", extra={}
     )
     client = get_llm_client(settings)
     assert isinstance(client, CachedLLMClient)
@@ -21,35 +19,29 @@ def test_factory_returns_google_client():
     # Mas LLMClient é @runtime_checkable. Vamos verificar.
     assert isinstance(client, LLMClient)
 
+
 def test_factory_returns_mock_client():
     settings = LLMSettings(
-        provider="mock",
-        model="mock-model",
-        api_key="secret",
-        extra={}
+        provider="mock", model="mock-model", api_key="secret", extra={}
     )
     client = get_llm_client(settings)
     assert isinstance(client, CachedLLMClient)
     assert isinstance(client._client, MockLLMClient)
 
+
 def test_factory_raises_error_for_unknown_provider():
     settings = LLMSettings(
-        provider="unknown_provider",
-        model="model",
-        api_key="secret",
-        extra={}
+        provider="unknown_provider", model="model", api_key="secret", extra={}
     )
     # O factory tenta acessar o dicionário e levanta ValueError se falhar
     with pytest.raises(ValueError) as exc:
         get_llm_client(settings)
     assert "não suportado" in str(exc.value)
 
+
 def test_factory_case_insensitive():
     settings = LLMSettings(
-        provider="GOOGLE",
-        model="gemini-pro",
-        api_key="secret",
-        extra={}
+        provider="GOOGLE", model="gemini-pro", api_key="secret", extra={}
     )
     client = get_llm_client(settings)
     assert isinstance(client, CachedLLMClient)

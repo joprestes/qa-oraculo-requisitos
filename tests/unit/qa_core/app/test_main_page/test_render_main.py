@@ -176,7 +176,10 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
     app.render_main_analysis_page()
 
     # Verifica que o relatório permanece inalterado (modo visualização)
-    assert mocked_st.session_state["test_plan_report"] == "### 🧩 Login válido\n```gherkin\nCenário antigo\n```"
+    assert (
+        mocked_st.session_state["test_plan_report"]
+        == "### 🧩 Login válido\n```gherkin\nCenário antigo\n```"
+    )
     # st.code deve ter sido chamado para exibir o cenário
     mocked_st.code.assert_called()
 

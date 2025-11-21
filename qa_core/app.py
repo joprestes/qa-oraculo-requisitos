@@ -476,10 +476,26 @@ def _save_edited_analysis_fields():
     try:
         validated_data = AnalysisEditInput(
             avaliacao_geral=st.session_state.get("edit_avaliacao", ""),
-            pontos_ambiguos=[line.strip() for line in st.session_state.get("edit_pontos", "").split("\n") if line.strip()],
-            perguntas_para_po=[line.strip() for line in st.session_state.get("edit_perguntas", "").split("\n") if line.strip()],
-            sugestao_criterios_aceite=[line.strip() for line in st.session_state.get("edit_criterios", "").split("\n") if line.strip()],
-            riscos_e_dependencias=[line.strip() for line in st.session_state.get("edit_riscos", "").split("\n") if line.strip()]
+            pontos_ambiguos=[
+                line.strip()
+                for line in st.session_state.get("edit_pontos", "").split("\n")
+                if line.strip()
+            ],
+            perguntas_para_po=[
+                line.strip()
+                for line in st.session_state.get("edit_perguntas", "").split("\n")
+                if line.strip()
+            ],
+            sugestao_criterios_aceite=[
+                line.strip()
+                for line in st.session_state.get("edit_criterios", "").split("\n")
+                if line.strip()
+            ],
+            riscos_e_dependencias=[
+                line.strip()
+                for line in st.session_state.get("edit_riscos", "").split("\n")
+                if line.strip()
+            ],
         )
 
         # Atualiza o bloco com dados validados e sanitizados
@@ -494,7 +510,6 @@ def _save_edited_analysis_fields():
 
     except ValidationError as e:
         announce(f"Erro de validação: {e}", "error", st_api=st)
-
 
 
 def _render_analysis_edit_form():
@@ -860,17 +875,17 @@ def _delete_test_case(pending_case: dict):
 def _save_scenario_edit(index: int, new_scenario: str) -> None:
     """
     Salva edição de cenário e atualiza persistência no histórico.
-    
+
     Args:
         index: Índice do cenário no DataFrame
         new_scenario: Novo conteúdo do cenário editado
     """
     # Converte para string para evitar problemas com mocks em testes
     cenario_str = str(new_scenario).strip()
-    
+
     # Atualiza DataFrame
     st.session_state["test_plan_df"].at[index, "cenario"] = cenario_str
-    
+
     # Atualiza JSON para persistência
     updated_df = st.session_state["test_plan_df"]
     records = updated_df.fillna("").to_dict(orient="records")
@@ -878,14 +893,14 @@ def _save_scenario_edit(index: int, new_scenario: str) -> None:
     st.session_state["test_plan_df_json"] = (
         json.dumps(records, ensure_ascii=False) if records else None
     )
-    
+
     # Atualiza relatório markdown
     intro = _get_plan_summary_from_state()
     st.session_state["test_plan_report"] = _compose_test_plan_report(intro, updated_df)
-    
+
     # Salva no histórico
     _save_current_analysis_to_history(update_existing=True)
-    
+
     st.toast("✅ Cenário atualizado e salvo!")
 
 
@@ -1005,16 +1020,16 @@ def _render_test_cases_table():
                 st.markdown(
                     f"**Justificativa de Acessibilidade:** {row.get('justificativa_acessibilidade','-')}"
                 )
-                
+
                 # Verifica se este cenário está em modo de edição
                 editing_index = st.session_state.get("editing_scenario_index")
                 is_editing = editing_index == index
-                
+
                 if row.get("cenario"):
                     if is_editing:
                         # MODO DE EDIÇÃO
                         st.markdown("**Cenário Gherkin (editando):**")
-                        
+
                         cenario_editado = accessible_text_area(
                             label=f"Editar Cenário {test_id}",
                             key=f"edit_cenario_{test_id}",
@@ -1029,7 +1044,7 @@ def _render_test_cases_table():
                             ),
                             st_api=st,
                         )
-                        
+
                         col1, col2 = st.columns(2)
                         with col1:
                             if accessible_button(
@@ -1043,7 +1058,7 @@ def _render_test_cases_table():
                                 _save_scenario_edit(index, cenario_editado)
                                 st.session_state["editing_scenario_index"] = None
                                 st.rerun()
-                        
+
                         with col2:
                             if accessible_button(
                                 label="❌ Cancelar",
@@ -1059,7 +1074,7 @@ def _render_test_cases_table():
                         # MODO DE VISUALIZAÇÃO
                         st.markdown("**Cenário Gherkin:**")
                         st.code(row["cenario"], language="gherkin")
-                        
+
                         col1, col2 = st.columns(2)
                         with col1:
                             if accessible_button(
@@ -1072,7 +1087,7 @@ def _render_test_cases_table():
                             ):
                                 st.session_state["editing_scenario_index"] = index
                                 st.rerun()
-                        
+
                         with col2:
                             if accessible_button(
                                 label="🗑️ Excluir Cenário",
