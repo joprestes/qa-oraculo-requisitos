@@ -273,6 +273,7 @@ Thumbs.db
 # === Project specific ===
 # Manter apenas o banco de dados de exemplo se necessário
 # data/qa_oraculo_history.db
+WORKSPACE_RULES.md
 
 # === Configurações locais ===
 config.local.json
@@ -289,3 +290,4 @@ tests/test_testrail_export.py
 
 # === Agent ===
 .agent/
+```
