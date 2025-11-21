@@ -23,6 +23,49 @@ _PROVIDER_BUILDERS: Dict[str, ProviderBuilder] = {
 }
 
 
+
+class CachedLLMClient:
+    """Wrapper simples para cache em memória de chamadas LLM."""
+
+    def __init__(self, client: LLMClient, max_size: int = 100):
+        self._client = client
+        self._cache: Dict[tuple, Any] = {}
+        self._max_size = max_size
+
+    @property
+    def provider_name(self) -> str:
+        return self._client.provider_name
+
+    def generate_content(
+        self,
+        prompt: str,
+        *,
+        config: Dict[str, Any] | None = None,
+        trace_id: str | None = None,
+        node: str | None = None,
+    ) -> Any:
+        # Cria uma chave de cache baseada no prompt e config
+        # Convertemos config para tupla de itens ordenados para ser hashable
+        config_key = (
+            tuple(sorted(config.items())) if config else None
+        )
+        cache_key = (prompt, config_key)
+
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        result = self._client.generate_content(
+            prompt, config=config, trace_id=trace_id, node=node
+        )
+
+        # Estratégia simples de limpeza: se encher, limpa tudo
+        if len(self._cache) >= self._max_size:
+            self._cache.clear()
+
+        self._cache[cache_key] = result
+        return result
+
+
 def get_llm_client(settings: LLMSettings) -> LLMClient:
     """
     Retorna uma instância de cliente LLM configurada com base nas configurações fornecidas.
@@ -34,7 +77,7 @@ def get_llm_client(settings: LLMSettings) -> LLMClient:
         settings: Objeto LLMSettings contendo provedor, modelo e chaves de API.
 
     Returns:
-        Uma instância que implementa o protocolo LLMClient.
+        Uma instância que implementa o protocolo LLMClient (envolta em cache).
 
     Raises:
         ValueError: Se o provedor especificado nas configurações não for suportado.
@@ -46,4 +89,7 @@ def get_llm_client(settings: LLMSettings) -> LLMClient:
         KeyError
     ) as exc:  # pragma: no cover - proteção contra provedores desconhecidos
         raise ValueError(f"LLM provider '{settings.provider}' não suportado.") from exc
-    return builder(settings)
+    
+    client = builder(settings)
+    return CachedLLMClient(client)
+

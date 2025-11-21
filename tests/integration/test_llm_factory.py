@@ -1,5 +1,6 @@
 import pytest
 from qa_core.llm import get_llm_client, LLMSettings
+from qa_core.llm.factory import CachedLLMClient
 from qa_core.llm.providers.google import GoogleLLMClient
 from qa_core.llm.providers.mock import MockLLMClient
 from qa_core.llm.providers.base import LLMClient
@@ -12,7 +13,12 @@ def test_factory_returns_google_client():
         extra={}
     )
     client = get_llm_client(settings)
-    assert isinstance(client, GoogleLLMClient)
+    assert isinstance(client, CachedLLMClient)
+    assert isinstance(client._client, GoogleLLMClient)
+    # Verifica se ainda respeita o protocolo (duck typing ou runtime check)
+    # Como CachedLLMClient não herda explicitamente de LLMClient na definição (mas implementa),
+    # o isinstance(client, LLMClient) pode falhar se LLMClient for Protocol sem runtime_checkable
+    # Mas LLMClient é @runtime_checkable. Vamos verificar.
     assert isinstance(client, LLMClient)
 
 def test_factory_returns_mock_client():
@@ -23,7 +29,8 @@ def test_factory_returns_mock_client():
         extra={}
     )
     client = get_llm_client(settings)
-    assert isinstance(client, MockLLMClient)
+    assert isinstance(client, CachedLLMClient)
+    assert isinstance(client._client, MockLLMClient)
 
 def test_factory_raises_error_for_unknown_provider():
     settings = LLMSettings(
@@ -45,4 +52,5 @@ def test_factory_case_insensitive():
         extra={}
     )
     client = get_llm_client(settings)
-    assert isinstance(client, GoogleLLMClient)
+    assert isinstance(client, CachedLLMClient)
+    assert isinstance(client._client, GoogleLLMClient)

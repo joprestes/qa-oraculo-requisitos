@@ -258,7 +258,7 @@ def save_analysis_to_history(update_existing: bool = False):
 # ==========================================================
 #  Funções cacheadas (IA via LangGraph)
 # ==========================================================
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, ttl=3600)
 def run_analysis_graph(user_story: str):
     """
     Executa o grafo de análise de User Story.
@@ -273,7 +273,7 @@ def run_analysis_graph(user_story: str):
     return grafo_analise.invoke(estado_inicial)
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, ttl=3600)
 def run_test_plan_graph(analysis_state: dict):
     """
     Executa o grafo de geração de Plano de Testes.
