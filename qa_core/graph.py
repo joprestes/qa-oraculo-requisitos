@@ -20,12 +20,27 @@ from .prompts import (
 )
 from .observability import log_graph_event
 
+logger = logging.getLogger(__name__)
+
 
 # --- Funções Auxiliares e Estrutura de Dados ---
 _llm_client: LLMClient | None = None
 
 
 def _get_llm_client() -> LLMClient:
+    """Obtém ou cria uma instância singleton do cliente LLM.
+
+    Carrega as configurações do ambiente (.env) e cria um cliente LLM
+    apropriado para o provedor configurado (Google, Azure, OpenAI, etc.).
+    A instância é cacheada globalmente para reutilização.
+
+    Returns:
+        LLMClient: Cliente LLM configurado e pronto para uso.
+
+    Raises:
+        LLMError: Se as configurações estiverem inválidas ou o provedor
+            não estiver disponível.
+    """
     global _llm_client
     if _llm_client is None:
         settings = LLMSettings.from_env()
@@ -34,7 +49,26 @@ def _get_llm_client() -> LLMClient:
 
 
 def extrair_json_da_resposta(texto_resposta: str) -> str | None:
-    """Função de segurança para extrair JSON de uma string, caso a API não retorne JSON puro."""
+    """Extrai JSON de uma string que pode conter formatação Markdown.
+
+    Função de segurança para extrair JSON de respostas de LLMs que podem
+    retornar JSON envolto em blocos de código Markdown (```json...```) ou
+    misturado com texto adicional.
+
+    Args:
+        texto_resposta: String contendo a resposta do LLM, possivelmente
+            com JSON envolto em Markdown ou texto adicional.
+
+    Returns:
+        String contendo apenas o JSON extraído, ou None se nenhum JSON
+        válido for encontrado.
+
+    Examples:
+        >>> extrair_json_da_resposta('```json\n{"key": "value"}\n```')
+        '{"key": "value"}'
+        >>> extrair_json_da_resposta('Aqui está: {"key": "value"}')
+        '{"key": "value"}'
+    """
     match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", texto_resposta)
     if match:
         return match.group(1).strip()
@@ -54,7 +88,32 @@ def chamar_modelo_com_retry(
     trace_id: str | None = None,
     node: str | None = None,
 ):
-    """Encapsula a chamada à API com lógica de retry para lidar com limites de requisição."""
+    """Chama o modelo LLM com lógica de retry automático.
+
+    Encapsula a chamada à API do LLM com retry automático para lidar com
+    limites de taxa (rate limiting) e erros temporários. Registra eventos
+    de observabilidade para cada tentativa.
+
+    Args:
+        client: Cliente LLM configurado para fazer a chamada.
+        prompt_completo: Prompt completo a ser enviado ao modelo.
+        tentativas: Número máximo de tentativas em caso de falha. Padrão: 3.
+        espera: Tempo de espera em segundos entre tentativas. Padrão: 60.
+        config: Configurações adicionais para a geração (temperatura, etc.).
+        trace_id: ID de rastreamento para correlação de logs.
+        node: Nome do nó do grafo que está fazendo a chamada.
+
+    Returns:
+        Resposta do modelo LLM, ou None em caso de falha após todas as tentativas.
+
+    Raises:
+        Não lança exceções diretamente, retorna None em caso de erro.
+
+    Note:
+        - Em caso de LLMRateLimitError, aguarda o tempo especificado antes de retry.
+        - Em caso de LLMError ou exceções genéricas, retorna None imediatamente.
+        - Todos os eventos são registrados via log_graph_event para observabilidade.
+    """
     log_graph_event(
         "model.call.start",
         trace_id=trace_id,
@@ -101,9 +160,9 @@ def chamar_modelo_com_retry(
             if tentativa < tentativas - 1:
                 time.sleep(espera)
             else:
-                print("❌ Esgotado o número de tentativas.")
+                logger.error("Esgotado o número de tentativas após rate limiting")
         except LLMError as e:
-            print(f"❌ Erro ao chamar provedor LLM: {e}")
+            logger.error(f"Erro ao chamar provedor LLM: {e}", exc_info=True)
             log_graph_event(
                 "model.call.error",
                 trace_id=trace_id,
@@ -116,7 +175,7 @@ def chamar_modelo_com_retry(
             )
             return None
         except Exception as e:  # pragma: no cover - salvaguarda final
-            print(f"❌ Erro inesperado na comunicação: {e}")
+            logger.error(f"Erro inesperado na comunicação com LLM: {e}", exc_info=True)
             log_graph_event(
                 "model.call.error",
                 trace_id=trace_id,
@@ -154,6 +213,29 @@ class AgentState(TypedDict):
 
 # --- Nós do Grafo ---
 def node_analisar_historia(state: AgentState) -> AgentState:
+    """Nó do grafo que analisa a User Story fornecida.
+
+    Primeiro nó do grafo de análise. Envia a User Story para o LLM com um
+    prompt especializado e retorna uma análise estruturada em JSON contendo:
+    - Avaliação de ambiguidades
+    - Pontos de atenção
+    - Riscos identificados
+    - Critérios de aceite sugeridos
+    - Perguntas para o Product Owner
+
+    Args:
+        state: Estado atual do grafo contendo:
+            - user_story: Texto da User Story a ser analisada.
+            - trace_id (opcional): ID para rastreamento de logs.
+
+    Returns:
+        Dicionário com a chave 'analise_da_us' contendo a análise estruturada
+        em formato JSON, ou um dicionário com chave 'erro' em caso de falha.
+
+    Note:
+        Registra eventos de observabilidade (node.start, node.finish, node.error)
+        para monitoramento e debugging.
+    """
     print("--- Etapa 1: Analisando a User Story... ---")
     trace_id = state.get("trace_id")
     node_name = "analista_us"
@@ -216,6 +298,26 @@ def node_analisar_historia(state: AgentState) -> AgentState:
 
 
 def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
+    """Nó do grafo que gera o relatório Markdown da análise.
+
+    Segundo nó do grafo de análise. Recebe a análise estruturada (JSON) e
+    gera um relatório em formato Markdown legível e bem formatado para
+    apresentação ao usuário.
+
+    Args:
+        state: Estado atual do grafo contendo:
+            - user_story: Texto original da User Story.
+            - analise_da_us: Análise estruturada em JSON.
+            - trace_id (opcional): ID para rastreamento de logs.
+
+    Returns:
+        Dicionário com a chave 'relatorio_analise_inicial' contendo o
+        relatório em formato Markdown, ou mensagem de erro em caso de falha.
+
+    Note:
+        Utiliza PROMPT_GERAR_RELATORIO_ANALISE e CONFIG_GERACAO_RELATORIO
+        para controlar a geração do relatório.
+    """
     print("--- Etapa 2: Compilando relatório de análise... ---")
     trace_id = state.get("trace_id")
     node_name = "gerador_relatorio_analise"
@@ -252,6 +354,31 @@ def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
 
 
 def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
+    """Nó do grafo que cria o plano de testes e cenários Gherkin.
+
+    Primeiro nó do grafo de plano de testes. Recebe a análise da User Story
+    e gera um plano de testes estruturado contendo:
+    - Objetivo e escopo do plano
+    - Estratégia de testes
+    - Cenários de teste em formato Gherkin (Given-When-Then)
+    - Priorização e justificativas de acessibilidade
+
+    Args:
+        state: Estado atual do grafo contendo:
+            - user_story: Texto original da User Story.
+            - analise_da_us: Análise estruturada da User Story.
+            - trace_id (opcional): ID para rastreamento de logs.
+
+    Returns:
+        Dicionário com a chave 'plano_e_casos_de_teste' contendo:
+            - plano_de_testes: Informações gerais do plano.
+            - casos_de_teste_gherkin: Lista de cenários estruturados.
+        Ou dicionário com chave 'erro' em caso de falha.
+
+    Note:
+        Os cenários são gerados em formato estruturado para facilitar
+        exportação para ferramentas como Jira, Xray, Azure DevOps, etc.
+    """
     print("--- Etapa Extra: Criando Plano de Testes... ---")
     trace_id = state.get("trace_id")
     node_name = "criador_plano_testes"

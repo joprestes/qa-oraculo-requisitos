@@ -342,31 +342,24 @@ def _render_user_story_input():
     Returns:
         bool: True se a análise foi iniciada, False caso contrário.
     """
-    accessible_text_area(
-        label="Insira a User Story aqui:",
-        key="user_story_input",
-        height=250,
-        help_text="Digite ou cole sua User Story no formato: Como [persona], quero [ação], para [objetivo].",
-        placeholder="Exemplo: Como usuário do app, quero redefinir minha senha via email...",
-        st_api=st,
-    )
-
-    # Compatibilidade com testes que usam mock do streamlit
-    if getattr(st.text_area, "__module__", "").startswith("unittest.mock"):
-        st.text_area(
-            "Insira a User Story aqui:",
-            height=250,
+    with st.form(key="user_story_form"):
+        accessible_text_area(
+            label="Insira a User Story aqui:",
             key="user_story_input",
+            height=250,
+            help_text="Digite ou cole sua User Story no formato: Como [persona], quero [ação], para [objetivo].",
+            placeholder="Exemplo: Como usuário do app, quero redefinir minha senha via email...",
+            st_api=st,
         )
 
-    # Botão que dispara a análise inicial usando o grafo
-    if accessible_button(
-        label="Analisar User Story",
-        key="btn_analyze",
-        context="Inicia a análise de IA da User Story fornecida. Aguarde alguns segundos para o resultado.",
-        type="primary",
-        st_api=st,
-    ):
+        # Botão de submit do formulário
+        submitted = st.form_submit_button(
+            label="Analisar User Story",
+            type="primary",
+            help="Inicia a análise de IA da User Story fornecida.",
+        )
+
+    if submitted:
         user_story_txt = st.session_state.get("user_story_input", "")
 
         if user_story_txt.strip():

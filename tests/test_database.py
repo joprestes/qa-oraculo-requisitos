@@ -179,7 +179,7 @@ class TestDatabaseDelete(unittest.TestCase):
         self.assertEqual(len(all_entries), 0)
 
 
-def test_init_db_com_erro(monkeypatch, capsys):
+def test_init_db_com_erro(monkeypatch, caplog):
     def fail_connect(*args, **kwargs):
         raise sqlite3.Error("DB fail")
 
@@ -187,11 +187,10 @@ def test_init_db_com_erro(monkeypatch, capsys):
 
     database.init_db()
 
-    captured = capsys.readouterr()
-    assert "[DB ERROR] Falha ao inicializar DB: DB fail" in captured.out
+    assert "Falha ao inicializar DB: DB fail" in caplog.text
 
 
-def test_save_analysis_to_history_com_erro(monkeypatch, capsys):
+def test_save_analysis_to_history_com_erro(monkeypatch, caplog):
     def fail_connect(*args, **kwargs):
         raise sqlite3.Error("DB fail")
 
@@ -199,8 +198,7 @@ def test_save_analysis_to_history_com_erro(monkeypatch, capsys):
 
     database.save_analysis_to_history("us", "report", "plan")
 
-    captured = capsys.readouterr()
-    assert "[DB ERROR] Falha ao salvar análise: DB fail" in captured.out
+    assert "Falha ao salvar análise: DB fail" in caplog.text
 
 
 def test_get_all_analysis_history_com_erro(monkeypatch):
