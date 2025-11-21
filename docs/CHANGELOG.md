@@ -5,6 +5,29 @@ Todas as mudanças notáveis deste projeto serão documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [1.8.0] - 2025-11-21
+
+### Refactor
+- **Consolidação e Modularização do Core**:
+  - `qa_core/utils.py` desmembrado em `qa_core/exports.py` (funções de exportação) e `qa_core/text_utils.py` (manipulação de texto e JSON).
+  - Eliminação de dependências circulares e acoplamento excessivo.
+- **Nova Arquitetura de LLM**:
+  - Implementação do pacote `qa_core.llm` utilizando **Factory Pattern**.
+  - Suporte modular para provedores (Google, OpenAI, Azure, Mock).
+  - `LLMSettings` refatorado com **Pydantic** para validação robusta.
+
+### Security
+- **Validação Estrita de Configuração**:
+  - Aplicação agora impede inicialização se chaves de API obrigatórias estiverem faltando (exceto em modo Mock).
+  - Auditoria de segurança em `.env` e tratamento de segredos.
+
+### Tests
+- **Cobertura Expandida**:
+  - Novos testes unitários para `exports.py` e `text_utils.py`.
+  - Testes de integração para `qa_core.llm.factory`.
+  - Verificação E2E com Mock Provider.
+  - Resolução de warnings de compatibilidade com Python 3.14 (`pytest.ini`).
+
 ## [Unreleased]
 
 ### Added
