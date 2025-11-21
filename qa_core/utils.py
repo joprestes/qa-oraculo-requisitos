@@ -29,15 +29,54 @@ import pandas as pd
 
 
 def normalizar_string(texto: str) -> str:
-    """Remove acentos e caracteres especiais de uma string."""
+    """Remove acentos e caracteres especiais de uma string.
+    
+    Normaliza uma string removendo acentuação e diacríticos, mantendo
+    apenas caracteres ASCII básicos. Útil para geração de nomes de arquivos
+    seguros e comparações de texto.
+    
+    Args:
+        texto: String a ser normalizada.
+    
+    Returns:
+        String normalizada sem acentos e caracteres especiais.
+        
+    Examples:
+        >>> normalizar_string("Criação de usuário")
+        'Criacao de usuario'
+        >>> normalizar_string("Éção")
+        'Ecao'
+    """
     nfkd_form = unicodedata.normalize("NFD", texto)
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
 
 def gerar_nome_arquivo_seguro(user_story: str, extension: str) -> str:
-    """
-    Gera nome de arquivo limpo, seguro e único, baseado na User Story.
-    Inclui timestamp para evitar sobrescrita.
+    """Gera nome de arquivo limpo, seguro e único baseado na User Story.
+    
+    Cria um nome de arquivo válido a partir do texto da User Story,
+    removendo caracteres especiais, limitando o tamanho e adicionando
+    timestamp para garantir unicidade.
+    
+    Args:
+        user_story: Texto da User Story para gerar o nome do arquivo.
+        extension: Extensão do arquivo (sem ponto), ex: 'pdf', 'csv', 'md'.
+    
+    Returns:
+        Nome de arquivo seguro no formato: 'nome-base_YYYYMMDD_HHMMSS.extension'
+        Se user_story estiver vazia, retorna 'relatorio_qa_oraculo.extension'.
+        
+    Examples:
+        >>> gerar_nome_arquivo_seguro("Como usuário, quero fazer login", "pdf")
+        'como-usuario-quero-fazer-login_20251120_215500.pdf'
+        >>> gerar_nome_arquivo_seguro("", "csv")
+        'relatorio_qa_oraculo.csv'
+        
+    Note:
+        - Usa apenas a primeira linha da User Story
+        - Limita o nome base a 50 caracteres
+        - Remove acentos e caracteres especiais
+        - Substitui espaços e underscores por hífens
     """
     if not user_story:
         return f"relatorio_qa_oraculo.{extension}"
@@ -56,7 +95,28 @@ def gerar_nome_arquivo_seguro(user_story: str, extension: str) -> str:
 
 
 def to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
-    """Converte um DataFrame Pandas em bytes de arquivo Excel."""
+    """Converte um DataFrame Pandas em bytes de arquivo Excel.
+    
+    Gera um arquivo Excel (.xlsx) em memória a partir de um DataFrame,
+    retornando os bytes prontos para download ou salvamento.
+    
+    Args:
+        df: DataFrame Pandas contendo os dados a serem exportados.
+        sheet_name: Nome da planilha (aba) no arquivo Excel.
+    
+    Returns:
+        Bytes do arquivo Excel (.xlsx) pronto para download.
+        
+    Examples:
+        >>> df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
+        >>> excel_bytes = to_excel(df, "Dados")
+        >>> len(excel_bytes) > 0
+        True
+        
+    Note:
+        Utiliza o engine 'openpyxl' para geração do arquivo Excel.
+        O índice do DataFrame não é incluído na exportação.
+    """
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl", mode="w") as writer:
         df.to_excel(writer, index=False, sheet_name=sheet_name)
