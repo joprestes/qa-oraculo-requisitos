@@ -52,7 +52,7 @@ jobs:
       # ---------------------------------------------------------------
       # 1️⃣ Baixa o código do repositório para dentro do runner
       # ---------------------------------------------------------------
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # ---------------------------------------------------------------
       # 2️⃣ Configura o Python na versão especificada na matriz
