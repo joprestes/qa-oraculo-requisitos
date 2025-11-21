@@ -123,3 +123,47 @@ def test_save_current_analysis_to_history_erro_generico(
 def test_save_analysis_to_history_wrapper_chama_privado(mock_save):
     assert app.save_analysis_to_history(update_existing=True) == "ok"
     mock_save.assert_called_once_with(update_existing=True)
+
+
+@patch("qa_core.database.get_db_connection")
+@patch("qa_core.app.announce")
+@patch("qa_core.app.st")
+def test_save_current_analysis_to_history_with_invalid_json_records(
+    mock_st, mock_announce, mock_get_conn
+):
+    """Testa que TypeError/ValueError ao converter records para JSON é tratado (linha 165)."""
+    mock_cursor = MagicMock()
+    mock_conn = MagicMock()
+    mock_conn.__enter__.return_value = mock_conn
+    mock_conn.cursor.return_value = mock_cursor
+    mock_get_conn.return_value = mock_conn
+
+    # Cria records que não podem ser serializados em JSON
+    # (ex: objetos complexos, funções, etc)
+    invalid_records = [
+        {
+            "id": "CT-1",
+            "titulo": "Caso",
+            "cenario": "Dado X",
+            "objeto_nao_serializavel": object(),  # Não serializável
+        }
+    ]
+
+    session_state = {
+        "user_story_input": "Como tester quero validar",
+        "analysis_state": {
+            "user_story": "História",
+            "relatorio_analise_inicial": "Relatório",
+        },
+        "test_plan_report": "Plano",
+        "test_plan_df_records": invalid_records,
+        # Não define test_plan_df_json para forçar tentativa de conversão
+    }
+
+    mock_st.session_state = session_state
+
+    # Deve tratar o erro e continuar sem quebrar
+    app._save_current_analysis_to_history()
+
+    # Verifica que tentou salvar (pode falhar no json.dumps mas não quebra)
+    assert mock_get_conn.called

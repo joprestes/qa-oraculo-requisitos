@@ -84,3 +84,35 @@ def test_stringify_payload_with_non_serializable_data():
     result = _stringify_payload(payload)
     assert result["good"] == "value"
     assert result["bad"] == "<NonSerializable>"
+
+
+def test_log_graph_event_json_dumps_fails():
+    """Testa que log_graph_event trata erro no json.dumps (linhas 67-68)."""
+    with patch("qa_core.observability._LOGGER") as mock_logger:
+        mock_logger.isEnabledFor.return_value = True
+
+        # Cria um payload que faz json.dumps falhar no log_graph_event
+        class NonSerializableInRecord:
+            def __repr__(self):
+                return "<NonSerializableInRecord>"
+
+        # Cria um record com dados que não podem ser serializados mesmo com default=repr
+        # Isso força o except TypeError na linha 67
+        with patch("qa_core.observability.json.dumps") as mock_dumps:
+            # Primeiro dumps (no payload) funciona, segundo (no record) falha
+            mock_dumps.side_effect = [None, TypeError("Cannot serialize")]
+
+            log_graph_event(
+                "test.event",
+                trace_id="xyz",
+                node="node1",
+                payload={"key": "value"},
+            )
+
+            # Deve usar repr(record) quando json.dumps falha
+            mock_logger.log.assert_called_once()
+            args = mock_logger.log.call_args
+            assert args[0][0] == logging.INFO
+            # Verifica que usou repr() como fallback
+            message = args[0][1]
+            assert isinstance(message, str)  # repr retorna string
