@@ -1,4 +1,6 @@
 from unittest.mock import Mock, patch
+
+import pytest
 from qa_core.llm import LLMSettings
 from qa_core.llm.providers.google import GoogleLLMClient
 
@@ -73,3 +75,11 @@ def test_google_generate_content_with_trace_id():
 
             # Verifica que a resposta foi retornada
             assert result.text == "Response"
+
+
+def test_google_init_raises_without_api_key():
+    """Testa que __init__ lança erro quando não há API key (linha 23)."""
+    from qa_core.llm.providers.google import GoogleLLMClient, LLMError
+
+    with pytest.raises(LLMError, match="GOOGLE_API_KEY não configurada"):
+        GoogleLLMClient(model="gemini-2.0-flash", api_key=None)

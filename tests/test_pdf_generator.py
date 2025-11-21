@@ -42,6 +42,43 @@ def test_clean_text_for_pdf_trata_typeerror_pd_isna():
     assert clean_text_for_pdf(Custom()) == "CustomObject"
 
 
+def test_clean_text_for_pdf_with_typeerror():
+    """Testa que TypeError em pd.isna é tratado corretamente (linhas 96-98)."""
+
+    # Objeto que causa TypeError em pd.isna (linha 96)
+    class NonIsnaType:
+        def __str__(self):
+            return "test"
+
+    result = clean_text_for_pdf(NonIsnaType())
+    assert result == "test"
+
+    # Testa também com um objeto que pd.isna não consegue processar
+    # Isso garante que o except TypeError (linha 96) e o pass (linha 98) são executados
+    class ComplexObject:
+        def __init__(self):
+            self.data = "complex"
+
+        def __str__(self):
+            return str(self.data)
+
+    result2 = clean_text_for_pdf(ComplexObject())
+    assert result2 == "complex"
+
+
+def test_normalize_test_plan_df_with_dict():
+    """Testa que _normalize_test_plan_df converte dict para DataFrame."""
+    from qa_core.pdf_generator import _normalize_test_plan_df
+
+    test_dict = {"id": "CT001", "titulo": "Teste 1", "prioridade": "Alta"}
+    df = _normalize_test_plan_df(test_dict)
+
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 1
+    assert df.iloc[0]["id"] == "CT001"
+    assert df.iloc[0]["titulo"] == "Teste 1"
+
+
 # ===================================================================
 # 2. Testes para Funções que Manipulam o PDF
 #    (Usaremos um MagicMock para simular o objeto PDF)
