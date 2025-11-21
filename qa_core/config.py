@@ -3,7 +3,7 @@
 # Configurações centrais do projeto
 # ==============================
 
-NOME_MODELO = "gemini-2.0-flash-lite-001"
+NOME_MODELO = "gemini-2.5-flash"
 
 # Configurações para tarefas que exigem criatividade e estrutura (JSONs complexos)
 CONFIG_GERACAO_ANALISE = {
