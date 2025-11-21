@@ -52,11 +52,11 @@ jobs:
       
       - name: Run Safety Check
         run: |
-          safety check --json || true
+          safety check --json > safety-report.json || true
       
       - name: Run Pip Audit
         run: |
-          pip-audit --desc --format json || true
+          pip-audit --desc --format json > pip-audit-report.json || true
       
       - name: Upload Security Reports
         if: always()
