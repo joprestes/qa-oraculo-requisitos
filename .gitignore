@@ -286,3 +286,6 @@ pyrightconfig.json
 quick-setup.sh
 quick-setup.bat
 tests/test_testrail_export.py
+
+# === Agent ===
+.agent/

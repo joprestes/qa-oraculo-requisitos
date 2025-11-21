@@ -10,7 +10,6 @@ from langchain.globals import set_llm_cache
 
 from qa_core.graph import (
     chamar_modelo_com_retry,
-    extrair_json_da_resposta,
     grafo_analise,
     grafo_plano_testes,
     node_analisar_historia,
@@ -18,6 +17,7 @@ from qa_core.graph import (
     node_gerar_relatorio_analise,
     node_gerar_relatorio_plano_de_testes,
 )
+from qa_core.text_utils import extract_json_from_text
 from qa_core.llm.providers.base import LLMRateLimitError
 
 
@@ -60,15 +60,15 @@ class TestHelperFunctions(BaseGraphTestCase):
         for nome, texto in casos.items():
             with self.subTest(nome):
                 self.assertEqual(
-                    json.loads(extrair_json_da_resposta(texto)), {"key": "value"}
+                    json.loads(extract_json_from_text(texto)), {"key": "value"}
                 )
 
     def test_extrair_json_sem_markdown(self):
         texto = '{"key": "value"}'
-        self.assertEqual(json.loads(extrair_json_da_resposta(texto)), {"key": "value"})
+        self.assertEqual(json.loads(extract_json_from_text(texto)), {"key": "value"})
 
     def test_extrair_json_falha_graciosamente(self):
-        self.assertIsNone(extrair_json_da_resposta("Apenas texto."))
+        self.assertIsNone(extract_json_from_text("Apenas texto."))
 
     @patch("qa_core.graph.time.sleep", return_value=None)
     def test_chamar_modelo_com_retry_e_sucesso(self, mock_sleep):

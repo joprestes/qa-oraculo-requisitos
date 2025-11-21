@@ -100,7 +100,7 @@ def gerar_csv_xray_from_df(
 ### Exemplo de Uso Programático
 
 ```python
-from qa_core.utils import gerar_csv_xray_from_df
+from qa_core.exports import gerar_csv_xray_from_df
 
 # Definir campos personalizados
 custom_fields = {

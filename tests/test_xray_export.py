@@ -6,7 +6,7 @@
 
 import pandas as pd
 
-from qa_core.utils import gerar_csv_xray_from_df
+from qa_core.exports import gerar_csv_xray_from_df
 
 
 def test_gerar_csv_xray_estrutura_basica():

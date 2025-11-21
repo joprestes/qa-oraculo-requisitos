@@ -2,7 +2,6 @@
 
 import logging
 import json
-import re
 import time
 from typing import Any, NotRequired, TypedDict
 
@@ -10,6 +9,7 @@ import streamlit as st
 from langgraph.graph import END, StateGraph
 
 from .config import CONFIG_GERACAO_ANALISE, CONFIG_GERACAO_RELATORIO
+from .text_utils import extract_json_from_text
 from .llm import LLMSettings, get_llm_client
 from .llm.providers.base import LLMClient, LLMError, LLMRateLimitError
 from .prompts import (
@@ -46,36 +46,6 @@ def _get_llm_client() -> LLMClient:
         settings = LLMSettings.from_env()
         _llm_client = get_llm_client(settings)
     return _llm_client
-
-
-def extrair_json_da_resposta(texto_resposta: str) -> str | None:
-    """Extrai JSON de uma string que pode conter formatação Markdown.
-
-    Função de segurança para extrair JSON de respostas de LLMs que podem
-    retornar JSON envolto em blocos de código Markdown (```json...```) ou
-    misturado com texto adicional.
-
-    Args:
-        texto_resposta: String contendo a resposta do LLM, possivelmente
-            com JSON envolto em Markdown ou texto adicional.
-
-    Returns:
-        String contendo apenas o JSON extraído, ou None se nenhum JSON
-        válido for encontrado.
-
-    Examples:
-        >>> extrair_json_da_resposta('```json\n{"key": "value"}\n```')
-        '{"key": "value"}'
-        >>> extrair_json_da_resposta('Aqui está: {"key": "value"}')
-        '{"key": "value"}'
-    """
-    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", texto_resposta)
-    if match:
-        return match.group(1).strip()
-    match = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", texto_resposta)
-    if match:
-        return match.group(0).strip()
-    return None
 
 
 def chamar_modelo_com_retry(
@@ -274,7 +244,7 @@ def node_analisar_historia(state: AgentState) -> AgentState:
         analise_json = json.loads(response.text)
     except json.JSONDecodeError:
         # Se falhar, tenta limpar a string como um fallback de segurança
-        json_limpo = extrair_json_da_resposta(response.text)
+        json_limpo = extract_json_from_text(response.text)
         if json_limpo:
             try:
                 analise_json = json.loads(json_limpo)
@@ -418,7 +388,7 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
     try:
         plano_json = json.loads(response.text)
     except json.JSONDecodeError:
-        json_limpo = extrair_json_da_resposta(response.text)
+        json_limpo = extract_json_from_text(response.text)
         if json_limpo:
             try:
                 plano_json = json.loads(json_limpo)

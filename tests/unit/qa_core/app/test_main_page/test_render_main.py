@@ -18,7 +18,11 @@ def test_render_main_analysis_page_sem_analysis_state(mocked_st):
 
     app.render_main_analysis_page()
     mocked_st.text_area.assert_any_call(
-        "Insira a User Story aqui:", height=250, key="user_story_input"
+        label="Insira a User Story aqui:",
+        height=250,
+        key="user_story_input",
+        help="Digite ou cole sua User Story no formato: Como [persona], quero [ação], para [objetivo].\n\n💡 Use Tab para navegar entre campos.",
+        placeholder="Exemplo: Como usuário do app, quero redefinir minha senha via email...",
     )
 
 
