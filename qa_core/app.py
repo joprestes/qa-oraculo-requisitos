@@ -69,6 +69,8 @@ from .exports import (
     to_excel,
 )
 
+# from .github_integration import get_github_integration, GitHubIntegration  # TODO: Descomentar quando implementar
+
 
 # ==========================================================
 #  Formatação segura de datas (compatível com testes)
@@ -2117,6 +2119,11 @@ def main():
     # ♿ Acessibilidade global
     # ------------------------------------------------------
     apply_accessible_styles()
+
+    # ------------------------------------------------------
+    #  Seleção de Repositório GitHub (Sidebar)
+    # ------------------------------------------------------
+    # _render_github_repo_selector()  # TODO: Implementar seletor de repositório GitHub
 
     # ------------------------------------------------------
     #  Mapa de páginas (sidebar)
