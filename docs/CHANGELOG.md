@@ -28,6 +28,48 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
   - Verificação E2E com Mock Provider.
   - Resolução de warnings de compatibilidade com Python 3.14 (`pytest.ini`).
 
+## [1.9.0] - 2025-11-21
+
+### Performance
+- **Otimização de Banco de Dados**:
+  - Ativado modo `WAL` (Write-Ahead Logging) no SQLite para melhor concorrência
+  - Configurado `synchronous=NORMAL` para balancear performance e segurança
+- **Cache de LLM**:
+  - Implementado `CachedLLMClient` com cache em memória para respostas LLM
+  - Redução de chamadas duplicadas à API
+  - Economia de custos e redução de latência
+- **Cache do Streamlit**:
+  - Adicionado TTL de 1 hora (`ttl=3600`) nos decoradores `@st.cache_data`
+  - Garantia de dados frescos sem sobrecarga de processamento
+
+### Security
+- **Validação de Entrada**:
+  - Implementado `UserStoryInput` com validação Pydantic
+  - Implementado `AnalysisEditInput` para validação de campos editados
+  - Sanitização automática de caracteres de controle
+  - Validação de comprimento mínimo e máximo
+- **Proteção de Logs**:
+  - Implementado `SanitizedLogger` para remoção automática de dados sensíveis
+  - Redação de API keys, tokens e emails em logs
+  - Prevenção de vazamento de PII (Personally Identifiable Information)
+- **Rate Limiting**:
+  - Implementado `RateLimiter` com algoritmo Token Bucket
+  - Proteção contra uso excessivo de recursos
+  - Configurável por operação
+
+### Tests
+- **Cobertura Expandida** (90.23% → 91.08%):
+  - Novos testes para `openai.py` provider (56% → 100%)
+  - Novos testes para `observability.py` (86% → 94%)
+  - Novos testes para `security.py` (91% → 100%)
+  - Novos testes para `schemas.py` (validação Pydantic)
+  - Total: 269 testes passando
+
+### Documentation
+- Atualizado `README.md` com seção "Performance & Segurança"
+- Badge de cobertura atualizado para 91%+
+- Documentação de rotação de API keys
+
 ## [Unreleased]
 
 ### Changed

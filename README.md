@@ -7,7 +7,7 @@ Ferramenta de análise inteligente de User Stories com geração automática de 
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.39+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-green.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#-testes-e-qualidade)
-[![Cobertura](https://img.shields.io/badge/Cobertura-90%25%2B-brightgreen.svg)](#-testes-e-qualidade)
+[![Cobertura](https://img.shields.io/badge/Cobertura-91%25%2B-brightgreen.svg)](#-testes-e-qualidade)
 
 > Transforme User Stories em planos de teste estruturados com o poder da IA.
 
@@ -185,6 +185,22 @@ Veja nosso [**Guia de Exportação Xray**](docs/XRAY_EXPORT_GUIDE.md) para instr
 
 ---
 
+## ⚡ Performance & Segurança
+
+### 🚀 Otimizações de Performance
+- **Cache em memória** para respostas LLM (evita chamadas duplicadas)
+- **SQLite WAL mode** para melhor concorrência
+- **Cache TTL** no Streamlit (1 hora) para dados frescos
+- **Redução de latência** e custos de API
+
+### 🔒 Segurança Robusta
+- **Validação Pydantic** em todos os inputs (User Stories e edições)
+- **Sanitização de logs** (remove API keys e dados sensíveis automaticamente)
+- **Rate Limiting** para proteção contra uso excessivo
+- **Auditoria de secrets** no CI/CD
+
+---
+
 ## 🧪 Testes e Qualidade
 
 ### Executar Testes
@@ -209,7 +225,7 @@ black --check .
 ```
 
 ### 📊 Cobertura de Testes
-- **90%+ de cobertura** garantida
+- **91%+ de cobertura** garantida
 - **Testes automatizados** em CI/CD
 - **Validação contínua** de qualidade
 - **Logs estruturados** salvos no console com `qa_core/observability.log_graph_event`
