@@ -1,12 +1,15 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 import time
 from qa_core.llm.providers.base import LLMClient
 from qa_core.llm.config import LLMSettings
 
+
 class MockLLMClient(LLMClient):
     provider_name = "mock"
 
-    def __init__(self, *, model: str, api_key: str | None, extra: Dict[str, Any]) -> None:
+    def __init__(
+        self, *, model: str, api_key: str | None, extra: Dict[str, Any]
+    ) -> None:
         self._model_name = model
         self._api_key = api_key or "mock-key"
         self._extra = extra
@@ -25,12 +28,13 @@ class MockLLMClient(LLMClient):
     ) -> Any:
         # Simula um pequeno delay de rede
         time.sleep(1.5)
-        
+
         # Retorna um JSON simulado dependendo do prompt ou contexto
         # Como o prompt é complexo, vamos retornar uma resposta genérica válida para o sistema
-        
+
         if "Analisar a User Story" in prompt or "node_analisar_historia" in str(node):
-            return MockResponse("""```json
+            return MockResponse(
+                """```json
 {
   "analise": {
     "clareza": "A User Story está clara e bem definida.",
@@ -40,10 +44,15 @@ class MockLLMClient(LLMClient):
     "sugestoes": "Adicionar validação de acessibilidade."
   }
 }
-```""")
-        
-        if "Criar um Plano de Testes" in prompt or "node_criar_plano_e_casos_de_teste" in str(node):
-            return MockResponse("""```json
+```"""
+            )
+
+        if (
+            "Criar um Plano de Testes" in prompt
+            or "node_criar_plano_e_casos_de_teste" in str(node)
+        ):
+            return MockResponse(
+                """```json
 {
   "plano_testes": [
     {
@@ -85,10 +94,12 @@ class MockLLMClient(LLMClient):
     }
   ]
 }
-```""")
+```"""
+            )
 
         # Fallback
         return MockResponse("Resposta Mock Genérica")
+
 
 class MockResponse:
     def __init__(self, text):

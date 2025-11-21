@@ -55,14 +55,16 @@ from .pdf_generator import generate_pdf_report
 from .state_manager import initialize_state, reset_session
 
 # Utilitários — helpers de exportação, normalização e formatação
-from .utils import (
+from .text_utils import (
     clean_markdown_report,
-    gerar_csv_azure_from_df,
-    gerar_csv_xray_from_df,
-    gerar_csv_testrail_from_df,
     gerar_nome_arquivo_seguro,
     gerar_relatorio_md_dos_cenarios,
     get_flexible,
+)
+from .exports import (
+    gerar_csv_azure_from_df,
+    gerar_csv_xray_from_df,
+    gerar_csv_testrail_from_df,
     preparar_df_para_zephyr_xlsx,
     to_excel,
 )

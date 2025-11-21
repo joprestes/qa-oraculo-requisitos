@@ -4,7 +4,9 @@ from unittest.mock import patch
 import pytest
 
 from qa_core.llm import LLMSettings, get_llm_client
-from qa_core.llm.providers.base import LLMError
+
+
+from pydantic import ValidationError
 
 
 @pytest.fixture(autouse=True)
@@ -13,12 +15,10 @@ def clear_env():
         yield
 
 
-def test_settings_default_to_google():
-    settings = LLMSettings.from_env()
-    assert settings.provider == "google"
-    assert settings.api_key is None
-    assert settings.model
-    assert settings.extra == {}
+def test_settings_from_env_raises_without_key():
+    """Testa se from_env lança erro quando não há chaves de API definidas."""
+    with pytest.raises(ValidationError):
+        LLMSettings.from_env()
 
 
 def test_settings_google_uses_google_api_key():
@@ -32,26 +32,25 @@ def test_settings_google_uses_google_api_key():
 
 
 def test_factory_requires_known_provider():
-    settings = LLMSettings(provider="desconhecido", model="m", api_key=None, extra={})
-    with pytest.raises(ValueError):
+    # Fornece uma chave dummy para passar na validação do Pydantic
+    settings = LLMSettings(
+        provider="desconhecido", model="m", api_key="dummy", extra={}
+    )
+    with pytest.raises(ValueError) as exc:
         get_llm_client(settings)
+    assert "não suportado" in str(exc.value)
 
 
-def test_google_client_requires_api_key():
-    settings = LLMSettings(provider="google", model="m", api_key=None, extra={})
-    with pytest.raises(LLMError):
-        get_llm_client(settings)
+def test_google_settings_requires_api_key():
+    with pytest.raises(ValidationError):
+        LLMSettings(provider="google", model="m", api_key=None, extra={})
 
 
-def test_openai_client_requires_api_key():
-    settings = LLMSettings(provider="openai", model="m", api_key=None, extra={})
-    with pytest.raises(LLMError) as exc:
-        get_llm_client(settings)
-    assert "OpenAI" in str(exc.value)
+def test_openai_settings_requires_api_key():
+    with pytest.raises(ValidationError):
+        LLMSettings(provider="openai", model="m", api_key=None, extra={})
 
 
-def test_llama_client_requires_api_key():
-    settings = LLMSettings(provider="llama", model="m", api_key=None, extra={})
-    with pytest.raises(LLMError) as exc:
-        get_llm_client(settings)
-    assert "LLaMA" in str(exc.value)
+def test_llama_settings_requires_api_key():
+    with pytest.raises(ValidationError):
+        LLMSettings(provider="llama", model="m", api_key=None, extra={})

@@ -24,6 +24,21 @@ _PROVIDER_BUILDERS: Dict[str, ProviderBuilder] = {
 
 
 def get_llm_client(settings: LLMSettings) -> LLMClient:
+    """
+    Retorna uma instância de cliente LLM configurada com base nas configurações fornecidas.
+
+    Esta função atua como uma Factory, instanciando o cliente correto (Google, OpenAI, Azure, etc.)
+    com base no campo `provider` das configurações.
+
+    Args:
+        settings: Objeto LLMSettings contendo provedor, modelo e chaves de API.
+
+    Returns:
+        Uma instância que implementa o protocolo LLMClient.
+
+    Raises:
+        ValueError: Se o provedor especificado nas configurações não for suportado.
+    """
     provider_key = settings.provider.lower()
     try:
         builder = _PROVIDER_BUILDERS[provider_key]

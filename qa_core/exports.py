@@ -1,93 +1,7 @@
-# ==========================================================
-# utils.py — Funções utilitárias do QA Oráculo (versão final)
-# ==========================================================
-# Este módulo reúne todas as funções de suporte do projeto:
-#   - Normalização de strings e nomes de arquivos
-#   - Exportação para Excel (XLSX) e CSV (Azure, Zephyr)
-#   - Limpeza de relatórios e parsing seguro de JSON
-#   - Geração de CSV para Azure Test Plans com autodetecção
-#
-# Tudo foi projetado para ser compreensível e útil ao QA:
-#   🔹 Código limpo e documentado
-#   🔹 Comentários explicando a lógica de cada regra
-#   🔹 Compatibilidade garantida com Excel PT-BR e EN-US
-# ==========================================================
-
 import csv
-import datetime
 import io
-import json
 import locale
-import re
-import unicodedata
-
 import pandas as pd
-
-# ==========================================================
-# NORMALIZAÇÃO E NOMES DE ARQUIVOS
-# ==========================================================
-
-
-def normalizar_string(texto: str) -> str:
-    """Remove acentos e caracteres especiais de uma string.
-
-    Normaliza uma string removendo acentuação e diacríticos, mantendo
-    apenas caracteres ASCII básicos. Útil para geração de nomes de arquivos
-    seguros e comparações de texto.
-
-    Args:
-        texto: String a ser normalizada.
-
-    Returns:
-        String normalizada sem acentos e caracteres especiais.
-
-    Examples:
-        >>> normalizar_string("Criação de usuário")
-        'Criacao de usuario'
-        >>> normalizar_string("Éção")
-        'Ecao'
-    """
-    nfkd_form = unicodedata.normalize("NFD", texto)
-    return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
-
-
-def gerar_nome_arquivo_seguro(user_story: str, extension: str) -> str:
-    """Gera nome de arquivo limpo, seguro e único baseado na User Story.
-
-    Cria um nome de arquivo válido a partir do texto da User Story,
-    removendo caracteres especiais, limitando o tamanho e adicionando
-    timestamp para garantir unicidade.
-
-    Args:
-        user_story: Texto da User Story para gerar o nome do arquivo.
-        extension: Extensão do arquivo (sem ponto), ex: 'pdf', 'csv', 'md'.
-
-    Returns:
-        Nome de arquivo seguro no formato: 'nome-base_YYYYMMDD_HHMMSS.extension'
-        Se user_story estiver vazia, retorna 'relatorio_qa_oraculo.extension'.
-
-    Examples:
-        >>> gerar_nome_arquivo_seguro("Como usuário, quero fazer login", "pdf")
-        'como-usuario-quero-fazer-login_20251120_215500.pdf'
-        >>> gerar_nome_arquivo_seguro("", "csv")
-        'relatorio_qa_oraculo.csv'
-
-    Note:
-        - Usa apenas a primeira linha da User Story
-        - Limita o nome base a 50 caracteres
-        - Remove acentos e caracteres especiais
-        - Substitui espaços e underscores por hífens
-    """
-    if not user_story:
-        return f"relatorio_qa_oraculo.{extension}"
-
-    primeira_linha_us = user_story.split("\n")[0].lower()
-    nome_sem_acentos = normalizar_string(primeira_linha_us)
-    nome_base = re.sub(r"[^\w\s-]", "", nome_sem_acentos).strip()
-    nome_base = re.sub(r"[-_\s]+", "-", nome_base)[:50]
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    return f"{nome_base}_{timestamp}.{extension}"
-
 
 # ==========================================================
 #  EXPORTAÇÃO PARA EXCEL
@@ -106,16 +20,6 @@ def to_excel(df: pd.DataFrame, sheet_name: str) -> bytes:
 
     Returns:
         Bytes do arquivo Excel (.xlsx) pronto para download.
-
-    Examples:
-        >>> df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
-        >>> excel_bytes = to_excel(df, "Dados")
-        >>> len(excel_bytes) > 0
-        True
-
-    Note:
-        Utiliza o engine 'openpyxl' para geração do arquivo Excel.
-        O índice do DataFrame não é incluído na exportação.
     """
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl", mode="w") as writer:
@@ -133,7 +37,18 @@ def preparar_df_para_zephyr_xlsx(
 ) -> pd.DataFrame:
     """
     Converte cenários de teste em DataFrame no formato aceito pelo Zephyr (Jira).
-    Cada linha do DataFrame representa um passo do caso de teste.
+
+    Transforma o DataFrame interno de cenários em uma estrutura compatível com
+    a importação via Excel do Zephyr. Cada passo do cenário gera uma linha.
+
+    Args:
+        df_original: DataFrame contendo os cenários gerados.
+        priority: Prioridade a ser atribuída a todos os casos (ex: "High").
+        labels: Etiquetas (labels) para os casos de teste.
+        description: Descrição geral para os casos de teste.
+
+    Returns:
+        DataFrame formatado com colunas específicas do Zephyr (Issue Type, Summary, etc.).
     """
     zephyr_rows = []
     header = [
@@ -169,46 +84,6 @@ def preparar_df_para_zephyr_xlsx(
             )
 
     return pd.DataFrame(zephyr_rows, columns=header)
-
-
-# ==========================================================
-#  FUNÇÕES DE SUPORTE E LIMPEZA
-# ==========================================================
-
-
-def get_flexible(data_dict: dict, keys: list, default_value):
-    """Busca flexível de valores por múltiplas chaves possíveis."""
-    if not isinstance(data_dict, dict):
-        return default_value
-    for key in keys:
-        if key in data_dict:
-            return data_dict[key]
-    return default_value
-
-
-def clean_markdown_report(report_text: str) -> str:
-    """Remove blocos de código Markdown do texto."""
-    if not isinstance(report_text, str):
-        return ""
-    text = re.sub(r"^```[a-zA-Z]*\n", "", report_text.strip())
-    text = re.sub(r"\n```$", "", text)
-    return text.strip()
-
-
-def parse_json_strict(s: str):
-    """Faz parsing seguro de JSON retornado pela IA."""
-    s = s.strip()
-    if s.startswith("```"):
-        s = s.lstrip("`")
-        s = s[s.find("{") :]
-    if s.endswith("```"):
-        s = s.rstrip("`")
-        s = s[: s.rfind("}") + 1]
-
-    try:
-        return json.loads(s)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Falha ao decodificar JSON: {e}") from e
 
 
 # ==========================================================
@@ -363,38 +238,6 @@ def gerar_csv_azure_from_df(  # noqa: C901
 
 
 # ==========================================================
-#  Salva Gherkin após edição do usuário
-# ==========================================================
-
-
-def gerar_relatorio_md_dos_cenarios(df):
-    """
-    Gera texto Markdown consolidado com os cenários Gherkin atuais.
-    Cada linha do DataFrame vira um bloco Markdown formatado.
-    """
-    if df is None or df.empty:
-        return "⚠️ Nenhum cenário disponível para gerar relatório."
-
-    blocos = []
-    for _, row in df.iterrows():
-        titulo = row.get("titulo", "Sem título")
-        prioridade = row.get("prioridade", "-")
-        criterio = row.get("criterio_de_aceitacao_relacionado", "")
-        cenario = row.get("cenario", "")
-
-        bloco = f"""### 🧩 {titulo}
-**Prioridade:** {prioridade}  
-**Critério de Aceitação:** {criterio}
-
-```gherkin
-{cenario.strip()}
-```
-"""
-        blocos.append(bloco)
-    return "\n".join(blocos)
-
-
-# ==========================================================
 #  EXPORTAÇÃO PARA XRAY (JIRA XRAY) - CSV
 # ==========================================================
 
@@ -407,29 +250,16 @@ def gerar_csv_xray_from_df(
     """
     Gera um CSV 100% compatível com Xray (Jira Test Management).
 
-    Formato requerido pelo Xray:
-    - Summary: nome da atividade de teste
-    - Description: descrição do teste
-    - Test_Repository_Folder: diretório onde o teste será salvo (deve existir no Xray)
-    - Test_Type: tipo de teste (sempre "Cucumber" para cenários Gherkin)
-    - Gherkin_Definition: cenário de teste completo em formato Gherkin
-
-    Campos opcionais/personalizados suportados:
-    - Labels: etiquetas para categorização
-    - Priority: prioridade do teste (High, Medium, Low)
-    - Component: componente do sistema relacionado
-    - Assignee: responsável pelo teste
-    - Qualquer outro campo customizado do Jira
+    Cria um arquivo CSV formatado para importação de testes manuais (Cucumber) no Xray.
+    Inclui suporte a campos personalizados e estrutura Gherkin.
 
     Args:
-        df_original: DataFrame com os cenários de teste
-        test_repository_folder: Diretório no Xray onde os testes serão salvos
-        custom_fields: Dicionário com campos personalizados (ex: {"Labels": "QA,Automation", "Priority": "High"})
+        df_original: DataFrame contendo os cenários de teste.
+        test_repository_folder: Caminho da pasta no repositório de testes do Xray.
+        custom_fields: Dicionário opcional de campos personalizados (chave=nome, valor=valor).
 
-    Requisitos:
-    - Separação por vírgulas
-    - Codificação UTF-8
-    - Quebras de linha preservadas no campo Gherkin_Definition
+    Returns:
+        Bytes do arquivo CSV codificado em UTF-8.
     """
 
     # Campos obrigatórios do Xray
@@ -524,18 +354,18 @@ def gerar_csv_testrail_from_df(
     """
     Gera um CSV compatível com importação de casos no TestRail.
 
-    Colunas comuns aceitas pelo TestRail Import (CSV):
-    - Title (obrigatório)
-    - Section (opcional)
-    - Template (ex.: "Test Case (Steps)")
-    - Type (ex.: "Functional")
-    - Priority (ex.: "High", "Medium", "Low")
-    - Estimate (opcional)
-    - References (opcional)
-    - Steps (texto com quebras de linha para cada passo)
-    - Expected Result (texto com quebras de linha, alinhadas aos passos)
+    Formata os cenários de teste para o layout de importação CSV do TestRail,
+    separando passos e resultados esperados.
 
-    Observação: utilizamos um formato simples com Steps/Expected Result multiline.
+    Args:
+        df_original: DataFrame contendo os cenários.
+        section: Seção (pasta) onde os casos serão criados no TestRail.
+        priority: Prioridade dos casos (ex: "Medium", "High").
+        template: Modelo de caso de teste (ex: "Test Case (Steps)").
+        references: Referências externas (ex: IDs de tickets Jira).
+
+    Returns:
+        Bytes do arquivo CSV codificado em UTF-8.
     """
 
     header = [
