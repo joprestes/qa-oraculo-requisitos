@@ -40,16 +40,34 @@ Este documento define as regras, padrões e convenções que devem ser seguidos 
 
 ## 5. Git e Versionamento
 
-*   **Commits Semânticos**:
-    *   `feat:`: Nova funcionalidade.
-    *   `fix:`: Correção de bug.
-    *   `docs:`: Alterações na documentação.
-    *   `style:`: Formatação, falta de ponto e vírgula, etc. (sem alteração de código).
-    *   `refactor:`: Refatoração de código (sem alteração de funcionalidade).
-    *   `test:`: Adição ou correção de testes.
-    *   `chore:`: Atualização de tarefas de build, configs, etc.
+### Regras Obrigatórias de Branch
+
+*   **NUNCA faça commits diretamente na branch `main`**.
+*   **SEMPRE crie uma branch antes de iniciar qualquer alteração**.
+*   Nomenclatura de branches:
+    *   `feature/nome-da-funcionalidade` para novas funcionalidades
+    *   `fix/nome-do-bug` para correções
+    *   `refactor/nome-da-refatoracao` para refatorações
+    *   `docs/nome-da-documentacao` para documentação
+
+### Commits Semânticos
+
+*   `feat:`: Nova funcionalidade.
+*   `fix:`: Correção de bug.
+*   `docs:`: Alterações na documentação.
+*   `style:`: Formatação, falta de ponto e vírgula, etc. (sem alteração de código).
+*   `refactor:`: Refatoração de código (sem alteração de funcionalidade).
+*   `test:`: Adição ou correção de testes.
+*   `chore:`: Atualização de tarefas de build, configs, etc.
+
+### Fluxo de Trabalho
+
+1. Crie uma branch a partir da `main`: `git checkout -b feature/minha-feature`
+2. Faça seus commits na branch criada
+3. Abra um Pull Request para a `main`
+4. Após aprovação, faça o merge
+
 *   **Mensagens**: Claras e descritivas, em português.
-*   **Branches**: NUNCA faça commits diretos na `main`. Use branches de feature/fix e faça Pull Requests (mesmo que simulados em ambiente local).
 
 ## 6. Segurança
 
