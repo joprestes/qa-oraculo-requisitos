@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import Mock, patch
 from qa_core.llm import LLMSettings
 from qa_core.llm.providers.google import GoogleLLMClient
@@ -14,7 +13,7 @@ def test_google_from_settings_creates_client():
     )
     
     with patch("qa_core.llm.providers.google.genai.configure"):
-        with patch("qa_core.llm.providers.google.genai.GenerativeModel") as mock_model:
+        with patch("qa_core.llm.providers.google.genai.GenerativeModel") as _:
             client = GoogleLLMClient.from_settings(settings)
             assert client is not None
             assert client._model_name == "gemini-2.0-flash"

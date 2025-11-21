@@ -68,7 +68,7 @@ from .exports import (
     preparar_df_para_zephyr_xlsx,
     to_excel,
 )
-from .github_integration import get_github_integration, GitHubIntegration
+# from .github_integration import get_github_integration, GitHubIntegration  # TODO: Descomentar quando implementar
 
 
 # ==========================================================

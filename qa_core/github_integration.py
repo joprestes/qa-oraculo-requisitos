@@ -275,7 +275,7 @@ class GitHubIntegration:
         Returns:
             Lista de resultados da busca
         """
-        repo = self.get_repository(repo_path)
+        _ = self.get_repository(repo_path)
         
         search_query = f"{query} repo:{repo_path}"
         if language:
