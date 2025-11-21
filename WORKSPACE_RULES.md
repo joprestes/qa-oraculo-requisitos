@@ -49,7 +49,7 @@ Este documento define as regras, padrões e convenções que devem ser seguidos 
     *   `test:`: Adição ou correção de testes.
     *   `chore:`: Atualização de tarefas de build, configs, etc.
 *   **Mensagens**: Claras e descritivas, em português.
-*   **Branches**: Evite commits diretos na `main`. Use branches de feature/fix e faça Pull Requests (mesmo que simulados em ambiente local).
+*   **Branches**: NUNCA faça commits diretos na `main`. Use branches de feature/fix e faça Pull Requests (mesmo que simulados em ambiente local).
 
 ## 6. Segurança
 
