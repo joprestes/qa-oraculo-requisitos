@@ -122,6 +122,10 @@ def test_render_main_page_falha_na_geracao_do_plano(mocked_st):
 
 
 def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
+    """
+    Testa que cenários são exibidos em modo de visualização por padrão.
+    Com a nova UX, edições só são salvas quando o usuário clica em 'Confirmar'.
+    """
     mocked_st.session_state.update(
         {
             "analysis_finished": True,
@@ -167,20 +171,14 @@ def test_render_main_page_edicao_e_salvamento_gherkin(mocked_st):
         }
     )
 
-    mocked_st.text_area.return_value = "Cenário: Login válido\nDado que o usuário acessa o sistema\nEntão o login é bem-sucedido"
+    # Cenários agora são exibidos em modo de visualização por padrão (st.code)
+    # Não há auto-save, então o relatório não deve mudar
+    app.render_main_analysis_page()
 
-    with (
-        patch("qa_core.app._save_current_analysis_to_history") as mock_save,
-        patch("qa_core.app._compose_test_plan_report", return_value="RELATÓRIO NOVO"),
-    ):
-        mocked_st.session_state["test_plan_report"] = (
-            "### 🧩 Login válido\n```gherkin\nCenário antigo\n```"
-        )
-        mocked_st.text_area.return_value = "Cenário: Login válido\nDado passo novo"
-        app.render_main_analysis_page()
-
-    assert mocked_st.session_state["test_plan_report"] == "RELATÓRIO NOVO"
-    mock_save.assert_called()
+    # Verifica que o relatório permanece inalterado (modo visualização)
+    assert mocked_st.session_state["test_plan_report"] == "### 🧩 Login válido\n```gherkin\nCenário antigo\n```"
+    # st.code deve ter sido chamado para exibir o cenário
+    mocked_st.code.assert_called()
 
 
 VALID_USER_STORY = (

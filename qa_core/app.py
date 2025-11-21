@@ -846,6 +846,38 @@ def _delete_test_case(pending_case: dict):
     st.rerun()
 
 
+def _save_scenario_edit(index: int, new_scenario: str) -> None:
+    """
+    Salva edição de cenário e atualiza persistência no histórico.
+    
+    Args:
+        index: Índice do cenário no DataFrame
+        new_scenario: Novo conteúdo do cenário editado
+    """
+    # Converte para string para evitar problemas com mocks em testes
+    cenario_str = str(new_scenario).strip()
+    
+    # Atualiza DataFrame
+    st.session_state["test_plan_df"].at[index, "cenario"] = cenario_str
+    
+    # Atualiza JSON para persistência
+    updated_df = st.session_state["test_plan_df"]
+    records = updated_df.fillna("").to_dict(orient="records")
+    st.session_state["test_plan_df_records"] = records
+    st.session_state["test_plan_df_json"] = (
+        json.dumps(records, ensure_ascii=False) if records else None
+    )
+    
+    # Atualiza relatório markdown
+    intro = _get_plan_summary_from_state()
+    st.session_state["test_plan_report"] = _compose_test_plan_report(intro, updated_df)
+    
+    # Salva no histórico
+    _save_current_analysis_to_history(update_existing=True)
+    
+    st.toast("✅ Cenário atualizado e salvo!")
+
+
 def _render_test_cases_table():
     """
     Renderiza a tabela de casos de teste com expanderes individuais.
@@ -962,69 +994,97 @@ def _render_test_cases_table():
                 st.markdown(
                     f"**Justificativa de Acessibilidade:** {row.get('justificativa_acessibilidade','-')}"
                 )
+                
+                # Verifica se este cenário está em modo de edição
+                editing_index = st.session_state.get("editing_scenario_index")
+                is_editing = editing_index == index
+                
                 if row.get("cenario"):
-                    st.markdown("**Cenário Gherkin (editável):**")
-
-                    cenario_editado = accessible_text_area(
-                        label=f"Editar Cenário {test_id}",
-                        key=f"edit_cenario_{test_id}",
-                        value=row["cenario"],
-                        height=220,
-                        help_text="Edite o cenário de teste mantendo a estrutura Gherkin (Dado, Quando, Então).",
-                        placeholder=(
-                            "Exemplo:\n"
-                            "Dado que o usuário possui um cartão válido\n"
-                            "Quando ele realiza a compra\n"
-                            "Então o sistema deve gerar um token de pagamento com sucesso"
-                        ),
-                        st_api=st,
-                    )
-
-                    # Atualiza o DataFrame se houve edição
-                    if cenario_editado.strip() != str(row["cenario"]).strip():
-                        st.session_state["test_plan_df"].at[
-                            index, "cenario"
-                        ] = cenario_editado
-
-                        novo_relatorio = _compose_test_plan_report(
-                            st.session_state.get(
-                                "test_plan_report_intro",
-                                st.session_state.get("test_plan_report", ""),
+                    if is_editing:
+                        # MODO DE EDIÇÃO
+                        st.markdown("**Cenário Gherkin (editando):**")
+                        
+                        cenario_editado = accessible_text_area(
+                            label=f"Editar Cenário {test_id}",
+                            key=f"edit_cenario_{test_id}",
+                            value=row["cenario"],
+                            height=220,
+                            help_text="Edite o cenário de teste mantendo a estrutura Gherkin (Dado, Quando, Então).",
+                            placeholder=(
+                                "Exemplo:\n"
+                                "Dado que o usuário possui um cartão válido\n"
+                                "Quando ele realiza a compra\n"
+                                "Então o sistema deve gerar um token de pagamento com sucesso"
                             ),
-                            st.session_state["test_plan_df"],
+                            st_api=st,
                         )
-                        st.session_state["test_plan_report"] = novo_relatorio
-
-                        #  Atualiza histórico com a versão revisada (atualização em linha)
-                        _save_current_analysis_to_history(update_existing=True)
-                        st.toast(
-                            "✅ Cenário atualizado e persistido no histórico (ID existente)."
-                        )
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if accessible_button(
+                                label="✅ Confirmar Edição",
+                                key=f"confirm_edit_{test_id}",
+                                context="Salva as alterações no cenário e atualiza o histórico.",
+                                type="primary",
+                                use_container_width=True,
+                                st_api=col1,
+                            ):
+                                _save_scenario_edit(index, cenario_editado)
+                                st.session_state["editing_scenario_index"] = None
+                                st.rerun()
+                        
+                        with col2:
+                            if accessible_button(
+                                label="❌ Cancelar",
+                                key=f"cancel_edit_{test_id}",
+                                context="Descarta as alterações e volta para o modo de visualização.",
+                                type="secondary",
+                                use_container_width=True,
+                                st_api=col2,
+                            ):
+                                st.session_state["editing_scenario_index"] = None
+                                st.rerun()
+                    else:
+                        # MODO DE VISUALIZAÇÃO
+                        st.markdown("**Cenário Gherkin:**")
+                        st.code(row["cenario"], language="gherkin")
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if accessible_button(
+                                label="✏️ Editar Cenário",
+                                key=f"edit_btn_{test_id}",
+                                context="Ativa o modo de edição para este cenário.",
+                                type="secondary",
+                                use_container_width=True,
+                                st_api=col1,
+                            ):
+                                st.session_state["editing_scenario_index"] = index
+                                st.rerun()
+                        
+                        with col2:
+                            if accessible_button(
+                                label="🗑️ Excluir Cenário",
+                                key=f"delete_btn_{test_id}",
+                                context="Remove este cenário do plano de testes.",
+                                type="secondary",
+                                use_container_width=True,
+                                st_api=col2,
+                            ):
+                                st.session_state["pending_case_deletion"] = {
+                                    "row_index": row.name,
+                                    "label": f"{test_id} — {row.get('titulo', '-')}",
+                                    "test_id": row.get("id"),
+                                    "title": row.get("titulo"),
+                                }
+                                st.rerun()
+                                return
                 else:
                     announce(
                         "Este caso de teste ainda não possui cenário em formato Gherkin.",
                         "info",
                         st_api=st,
                     )
-
-                if accessible_button(
-                    label="🗑️ Excluir cenário",
-                    key=f"delete_case_{row.name}",
-                    context=(
-                        "Remove o cenário atual do plano de testes e atualiza o histórico automaticamente."
-                    ),
-                    type="secondary",
-                    use_container_width=True,
-                    st_api=st,
-                ):
-                    st.session_state["pending_case_deletion"] = {
-                        "row_index": row.name,
-                        "label": f"{test_id} — {row.get('titulo', '-')}",
-                        "test_id": row.get("id"),
-                        "title": row.get("titulo"),
-                    }
-                    st.rerun()
-                    return
 
 
 def _render_history_test_cases_table(df: pd.DataFrame):

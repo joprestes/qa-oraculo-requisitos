@@ -30,6 +30,17 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Melhorias de UX na Edição de Cenários**:
+  - Cenários agora são exibidos em **modo de visualização** por padrão (código formatado Gherkin).
+  - Adicionados botões **"✏️ Editar Cenário"** e **"🗑️ Excluir Cenário"** em cada caso de teste.
+  - Modo de edição ativado explicitamente via botão, exibindo **"✅ Confirmar Edição"** e **"❌ Cancelar"**.
+  - Edições só são persistidas após confirmação explícita do usuário.
+  - Nova função auxiliar `_save_scenario_edit()` para garantir persistência correta no histórico.
+  - Interface mais limpa e profissional, prevenindo edições acidentais.
+
+
 ### Added
 
 - **Gestão avançada do plano de testes**:
