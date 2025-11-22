@@ -396,9 +396,21 @@ def _render_user_story_input():
             validated_input = UserStoryInput(content=user_story_txt)
             user_story_txt = validated_input.content
         except ValidationError as e:
-            # Extrai mensagem amigável
-            error_msg = e.errors()[0]["msg"] if e.errors() else str(e)
-            announce(f"Erro na User Story: {error_msg}", "warning", st_api=st)
+            # Traduz mensagens de erro do Pydantic para português
+            error_data = e.errors()[0] if e.errors() else {}
+            raw_msg = error_data.get("msg", str(e))
+            
+            if "String should have at least" in raw_msg:
+                min_len = error_data.get("ctx", {}).get("min_length", 10)
+                friendly_msg = f"A User Story é muito curta. Digite pelo menos {min_len} caracteres."
+            elif "String should have at most" in raw_msg:
+                friendly_msg = "A User Story excedeu o limite máximo de caracteres."
+            elif "Field required" in raw_msg:
+                friendly_msg = "Por favor, preencha o campo da User Story."
+            else:
+                friendly_msg = f"Erro de validação: {raw_msg}"
+
+            announce(friendly_msg, "warning", st_api=st)
             return True
 
         if user_story_txt:
