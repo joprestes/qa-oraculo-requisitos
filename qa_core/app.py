@@ -460,26 +460,42 @@ def _extract_analysis_fields():
     """
     analise_json = st.session_state.get("analysis_state", {}).get("analise_da_us", {})
 
-    # Usa get_flexible para aceitar variações de chave que a IA pode devolver
-    avaliacao_str = get_flexible(analise_json, ["avaliacao_geral", "avaliacao"], "")
-    pontos_list = get_flexible(
-        analise_json, ["pontos_ambiguos", "pontos_de_ambiguidade"], []
-    )
-    perguntas_list = get_flexible(
-        analise_json, ["perguntas_para_po", "perguntas_ao_po"], []
-    )
-    criterios_list = get_flexible(
-        analise_json,
-        ["sugestao_criterios_aceite", "criterios_de_aceite"],
-        [],
-    )
-    riscos_list = get_flexible(analise_json, ["riscos_e_dependencias", "riscos"], [])
+    # Tenta recuperar do estado de edição (caso o usuário tenha digitado e a página recarregado)
+    # Se não houver edição em andamento, pega do JSON original
+    
+    # Avaliação
+    if "edit_avaliacao" in st.session_state:
+        avaliacao_str = st.session_state["edit_avaliacao"]
+    else:
+        avaliacao_str = get_flexible(analise_json, ["avaliacao_geral", "avaliacao"], "")
 
-    # Converte listas em strings com quebra de linha para o form
-    pontos_str = "\n".join(pontos_list)
-    perguntas_str = "\n".join(perguntas_list)
-    criterios_str = "\n".join(criterios_list)
-    riscos_str = "\n".join(riscos_list)
+    # Pontos
+    if "edit_pontos" in st.session_state:
+        pontos_str = st.session_state["edit_pontos"]
+    else:
+        pontos_list = get_flexible(analise_json, ["pontos_ambiguos", "pontos_de_ambiguidade"], [])
+        pontos_str = "\n".join(pontos_list)
+
+    # Perguntas
+    if "edit_perguntas" in st.session_state:
+        perguntas_str = st.session_state["edit_perguntas"]
+    else:
+        perguntas_list = get_flexible(analise_json, ["perguntas_para_po", "perguntas_ao_po"], [])
+        perguntas_str = "\n".join(perguntas_list)
+
+    # Critérios
+    if "edit_criterios" in st.session_state:
+        criterios_str = st.session_state["edit_criterios"]
+    else:
+        criterios_list = get_flexible(analise_json, ["sugestao_criterios_aceite", "criterios_de_aceite"], [])
+        criterios_str = "\n".join(criterios_list)
+
+    # Riscos
+    if "edit_riscos" in st.session_state:
+        riscos_str = st.session_state["edit_riscos"]
+    else:
+        riscos_list = get_flexible(analise_json, ["riscos_e_dependencias", "riscos"], [])
+        riscos_str = "\n".join(riscos_list)
 
     return avaliacao_str, pontos_str, perguntas_str, criterios_str, riscos_str
 
