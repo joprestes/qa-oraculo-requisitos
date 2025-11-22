@@ -1,192 +1,166 @@
-# 🚀 Resumo da Pull Request
+# 🚀 Implementação de Quick Wins do Roadmap
 
-Este PR aumenta a cobertura de testes unitários de 86% para 94%, adicionando mais de 90 novos testes unitários para módulos críticos do projeto. A mudança melhora significativamente a confiabilidade e manutenibilidade do código, garantindo que funcionalidades importantes estejam adequadamente testadas.
+Este PR implementa os "quick wins" pendentes do roadmap, focando em melhorias de funcionalidade e experiência do usuário com baixo esforço e alto impacto.
 
-**Impacto**: Melhoria na qualidade e confiabilidade do código, facilitando refatorações futuras e detectando regressões precocemente.
+**Impacto**: Melhoria na experiência do usuário, otimização de performance e maior segurança no desenvolvimento.
 
 ## ✨ Detalhes da Implementação
 
 ### **Contexto**
-O projeto tinha uma cobertura de testes de 86%, próxima da meta de 90%, mas alguns módulos críticos estavam com cobertura baixa:
-- `github_integration.py`: apenas 14% de cobertura
-- `llm/config.py`: apenas 64% de cobertura
-- `prompts.py`: sem testes
-- `config.py`: sem testes
+O roadmap identificou várias melhorias de baixa complexidade que poderiam ser implementadas rapidamente para melhorar a qualidade e usabilidade do sistema.
 
 ### **Solução**
-Foram criados e expandidos testes unitários abrangentes para os módulos identificados:
+Foram implementados 5 quick wins prioritários:
 
-#### Novos Arquivos de Teste Criados:
-1. **`tests/unit/qa_core/test_github_integration.py`**
-   - 40+ testes unitários cobrindo todos os métodos da classe `GitHubIntegration`
-   - Testes de autenticação, obtenção de repositórios, leitura de arquivos, listagem, busca de código
-   - Cobertura de casos de erro (404, 403, 500)
-   - Validação de formatos e tratamento de exceções
+#### 1. 🔒 Auditoria de Secrets no CI/CD
+- **Status**: ✅ Já estava implementado
+- **Detalhes**: Verificamos que o projeto já possui:
+  - Gitleaks configurado no `.github/workflows/security-audit.yml`
+  - Dependabot configurado no `.github/dependabot.yml`
+  - Scans automáticos de segurança de dependências
+- **Documentação**: Atualizada no `ROADMAP.md` como implementado
 
-2. **`tests/unit/qa_core/test_core_config.py`**
-   - 12 testes para validação das configurações centrais
-   - Verificação de `NOME_MODELO`, `CONFIG_GERACAO_ANALISE`, `CONFIG_GERACAO_RELATORIO`
-   - Validação de valores e tipos
+#### 2. ⚡ TTL Configurável no CachedLLMClient
+- **Arquivo**: `qa_core/llm/factory.py`
+- **Funcionalidade**: 
+  - Adicionado parâmetro `ttl_seconds` opcional ao `CachedLLMClient`
+  - Implementada expiração automática de entradas do cache baseada em TTL
+  - Cache limpa automaticamente entradas expiradas durante operações
+  - Compatível com sistema de cache existente (max_size)
+- **Benefícios**: Permite controlar o tempo de vida do cache, útil para dados que podem ficar desatualizados
 
-3. **`tests/unit/qa_core/test_prompts.py`**
-   - 10 testes para validação de todos os prompts do sistema
-   - Verificação de existência, estrutura e conteúdo dos prompts
-   - Validação de instruções sobre JSON, Markdown, Gherkin, WCAG
+#### 3. 🌙 Modo Escuro com Toggle Manual
+- **Arquivo**: `qa_core/a11y.py`
+- **Funcionalidade**:
+  - Adicionado toggle manual na sidebar para ativar/desativar modo escuro
+  - Preferência manual sobrescreve detecção automática do sistema
+  - Estado persistido em `session_state`
+  - CSS dinâmico aplicado baseado na preferência do usuário
+- **Benefícios**: Melhor experiência visual e acessibilidade para usuários que preferem tema escuro
 
-#### Arquivos de Teste Melhorados:
-4. **`tests/unit/qa_core/llm/test_config.py`**
-   - Expandido de 6 para 29 testes
-   - Cobertura de todos os providers (Google, OpenAI, LLaMA, Mock)
-   - Testes de configuração via variáveis de ambiente
-   - Validação de API keys e configurações extras
+#### 4. 🔍 Busca e Filtros Básicos no Histórico
+- **Arquivo**: `qa_core/app.py`
+- **Funcionalidade**:
+  - Campo de busca para filtrar análises por conteúdo da User Story
+  - Filtro por data (Últimos 7/30/90 dias ou Todos)
+  - Contador de resultados filtrados vs. total
+  - Busca case-insensitive e em tempo real
+- **Benefícios**: Facilita encontrar análises específicas em histórico grande
 
-5. **`tests/unit/qa_core/test_observability.py`**
-   - Adicionados testes para casos de erro no JSON serialization
-   - Cobertura: 94% → 100%
+#### 5. 🧪 Melhorar Cobertura de Testes LLM (Edge Cases)
+- **Arquivo**: `tests/unit/qa_core/llm/test_factory_cache.py`
+- **Funcionalidade**:
+  - Adicionados 8 novos testes para funcionalidade TTL do cache
+  - Cobertura de casos de expiração, limpeza automática, interação TTL/max_size
+  - Testes de comportamento quando TTL é None vs. configurado
+- **Benefícios**: Garante robustez do sistema de cache e evita regressões
 
-6. **`tests/unit/qa_core/llm/providers/test_google_extended.py`**
-   - Adicionado teste para erro sem API key
-
-7. **`tests/unit/qa_core/app/test_history_persistence.py`**
-   - Adicionado teste para erro na serialização JSON de records
-
-### **Notas para QA**
-- Todos os testes são unitários e não dependem de serviços externos
-- Uso extensivo de `unittest.mock` para isolar dependências
-- Testes cobrem casos de sucesso e erro
-- Nenhuma mudança no código de produção, apenas testes
+### **Documentação Atualizada**
+- `docs/ROADMAP.md`: Marcados os quick wins como implementados
+- `docs/ROADMAP_STATUS.md`: Criado documento detalhado de status de implementação
 
 ## 🧪 Testes Realizados
 
-- ✅ `pytest --cov=qa_core --cov-report=term --cov-report=html`
-  - **Cobertura**: 94% (meta ≥90% atingida)
-  - **Testes**: 384 testes passando (11 subtests)
+- ✅ `pytest --cov=qa_core --cov-report=term`
+  - **Testes**: 392 testes passando
   - **Resultado**: ✅ PASSED
 
 - ✅ `ruff check qa_core/ tests/ main.py`
   - **Resultado**: All checks passed
 
 - ✅ `black qa_core/ tests/ main.py --check`
-  - **Resultado**: All done! 68 files would be left unchanged
+  - **Resultado**: All done! Todos os arquivos formatados corretamente
 
 - ✅ `make test`
-  - **Resultado**: 384 passed, 11 subtests passed
+  - **Resultado**: 392 passed
 
 - ✅ `make lint`
   - **Resultado**: All checks passed!
 
-- ✅ `make format-check`
-  - **Resultado**: All done! ✨ 🍰 ✨
+## 📚 Arquivos Modificados
 
-### Cobertura por Módulo
+### Novos Arquivos:
+- `tests/unit/qa_core/llm/test_factory_cache.py` (8 novos testes para TTL)
+- `docs/ROADMAP_STATUS.md` (documentação de status de implementação)
 
-| Módulo | Antes | Depois | Status |
-|--------|-------|--------|--------|
-| `github_integration.py` | 14% | **100%** | ✅ |
-| `llm/config.py` | 64% | **100%** | ✅ |
-| `prompts.py` | 0% | **100%** | ✅ |
-| `config.py` | 100% | **100%** | ✅ |
-| `observability.py` | 94% | **100%** | ✅ |
-| `database.py` | 98% | **100%** | ✅ |
-| `graph.py` | 98% | **100%** | ✅ |
-| Todos os providers LLM | 91-100% | **100%** | ✅ |
-
-## 📚 Documentação
-
-- [x] Não foi necessário atualizar documentação
-  - Apenas testes unitários foram adicionados
-  - Nenhuma mudança na API pública ou comportamento do código
-  - Estrutura e organização dos testes seguem padrões já estabelecidos no projeto
+### Arquivos Modificados:
+- `qa_core/llm/factory.py` (TTL configurável no CachedLLMClient)
+- `qa_core/a11y.py` (modo escuro com toggle manual)
+- `qa_core/app.py` (busca e filtros no histórico)
+- `tests/test_a11y.py` (ajustes nos testes de acessibilidade)
+- `docs/ROADMAP.md` (marcados quick wins como implementados)
 
 ## ✅ Checklist de Qualidade
 
-- [x] Cobertura de testes ≥ 90% (validada no CI e localmente).
-  - **Cobertura atual**: 94% (meta de 90% atingida)
-  
-- [x] Layout revisado em viewport mobile (Mobile First).
-  - N/A - Apenas testes unitários, sem mudanças no frontend
+- [x] Cobertura de testes mantida ≥ 90%
+- [x] Lint passou sem erros
+- [x] Formatação de código verificada (Black)
+- [x] Testes unitários passando (392 testes)
+- [x] Compatibilidade com testes existentes mantida
+- [x] Tratamento de MagicMock em testes Streamlit
+- [x] Documentação atualizada
 
-- [x] Checklist de acessibilidade cumprido (`docs/ACESSIBILIDADE.md`).
-  - N/A - Apenas testes unitários, sem mudanças no frontend
+## 🎯 Benefícios dos Quick Wins
 
-- [x] Comentários adicionados/ajustados são didáticos e explicam o "porquê".
-  - Todos os testes têm docstrings descritivas em português
-  - Comentários explicativos onde necessário
+### TTL Configurável
+- ✅ Permite controle fino sobre expiração de cache
+- ✅ Útil para dados que podem ficar desatualizados
+- ✅ Mantém compatibilidade com cache existente
 
-- [x] Padrões arquiteturais respeitados (responsabilidades bem definidas).
-  - Testes isolados por responsabilidade
-  - Uso de mocks para isolamento
-  - Padrão AAA (Arrange, Act, Assert) aplicado
+### Modo Escuro
+- ✅ Melhora experiência visual para usuários noturnos
+- ✅ Acessibilidade aprimorada (contraste ajustado)
+- ✅ Preferência do usuário respeitada (manual > sistema)
 
-- [x] `make dev-check` (ou comandos equivalentes) executado sem erros.
-  - `make lint`: ✅ All checks passed
-  - `make format-check`: ✅ All done
-  - `make test-cov`: ✅ 384 passed, cobertura 94%
+### Busca e Filtros
+- ✅ Navegação mais eficiente no histórico
+- ✅ Encontra análises específicas rapidamente
+- ✅ Interface intuitiva e responsiva
 
 ## 📊 Estatísticas
 
-- **Testes adicionados**: +30 testes novos
-- **Arquivos modificados/criados**: 8 arquivos
-- **Linhas adicionadas**: ~1.268 linhas
-- **Linhas removidas**: ~32 linhas
-- **Cobertura anterior**: 86%
-- **Cobertura atual**: 94%
-- **Melhoria**: +8 pontos percentuais
-
-## 🔍 Arquivos Alterados
-
-### Novos Arquivos:
-- `tests/unit/qa_core/test_github_integration.py` (718 linhas)
-- `tests/unit/qa_core/test_core_config.py` (93 linhas)
-- `tests/unit/qa_core/test_prompts.py` (59 linhas)
-
-### Arquivos Modificados:
-- `tests/unit/qa_core/llm/test_config.py` (expansão de 6 para 29 testes)
-- `tests/unit/qa_core/test_observability.py` (adicionados testes de erro)
-- `tests/unit/qa_core/llm/providers/test_google_extended.py` (teste de erro sem API key)
-- `tests/unit/qa_core/app/test_history_persistence.py` (teste de erro JSON)
-- `tests/test_pdf_generator.py` (melhorias nos testes)
-
-## 🎯 Módulos com 100% de Cobertura
-
-Após este PR, os seguintes módulos alcançaram 100% de cobertura:
-- ✅ `github_integration.py`
-- ✅ `observability.py`
-- ✅ `llm/config.py`
-- ✅ `config.py`
-- ✅ `prompts.py`
-- ✅ `database.py`
-- ✅ `graph.py`
-- ✅ `exports.py`
-- ✅ `security.py`
-- ✅ `state_manager.py`
-- ✅ `text_utils.py`
-- ✅ Todos os providers LLM (`azure_openai`, `google`, `llama`, `mock`, `openai`)
+- **Quick wins implementados**: 5/5
+- **Testes adicionados**: 8 novos testes
+- **Arquivos modificados**: 13 arquivos
+- **Linhas adicionadas**: ~1.751 inserções
+- **Linhas removidas**: ~67 deleções
+- **Cobertura de testes**: Mantida acima de 90%
 
 ## 🔗 Informações Técnicas
 
-- **Branch**: `test/aumento-cobertura-unitarios`
-- **Commit**: `265810d`
-- **Tipo**: `test:` (adição de testes)
+- **Branch**: `feature/roadmap-quick-wins`
+- **Commit**: `47c1c70`
+- **Tipo**: `feat:` (novas funcionalidades)
 - **Linters**: Ruff ✅ | Black ✅
 - **Framework de testes**: Pytest
-- **Tempo de execução dos testes**: ~42-47 segundos
+- **Tempo de execução dos testes**: ~40-45 segundos
 
-## 📝 Observações Adicionais
+## 🎨 Screenshots/Exemplos
 
-- Todos os testes são unitários e não dependem de serviços externos
-- Uso extensivo de `unittest.mock` para isolar dependências (GitHub API, Streamlit, etc.)
-- Testes seguem padrão AAA (Arrange, Act, Assert)
-- Nomenclatura dos testes segue padrão do projeto (inglês para métodos técnicos)
-- Docstrings em português conforme regras do projeto
+### Modo Escuro
+O toggle do modo escuro aparece na sidebar, permitindo alternar entre tema claro e escuro.
+
+### Busca e Filtros
+A página de histórico agora possui:
+- Campo de busca para filtrar por conteúdo da User Story
+- Dropdown para filtrar por período (7/30/90 dias)
+- Contador de resultados filtrados
 
 ## ✅ Smoke Test
 
-- Smoke test: ✅ PASSED (via execução dos testes automatizados)
-- Nota: Como são apenas testes unitários (sem mudanças no frontend), os testes automatizados são suficientes para validação
+**Smoke test**: ⚠️ **REQUERIDO ANTES DO MERGE**
+
+Antes de fazer o merge, é necessário executar o smoke test manual conforme `WORKSPACE-RULES.md`:
+- [ ] Carregamento inicial da aplicação
+- [ ] Fluxo principal - Análise de User Story
+- [ ] Fluxo principal - Plano de Testes
+- [ ] Edição de cenários
+- [ ] Exportações
+- [ ] Histórico (incluindo busca e filtros)
+- [ ] Modo escuro (toggle na sidebar)
+
+**Nota**: Como há mudanças visuais (modo escuro, busca/filtros), o smoke test manual é obrigatório antes do merge.
 
 ---
 
-**Pronto para merge!** 🚀
-
-
+**Pronto para review!** 🚀
