@@ -1,9 +1,103 @@
 <!-- markdownlint-disable MD024 -->
 # Changelog
 
-Todas as mudanças notáveis deste projeto serão documentadas aqui.
+Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
+O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
+e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
+
+---
+
+## [2.0.0] - 2025-11-22
+
+### 🎉 Novas Funcionalidades (Features)
+
+#### 🔄 Comparação entre Análises
+- **Modo de Comparação** no histórico com checkboxes para seleção
+- **Visualização lado a lado** de duas análises simultaneamente
+- **Diff visual HTML** destacando adições, remoções e modificações
+- **Abas separadas** para comparar User Story e Relatório de Análise
+- **Validação automática** para garantir seleção de exatamente 2 análises
+- **Documentação completa** em [COMPARISON_GUIDE.md](docs/COMPARISON_GUIDE.md)
+
+#### 🥒 Exportação para Cucumber Studio
+- **Exportação em formato .feature** compatível com Cucumber Studio
+- **ZIP com múltiplos arquivos** - um arquivo .feature por cenário
+- **Formato Gherkin completo** com Funcionalidade, Cenário, Dado, Quando, Então
+- **Sanitização automática** de nomes de arquivo (remove caracteres especiais)
+- **Suporte a português** com tag `# language: pt`
+- **Documentação completa** em [CUCUMBER_EXPORT_GUIDE.md](docs/CUCUMBER_EXPORT_GUIDE.md)
+
+#### 📮 Exportação para Postman Collection
+- **Exportação em formato JSON v2.1** compatível com Postman
+- **Conversão automática** de cenários em requests HTTP POST
+- **Steps Gherkin no body** de cada request
+- **User Story incluída** na descrição da collection
+- **Pronto para importar** diretamente no Postman
+- **Documentação completa** em [POSTMAN_EXPORT_GUIDE.md](docs/POSTMAN_EXPORT_GUIDE.md)
+
+#### 📦 Exportação em Lote
+- **Seleção múltipla** de análises no histórico
+- **Download único em ZIP** contendo todas as análises selecionadas
+- **Formato duplo** - Markdown (.md) e PDF (.pdf) para cada análise
+- **Nomes organizados** com padrão `{data}_analise_{id}.{extensão}`
+- **Sem limite** de quantidade de análises exportadas
+- **Documentação completa** em [BATCH_EXPORT_GUIDE.md](docs/BATCH_EXPORT_GUIDE.md)
+
+### 🐛 Correções de Bugs (Bug Fixes)
+
+- **Corrigido**: `AttributeError` ao usar filtros no histórico com objetos `sqlite3.Row`
+  - Adicionada conversão para `dict` antes de usar método `.get()`
+  - Afetava filtros de data e tipo de análise
+  - Resolução: Conversão explícita em `_apply_history_filters`
+
+### 📚 Documentação
+
+#### Novos Guias para Iniciantes
+- **COMPARISON_GUIDE.md**: Guia completo de comparação de análises
+- **CUCUMBER_EXPORT_GUIDE.md**: Guia passo a passo de exportação Cucumber
+- **POSTMAN_EXPORT_GUIDE.md**: Guia detalhado de exportação Postman
+- **BATCH_EXPORT_GUIDE.md**: Guia de exportação em lote
+
+#### Atualizações de Documentação
+- **README.md**: Adicionadas seções de destaque para todas as novas features
+- **ROADMAP_STATUS.md**: Progresso da Fase 2 atualizado de 30% para 75%
+- **WORKSPACE-RULES.md**: Smoke test atualizado com novos itens de verificação
+
+### 🧪 Testes
+
+- **Novos testes unitários** para `qa_core/utils/diff.py` (5 testes)
+- **Novos testes unitários** para `qa_core/utils/exporters.py` (5 testes)
+- **Testes existentes atualizados** para suportar novo layout de colunas
+- **Cobertura mantida** em 91%+ 
+- **420 testes passando** sem regressões
+
+### 🏗️ Arquitetura
+
+#### Novos Módulos
+- **qa_core/utils/diff.py**: Utilitário para geração de diffs HTML
+- **qa_core/utils/exporters.py**: Exportadores avançados (Cucumber, Postman, Batch)
+
+#### Modificações
+- **qa_core/app.py**: 
+  - Adicionado modo de comparação no histórico
+  - Adicionado modo de exportação em lote no histórico
+  - Novos botões de exportação (Cucumber e Postman)
+  - Layout de exportação expandido para 4 colunas
+
+### ⚡ Melhorias de Performance
+
+- **Conversão otimizada** de sqlite3.Row para dict apenas quando necessário
+- **Lazy imports** para módulos de exportação (carregados sob demanda)
+- **Tratamento de erros robusto** com fallback para botões desabilitados
+
+### 🔧 Manutenção
+
+- **Linting**: 0 erros (Ruff)
+- **Formatação**: 100% conforme (Black)
+- **Type hints**: Mantidos em todas as novas funções
+
+---
 
 ## [1.8.0] - 2025-11-21
 

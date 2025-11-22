@@ -16,6 +16,7 @@
 
 import datetime
 import json
+import logging
 import sqlite3
 
 import pandas as pd
@@ -71,6 +72,8 @@ from .exports import (
 
 # from .github_integration import get_github_integration, GitHubIntegration  # TODO: Descomentar quando implementar
 
+logger = logging.getLogger(__name__)
+
 
 # ==========================================================
 #  Formatação segura de datas (compatível com testes)
@@ -87,27 +90,6 @@ def format_datetime(value):
     if hasattr(value, "strftime"):
         return value.strftime("%d/%m/%Y %H:%M")
     return str(value)
-
-
-def _parse_entry_date(value) -> datetime.datetime | None:
-    """Converte data de entry para datetime.datetime para comparação."""
-    if value is None:
-        return None
-
-    if isinstance(value, datetime.datetime):
-        return value
-
-    if isinstance(value, str):
-        try:
-            return datetime.datetime.fromisoformat(value)
-        except Exception:
-            # Tenta outros formatos comuns
-            try:
-                return datetime.datetime.strptime(value.split()[0], "%Y-%m-%d")
-            except Exception:
-                return None
-
-    return None
 
 
 # ==========================================================
@@ -194,7 +176,7 @@ def _save_current_analysis_to_history(update_existing: bool = False):
                 test_plan_report_to_save,
             ]
         ):
-            print("⚠️ Nenhum dado válido para salvar no histórico.")
+            logger.warning("⚠️ Nenhum dado válido para salvar no histórico.")
             return
 
         from .database import get_db_connection  # evita dependência circular
@@ -223,7 +205,7 @@ def _save_current_analysis_to_history(update_existing: bool = False):
                         st.session_state["last_saved_id"],
                     ),
                 )
-                print(
+                logger.info(
                     f"♻️ Registro existente atualizado (ID {st.session_state['last_saved_id']}) em {timestamp}"
                 )
             else:
@@ -251,19 +233,19 @@ def _save_current_analysis_to_history(update_existing: bool = False):
                 )
                 st.session_state["last_saved_id"] = cursor.lastrowid
                 st.session_state["history_saved"] = True
-                print(f"💾 Análise salva no histórico em {timestamp}")
+                logger.info(f"💾 Análise salva no histórico em {timestamp}")
 
             conn.commit()
 
     except sqlite3.Error as db_error:
-        print(f"❌ Erro de banco de dados ao salvar: {db_error}")
+        logger.error(f"❌ Erro de banco de dados ao salvar: {db_error}")
         announce(
             "Erro ao salvar no banco de dados. Verifique o arquivo de log.",
             "error",
             st_api=st,
         )
     except Exception as e:
-        print(f"❌ Erro inesperado ao salvar no histórico: {e}")
+        logger.error(f"❌ Erro inesperado ao salvar no histórico: {e}")
         announce(
             "Ocorreu um erro ao salvar ou atualizar a análise no histórico, "
             "mas o fluxo principal não foi interrompido.",
@@ -399,7 +381,7 @@ def _render_user_story_input():
             # Traduz mensagens de erro do Pydantic para português
             error_data = e.errors()[0] if e.errors() else {}
             raw_msg = error_data.get("msg", str(e))
-            
+
             if "String should have at least" in raw_msg:
                 min_len = error_data.get("ctx", {}).get("min_length", 10)
                 friendly_msg = f"A User Story é muito curta. Digite pelo menos {min_len} caracteres."
@@ -442,8 +424,13 @@ def _render_user_story_input():
                 st.session_state["show_generate_plan_button"] = False
                 return True
 
-            with st.spinner("🔮 O Oráculo está realizando a análise inicial..."):
+            with st.status("🔮 O Oráculo está trabalhando...", expanded=True) as status:
+                st.write("🔍 Analisando requisitos da User Story...")
                 resultado_analise = run_analysis_graph(user_story_txt)
+                st.write("✅ Análise concluída!")
+                status.update(
+                    label="✨ Análise Finalizada!", state="complete", expanded=False
+                )
 
                 # Guarda o resultado bruto da IA para edição posterior
                 st.session_state["analysis_state"] = resultado_analise
@@ -474,7 +461,7 @@ def _extract_analysis_fields():
 
     # Tenta recuperar do estado de edição (caso o usuário tenha digitado e a página recarregado)
     # Se não houver edição em andamento, pega do JSON original
-    
+
     # Avaliação
     if "edit_avaliacao" in st.session_state:
         avaliacao_str = st.session_state["edit_avaliacao"]
@@ -485,28 +472,36 @@ def _extract_analysis_fields():
     if "edit_pontos" in st.session_state:
         pontos_str = st.session_state["edit_pontos"]
     else:
-        pontos_list = get_flexible(analise_json, ["pontos_ambiguos", "pontos_de_ambiguidade"], [])
+        pontos_list = get_flexible(
+            analise_json, ["pontos_ambiguos", "pontos_de_ambiguidade"], []
+        )
         pontos_str = "\n".join(pontos_list)
 
     # Perguntas
     if "edit_perguntas" in st.session_state:
         perguntas_str = st.session_state["edit_perguntas"]
     else:
-        perguntas_list = get_flexible(analise_json, ["perguntas_para_po", "perguntas_ao_po"], [])
+        perguntas_list = get_flexible(
+            analise_json, ["perguntas_para_po", "perguntas_ao_po"], []
+        )
         perguntas_str = "\n".join(perguntas_list)
 
     # Critérios
     if "edit_criterios" in st.session_state:
         criterios_str = st.session_state["edit_criterios"]
     else:
-        criterios_list = get_flexible(analise_json, ["sugestao_criterios_aceite", "criterios_de_aceite"], [])
+        criterios_list = get_flexible(
+            analise_json, ["sugestao_criterios_aceite", "criterios_de_aceite"], []
+        )
         criterios_str = "\n".join(criterios_list)
 
     # Riscos
     if "edit_riscos" in st.session_state:
         riscos_str = st.session_state["edit_riscos"]
     else:
-        riscos_list = get_flexible(analise_json, ["riscos_e_dependencias", "riscos"], [])
+        riscos_list = get_flexible(
+            analise_json, ["riscos_e_dependencias", "riscos"], []
+        )
         riscos_str = "\n".join(riscos_list)
 
     return avaliacao_str, pontos_str, perguntas_str, criterios_str, riscos_str
@@ -665,12 +660,15 @@ def _render_test_plan_generation():
     if col1.button(
         "Sim, Gerar Plano de Testes", type="primary", use_container_width=True
     ):
-        with st.spinner(
-            "🔮 Elaborando o Plano de Testes com base na análise refinada..."
-        ):
+        with st.status("🔮 Elaborando o Plano de Testes...", expanded=True) as status:
+            st.write("🧠 Refinando cenários Gherkin...")
             try:
                 resultado_plano = run_test_plan_graph(
                     st.session_state.get("analysis_state", {})
+                )
+                st.write("✅ Plano gerado com sucesso!")
+                status.update(
+                    label="✨ Plano de Testes Pronto!", state="complete", expanded=False
                 )
 
                 casos_de_teste = resultado_plano.get("plano_e_casos_de_teste", {}).get(
@@ -725,7 +723,7 @@ def _render_test_plan_generation():
 
             except Exception as e:
                 # Em caso de falha, informa o usuário, mas não perde o progresso
-                print(f"❌ Falha na geração do plano de testes: {e}")
+                logger.error(f"❌ Falha na geração do plano de testes: {e}")
                 announce(
                     "O Oráculo não conseguiu gerar um plano de testes estruturado.",
                     "error",
@@ -840,7 +838,7 @@ def _update_test_plan_outputs(updated_df: pd.DataFrame):
             analysis_report, updated_df
         )
     except Exception as pdf_error:
-        print(f"❌ Erro ao regenerar PDF após atualização do plano: {pdf_error}")
+        logger.error(f"❌ Erro ao regenerar PDF após atualização do plano: {pdf_error}")
         st.session_state["pdf_report_bytes"] = b""
 
 
@@ -1327,27 +1325,19 @@ def _render_results_section():
 
 
 def _render_basic_exports():
-    """Renderiza os downloads básicos (Markdown e PDF)."""
-    columns = st.columns(5)
-    if len(columns) >= 5:
-        col_md, col_pdf, col_azure, col_zephyr, col_xray = columns
-    else:
-        # Fallback para testes ou quando há menos colunas
-        col_md = col_pdf = col_azure = col_zephyr = col_xray = (
-            columns[0] if columns else None
-        )
+    """
+    Renderiza os botões de exportação básicos (MD, PDF) e avançados (Cucumber, Postman).
+    """
+    col_md, col_pdf, col_cucumber, col_postman = st.columns(4)
 
-    # Markdown unificado (análise + plano)
-    relatorio_completo_md = (
-        f"{(st.session_state.get('analysis_state', {}).get('relatorio_analise_inicial') or '')}\n\n"
-        f"---\n\n"
-        f"{(st.session_state.get('test_plan_report') or '')}"
-    )
-
-    # 📥 Exporta análise completa em Markdown
+    # 📝 Exporta relatório Markdown
     col_md.download_button(
-        "📥 Análise (.md)",
-        _ensure_bytes(relatorio_completo_md),
+        "📝 Relatório (.md)",
+        _ensure_bytes(
+            f"{(st.session_state.get('analysis_state', {}).get('relatorio_analise_inicial') or '')}\n\n"
+            f"---\n\n"
+            f"{(st.session_state.get('test_plan_report') or '')}"
+        ),
         file_name=gerar_nome_arquivo_seguro(
             st.session_state.get("user_story_input", ""), "md"
         ),
@@ -1365,6 +1355,61 @@ def _render_basic_exports():
             use_container_width=True,
         )
 
+    # 🥒 Exporta para Cucumber Studio (ZIP de .feature files)
+    df_para_cucumber = st.session_state.get("test_plan_df")
+    if df_para_cucumber is not None and not df_para_cucumber.empty:
+        from .utils.exporters import export_to_cucumber_zip
+
+        try:
+            cucumber_zip = export_to_cucumber_zip(df_para_cucumber)
+            col_cucumber.download_button(
+                "🥒 Cucumber (.zip)",
+                cucumber_zip,
+                file_name=gerar_nome_arquivo_seguro(
+                    st.session_state.get("user_story_input", ""), "cucumber.zip"
+                ),
+                mime="application/zip",
+                use_container_width=True,
+                help="Baixa um ZIP com arquivos .feature para Cucumber Studio",
+            )
+        except Exception as e:
+            logger.error(f"Erro ao gerar Cucumber ZIP: {e}")
+            col_cucumber.button(
+                "🥒 Cucumber (.zip)",
+                disabled=True,
+                use_container_width=True,
+                help="Erro ao gerar exportação",
+            )
+
+    # 📮 Exporta para Postman Collection (JSON)
+    df_para_postman = st.session_state.get("test_plan_df")
+    if df_para_postman is not None and not df_para_postman.empty:
+        from .utils.exporters import export_to_postman_collection
+
+        try:
+            user_story = st.session_state.get("user_story_input", "")
+            postman_json = export_to_postman_collection(df_para_postman, user_story)
+            col_postman.download_button(
+                "📮 Postman (.json)",
+                postman_json.encode("utf-8"),
+                file_name=gerar_nome_arquivo_seguro(
+                    st.session_state.get("user_story_input", ""), "postman.json"
+                ),
+                mime="application/json",
+                use_container_width=True,
+                help="Baixa uma Postman Collection com os cenários de teste",
+            )
+        except Exception as e:
+            logger.error(f"Erro ao gerar Postman Collection: {e}")
+            col_postman.button(
+                "📮 Postman (.json)",
+                disabled=True,
+                use_container_width=True,
+                help="Erro ao gerar exportação",
+            )
+
+    # Retorna as colunas para Azure, Zephyr e Xray (mantém compatibilidade)
+    col_azure, col_zephyr, col_xray = st.columns(3)
     return col_azure, col_zephyr, col_xray
 
 
@@ -1377,8 +1422,10 @@ def _render_export_previews():
         return
 
     with st.expander("👁️ Visualizar Arquivos de Exportação (Preview)", expanded=False):
-        tabs = st.tabs(["Markdown", "Azure CSV", "TestRail CSV", "Xray CSV", "Zephyr (Dados)"])
-        
+        tabs = st.tabs(
+            ["Markdown", "Azure CSV", "TestRail CSV", "Xray CSV", "Zephyr (Dados)"]
+        )
+
         # 1. Markdown Preview
         with tabs[0]:
             content = (
@@ -1388,34 +1435,36 @@ def _render_export_previews():
             )
             st.caption(f"Total: {len(content)} caracteres")
             st.code(content, language="markdown")
-            
+
         # 2. Azure CSV Preview
         with tabs[1]:
             try:
-                csv_azure = gerar_csv_azure_from_df(
+                csv_azure_bytes = gerar_csv_azure_from_df(
                     st.session_state.get("test_plan_df"),
                     st.session_state.get("area_path_input", ""),
                     st.session_state.get("assigned_to_input", ""),
                 )
-                st.caption(f"Preview das primeiras 50 linhas")
-                st.code("\n".join(csv_azure.split("\n")[:50]), language="csv")
+                csv_azure_str = csv_azure_bytes.decode("utf-8-sig")
+                st.caption("Preview das primeiras 50 linhas")
+                st.code("\n".join(csv_azure_str.splitlines()[:50]), language="csv")
             except Exception as e:
-                st.error(f"Erro ao gerar preview: {e}")
+                st.warning(f"⚠️ Não foi possível gerar o preview do Azure: {e}")
 
         # 3. TestRail CSV Preview
         with tabs[2]:
             try:
-                csv_testrail = gerar_csv_testrail_from_df(
+                csv_testrail_bytes = gerar_csv_testrail_from_df(
                     st.session_state.get("test_plan_df"),
                     st.session_state.get("testrail_section", ""),
                     st.session_state.get("testrail_priority", "Medium"),
                     "Test Case (Steps)",
                     st.session_state.get("testrail_references", ""),
                 )
-                st.caption(f"Preview das primeiras 50 linhas")
-                st.code("\n".join(csv_testrail.split("\n")[:50]), language="csv")
+                csv_testrail_str = csv_testrail_bytes.decode("utf-8")
+                st.caption("Preview das primeiras 50 linhas")
+                st.code("\n".join(csv_testrail_str.splitlines()[:50]), language="csv")
             except Exception as e:
-                st.error(f"Erro ao gerar preview: {e}")
+                st.warning(f"⚠️ Não foi possível gerar o preview do TestRail: {e}")
 
         # 4. Xray CSV Preview
         with tabs[3]:
@@ -1426,17 +1475,25 @@ def _render_export_previews():
                     xray_fields["Labels"] = st.session_state.get("xray_labels")
                 if st.session_state.get("xray_priority"):
                     xray_fields["Priority"] = st.session_state.get("xray_priority")
-                
-                csv_xray = gerar_csv_xray_from_df(
+
+                # Campos customizados
+                custom_text = st.session_state.get("xray_custom_fields", "").strip()
+                if custom_text:
+                    for raw_line in custom_text.split("\n"):
+                        if "=" in raw_line:
+                            key, value = raw_line.split("=", 1)
+                            xray_fields[key.strip()] = value.strip()
+
+                csv_xray_bytes = gerar_csv_xray_from_df(
                     st.session_state.get("test_plan_df"),
                     st.session_state.get("xray_test_folder", "Preview_Folder"),
                     xray_fields,
-                    st.session_state.get("xray_custom_fields", "")
                 )
-                st.caption(f"Preview das primeiras 50 linhas")
-                st.code("\n".join(csv_xray.split("\n")[:50]), language="csv")
+                csv_xray_str = csv_xray_bytes.decode("utf-8")
+                st.caption("Preview das primeiras 50 linhas")
+                st.code("\n".join(csv_xray_str.splitlines()[:50]), language="csv")
             except Exception as e:
-                st.error(f"Erro ao gerar preview: {e}")
+                st.warning(f"⚠️ Não foi possível gerar o preview do Xray: {e}")
 
         # 5. Zephyr Preview (mostra DataFrame preparado)
         with tabs[4]:
@@ -1448,9 +1505,11 @@ def _render_export_previews():
                     st.session_state.get("jira_description", ""),
                 )
                 st.dataframe(df_zephyr.head(20), use_container_width=True)
-                st.caption("Mostrando primeiras 20 linhas dos dados preparados para Excel")
+                st.caption(
+                    "Mostrando primeiras 20 linhas dos dados preparados para Excel"
+                )
             except Exception as e:
-                st.error(f"Erro ao gerar preview: {e}")
+                st.warning(f"⚠️ Não foi possível gerar o preview do Zephyr: {e}")
 
 
 def _render_export_section():  # noqa: C901, PLR0915
@@ -1846,33 +1905,34 @@ def _render_history_filters():
     """Renderiza filtros de histórico."""
     with st.expander("🔍 Filtros e Busca", expanded=False):
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
             search_text = st.text_input(
                 "Buscar",
                 placeholder="Digite palavras-chave...",
-                help="Busca em User Story, análise e plano de testes"
+                help="Busca em User Story, análise e plano de testes",
             )
-        
+
         with col2:
             date_filter = st.selectbox(
                 "Período",
                 options=["Todos", "Última semana", "Último mês", "Últimos 3 meses"],
-                help="Filtrar por data de criação"
+                help="Filtrar por data de criação",
             )
-        
+
         with col3:
             type_filter = st.multiselect(
                 "Tipo",
                 options=["Com análise", "Com plano de testes"],
                 default=[],
-                help="Filtrar por tipo de conteúdo (vazio = todos)"
+                help="Filtrar por tipo de conteúdo (vazio = todos)",
+                placeholder="Selecione as opções",
             )
-        
+
         return {
             "search_text": search_text.lower() if search_text else "",
             "date_filter": date_filter,
-            "type_filter": type_filter
+            "type_filter": type_filter,
         }
 
 
@@ -1880,49 +1940,51 @@ def _apply_history_filters(entries: list, filters: dict) -> list:
     """Aplica filtros aos registros do histórico."""
     if not filters:
         return entries
-        
+
     filtered = entries
-    
+
     # Filtro de texto
     if filters["search_text"]:
         search = filters["search_text"]
         filtered = [
-            e for e in filtered
+            e
+            for e in filtered
             if search in (e.get("user_story", "") or "").lower()
             or search in (e.get("analysis_report", "") or "").lower()
             or search in (e.get("test_plan_report", "") or "").lower()
         ]
-    
+
     # Filtro de data
     if filters["date_filter"] != "Todos":
         from datetime import datetime, timedelta
+
         now = datetime.now()
-        
+
         if filters["date_filter"] == "Última semana":
             cutoff = now - timedelta(days=7)
         elif filters["date_filter"] == "Último mês":
             cutoff = now - timedelta(days=30)
         else:  # Últimos 3 meses
             cutoff = now - timedelta(days=90)
-            
+
         filtered = [
-            e for e in filtered
-            if _parse_date_safe(e.get("created_at")) >= cutoff
+            e for e in filtered if _parse_date_safe(dict(e).get("created_at")) >= cutoff
         ]
-    
+
     # Filtro de tipo
     if filters["type_filter"]:
         if "Com análise" in filters["type_filter"]:
-            filtered = [e for e in filtered if e.get("analysis_report")]
+            filtered = [e for e in filtered if dict(e).get("analysis_report")]
         if "Com plano de testes" in filters["type_filter"]:
-            filtered = [e for e in filtered if e.get("test_plan_report")]
-            
+            filtered = [e for e in filtered if dict(e).get("test_plan_report")]
+
     return filtered
 
 
 def _parse_date_safe(date_str):
     """Converte string de data para datetime de forma segura."""
     from datetime import datetime
+
     try:
         if isinstance(date_str, datetime):
             return date_str
@@ -2158,90 +2220,8 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
         # ==========================================================
         # 🔍 Busca e Filtros
         # ==========================================================
-        st.divider()
-        st.markdown("### 🔍 Buscar e Filtrar")
-
-        col_search, col_filter = st.columns([2, 1])
-
-        # Campo de busca
-        with col_search:
-            search_term = st.text_input(
-                "🔎 Buscar na User Story",
-                value=st.session_state.get("history_search", ""),
-                key="history_search_input",
-                placeholder="Digite palavras-chave para buscar nas User Stories...",
-                help="Busca pelo conteúdo da User Story nas análises do histórico.",
-            )
-            # Valida que search_term é string (para compatibilidade com testes/mocks)
-            # Detecta MagicMock e trata como string vazia
-            if not isinstance(search_term, str) or hasattr(search_term, "_mock_name"):
-                search_term = ""
-            st.session_state["history_search"] = search_term
-
-        # Filtro por data (opcional - simplificado)
-        with col_filter:
-            filter_date = st.selectbox(
-                "📅 Filtrar por Data",
-                options=[
-                    "Todos",
-                    "Últimos 7 dias",
-                    "Últimos 30 dias",
-                    "Últimos 90 dias",
-                ],
-                key="history_date_filter",
-                help="Filtra análises por período de criação.",
-            )
-            # Detecta MagicMock e trata como "Todos"
-            if not isinstance(filter_date, str) or hasattr(filter_date, "_mock_name"):
-                filter_date = "Todos"
-
-        # Aplica filtros
+        # Aplica filtros (já aplicados acima, apenas mantendo a referência)
         filtered_entries = history_entries
-
-        # Filtro por busca - valida que search_term é string válida
-        if isinstance(search_term, str) and search_term.strip():
-            search_lower = search_term.lower().strip()
-            filtered_entries = [
-                entry
-                for entry in filtered_entries
-                if (
-                    isinstance((user_story := dict(entry).get("user_story", "")), str)
-                    and search_lower in user_story.lower()
-                )
-            ]
-
-        # Filtro por data - valida que filter_date é string válida
-        if isinstance(filter_date, str) and filter_date != "Todos":
-            from datetime import timedelta
-
-            now = datetime.datetime.now()
-            if filter_date == "Últimos 7 dias":
-                cutoff_date = now - timedelta(days=7)
-            elif filter_date == "Últimos 30 dias":
-                cutoff_date = now - timedelta(days=30)
-            elif filter_date == "Últimos 90 dias":
-                cutoff_date = now - timedelta(days=90)
-            else:
-                cutoff_date = None
-
-            if cutoff_date:
-                filtered_entries = [
-                    entry
-                    for entry in filtered_entries
-                    if (
-                        (entry_date := _parse_entry_date(dict(entry).get("created_at")))
-                        is not None
-                        and entry_date >= cutoff_date
-                    )
-                ]
-
-        # Mostra contagem de resultados apenas se filtros foram aplicados
-        if (search_term and isinstance(search_term, str) and search_term.strip()) or (
-            isinstance(filter_date, str) and filter_date != "Todos"
-        ):
-            st.info(
-                f"📊 Mostrando {len(filtered_entries)} de {len(history_entries)} análises"
-            )
 
         st.divider()
 
@@ -2267,11 +2247,35 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
             )
             return
 
+        # ==========================================================
+        #  COMPARADOR DE ANÁLISES E EXPORTAÇÃO EM LOTE
+        # ==========================================================
+
+        # Checkbox para ativar modo de comparação ou exportação em lote
+        col_actions_1, col_actions_2, col_actions_3 = st.columns([1, 1, 2])
+        with col_actions_1:
+            comparison_mode = st.checkbox(
+                "🔄 Modo de Comparação", key="comparison_mode_active"
+            )
+        with col_actions_2:
+            batch_export_mode = st.checkbox(
+                "📦 Exportação em Lote", key="batch_export_mode_active"
+            )
+
+        selected_for_comparison = []
+        selected_for_batch = []
+
+        if comparison_mode:
+            st.info("Selecione exatamente 2 análises abaixo para comparar.")
+        if batch_export_mode:
+            st.info("Selecione uma ou mais análises para exportar em lote (ZIP).")
+
         # Cria um card/expander para cada item filtrado
         for entry in filtered_entries:
             entry_dict = dict(entry) if not isinstance(entry, dict) else entry
             created_at = entry_dict.get("created_at")
             user_story_preview = entry_dict.get("user_story", "")[:80]
+            entry_id = entry_dict.get("id")
 
             # Formata data de forma segura
             if isinstance(created_at, str):
@@ -2280,6 +2284,28 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
                 data_formatada = created_at.strftime("%d/%m/%Y %H:%M")
             else:
                 data_formatada = str(created_at)
+
+            # Lógica de seleção para comparação e exportação em lote
+            is_selected_comparison = False
+            is_selected_batch = False
+
+            if comparison_mode:
+                is_selected_comparison = st.checkbox(
+                    f"Comparar #{entry_id}",
+                    key=f"chk_compare_{entry_id}",
+                    value=entry_id in st.session_state.get("comparison_ids", []),
+                )
+                if is_selected_comparison:
+                    selected_for_comparison.append(entry_dict)
+
+            if batch_export_mode:
+                is_selected_batch = st.checkbox(
+                    f"Exportar #{entry_id}",
+                    key=f"chk_batch_{entry_id}",
+                    value=entry_id in st.session_state.get("batch_export_ids", []),
+                )
+                if is_selected_batch:
+                    selected_for_batch.append(entry_id)
 
             with st.expander(
                 f"🧩 {data_formatada} — {user_story_preview}...",
@@ -2296,25 +2322,115 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
                 with col1:
                     if accessible_button(
                         label="🔍 Ver Detalhes",
-                        key=f"btn_detalhes_{entry['id']}",
-                        context=f"Exibe os detalhes completos da análise #{entry['id']}, incluindo critérios, perguntas e pontos ambíguos.",
+                        key=f"btn_detalhes_{entry_id}",
+                        context=f"Exibe os detalhes completos da análise #{entry_id}, incluindo critérios, perguntas e pontos ambíguos.",
                         type="primary",
                         use_container_width=True,
                         st_api=st,
                     ):
-                        st.query_params["analysis_id"] = str(entry["id"])
+                        st.query_params["analysis_id"] = str(entry_id)
                         st.rerun()
 
                 with col2:
                     if accessible_button(
                         label="🗑️ Excluir",
-                        key=f"btn_excluir_{entry['id']}",
-                        context=f"Remove permanentemente a análise #{entry['id']}. Esta ação não pode ser desfeita.",
+                        key=f"btn_excluir_{entry_id}",
+                        context=f"Remove permanentemente a análise #{entry_id}. Esta ação não pode ser desfeita.",
                         use_container_width=True,
                         st_api=st,
                     ):
-                        st.session_state["confirm_delete_id"] = entry["id"]
+                        st.session_state["confirm_delete_id"] = entry_id
                         st.rerun()
+
+        # Renderiza a comparação se 2 itens forem selecionados
+        if comparison_mode and len(selected_for_comparison) == 2:
+            st.divider()
+            st.markdown("### ⚖️ Comparação de Análises")
+
+            item_a = selected_for_comparison[0]
+            item_b = selected_for_comparison[1]
+
+            col_comp_1, col_comp_2 = st.columns(2)
+
+            with col_comp_1:
+                st.subheader(f"Análise #{item_a['id']}")
+                st.caption(f"Data: {item_a.get('created_at')}")
+                st.markdown("#### User Story")
+                st.code(item_a.get("user_story"), language="gherkin")
+                st.markdown("#### Relatório")
+                with st.container(height=300):
+                    st.markdown(
+                        clean_markdown_report(item_a.get("analysis_report", "")),
+                        unsafe_allow_html=True,
+                    )
+
+            with col_comp_2:
+                st.subheader(f"Análise #{item_b['id']}")
+                st.caption(f"Data: {item_b.get('created_at')}")
+                st.markdown("#### User Story")
+                st.code(item_b.get("user_story"), language="gherkin")
+                st.markdown("#### Relatório")
+                with st.container(height=300):
+                    st.markdown(
+                        clean_markdown_report(item_b.get("analysis_report", "")),
+                        unsafe_allow_html=True,
+                    )
+
+            st.divider()
+            st.markdown("### 🔍 Diferenças (Diff)")
+
+            # Importação lazy para evitar dependência circular no topo
+            from .utils.diff import generate_html_diff
+
+            tab_diff_us, tab_diff_report = st.tabs(
+                ["User Story", "Relatório de Análise"]
+            )
+
+            with tab_diff_us:
+                diff_html_us = generate_html_diff(
+                    item_a.get("user_story", ""), item_b.get("user_story", "")
+                )
+                st.components.v1.html(diff_html_us, height=400, scrolling=True)
+
+            with tab_diff_report:
+                diff_html_report = generate_html_diff(
+                    item_a.get("analysis_report", ""), item_b.get("analysis_report", "")
+                )
+                st.components.v1.html(diff_html_report, height=600, scrolling=True)
+
+                st.code(item_b.get("user_story"), language="gherkin")
+                st.markdown("#### Relatório")
+                with st.container(height=300):
+                    st.markdown(
+                        clean_markdown_report(item_b.get("analysis_report", "")),
+                        unsafe_allow_html=True,
+                    )
+
+        elif comparison_mode and len(selected_for_comparison) > 2:
+            st.warning("⚠️ Selecione apenas 2 análises para comparar.")
+
+        # Renderiza o botão de exportação em lote se houver seleções
+        if batch_export_mode and len(selected_for_batch) > 0:
+            st.divider()
+            st.markdown(
+                f"### 📦 Exportação em Lote ({len(selected_for_batch)} análises selecionadas)"
+            )
+
+            from .utils.exporters import export_batch_zip
+
+            try:
+                batch_zip = export_batch_zip(selected_for_batch)
+                st.download_button(
+                    label=f"📥 Baixar ZIP com {len(selected_for_batch)} análises",
+                    data=batch_zip,
+                    file_name=f"qa_oraculo_batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                    mime="application/zip",
+                    use_container_width=True,
+                    help="Baixa um arquivo ZIP contendo Markdown e PDF de todas as análises selecionadas",
+                )
+            except Exception as e:
+                logger.error(f"Erro ao gerar batch export: {e}")
+                st.error(f"❌ Erro ao gerar exportação em lote: {e}")
 
         st.markdown(
             "<p style='color:gray;font-size:13px;'>Pressione TAB para navegar pelos registros ou ENTER para expandir.</p>",

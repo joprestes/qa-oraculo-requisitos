@@ -179,28 +179,33 @@ Este documento mostra o status atual de cada item do roadmap, verificando o que 
 
 #### Verificações Realizadas:
 
-- [ ] **Adicionar modo escuro (tema dark)**
-  - ⚠️ **Parcial**: Detecção de preferência do sistema implementada (`prefers-color-scheme: dark`)
-  - ❌ **Faltando**: Opção manual para alternar tema (toggle/switch na UI)
-  - ✅ **Implementado**: Estilos CSS para alto contraste e acessibilidade
-  - **Localização**: `qa_core/a11y.py` (linhas 28, 540-547)
+- [x] **Adicionar modo escuro (tema dark)**
+  - 🚫 **REMOVIDO**: Decisão de design para manter apenas o tema claro (Light Mode)
+  - ✅ **Implementado**: Código de estilos (`a11y.py`) força tema claro e remove toggle
+  - **Localização**: `qa_core/a11y.py`
 
-- [ ] **Implementar preview de exportações antes do download**
-  - ❌ **Não Implementado**: Não há preview antes do download
-  - **Recomendação**: Adicionar expanders ou modais com preview do conteúdo
+- [x] **Implementar preview de exportações antes do download**
+  - ✅ **Implementado**: Função `_render_export_previews` em `qa_core/app.py`
+  - ✅ **Funcionalidade**: Abas com preview para Markdown, Azure CSV, TestRail CSV, Xray CSV e Zephyr
+  - **Localização**: `qa_core/app.py`
 
-- [ ] **Adicionar busca e filtros no histórico**
-  - ❌ **Não Implementado**: Apenas lista completa ordenada por data
-  - **Localização**: `qa_core/app.py` (função `_render_history_page_impl`)
+- [x] **Adicionar busca e filtros no histórico**
+  - ✅ **Implementado**: Função `_render_history_filters` e `_apply_history_filters` em `qa_core/app.py`
+  - ✅ **Funcionalidade**: Busca por texto, filtro por data e tipo
+  - **Localização**: `qa_core/app.py`
 
-- [ ] **Implementar comparação entre análises**
-  - ❌ **Não Implementado**: Não há funcionalidade de comparação
+- [x] **Implementar comparação entre análises**
+  - ✅ **Implementado**: Modo de comparação no histórico com checkboxes
+  - ✅ **Funcionalidade**: Seleção de 2 análises para comparação lado a lado
+  - ✅ **Funcionalidade**: Diff visual HTML para User Story e Relatório de Análise
+  - ✅ **Funcionalidade**: Abas com diffs destacando adições/remoções
+  - **Localização**: `qa_core/app.py`, `qa_core/utils/diff.py`
 
 - [ ] **Adicionar indicadores de progresso para operações longas**
   - ⚠️ **Parcial**: Uso de `st.spinner` presente, mas pode ser melhorado
   - **Recomendação**: Adicionar barras de progresso mais detalhadas
 
-**Conclusão**: Apenas detecção de modo escuro foi parcialmente implementada. Os demais itens ainda precisam ser implementados.
+**Conclusão**: Modo escuro removido. Preview, Busca no Histórico e Comparação implementados. Falta apenas melhoria em Indicadores de progresso.
 
 ---
 
@@ -210,27 +215,39 @@ Este documento mostra o status atual de cada item do roadmap, verificando o que 
 
 #### Verificações Realizadas:
 
-- [ ] **Adicionar exportação para Cucumber Studio**
-  - ❌ **Não Implementado**
+- [x] **Adicionar exportação para Cucumber Studio**
+  - ✅ **Implementado**: Exportação de cenários para arquivos .feature
+  - ✅ **Funcionalidade**: Gera ZIP com um arquivo .feature por cenário
+  - ✅ **Funcionalidade**: Formato compatível com Cucumber Studio
+  - **Localização**: `qa_core/utils/exporters.py`
 
-- [ ] **Implementar exportação para Postman Collections (para APIs)**
-  - ❌ **Não Implementado**
+- [x] **Implementar exportação para Postman Collections (para APIs)**
+  - ✅ **Implementado**: Exportação de cenários para Postman Collection v2.1
+  - ✅ **Funcionalidade**: Gera JSON com requests POST para cada cenário
+  - ✅ **Funcionalidade**: Inclui User Story na descrição da collection
+  - **Localização**: `qa_core/utils/exporters.py`
 
 - [ ] **Adicionar templates customizáveis de exportação**
   - ❌ **Não Implementado**
 
-- [ ] **Implementar exportação em lote (múltiplas análises)**
-  - ❌ **Não Implementado**
+- [x] **Implementar exportação em lote (múltiplas análises)**
+  - ✅ **Implementado**: Exportação em lote de múltiplas análises
+  - ✅ **Funcionalidade**: Seleção de análises no histórico via checkboxes
+  - ✅ **Funcionalidade**: Gera ZIP com Markdown e PDF de cada análise
+  - **Localização**: `qa_core/utils/exporters.py`, `qa_core/app.py`
 
 - [x] **Exportações já implementadas**:
   - ✅ Markdown (.md)
   - ✅ PDF (.pdf)
   - ✅ Azure DevOps (.csv)
   - ✅ Jira Zephyr (.xlsx)
-  - ✅ Xray (.csv) - **NOVO** ✅
-  - ✅ TestRail (.csv) - **NOVO** ✅
+  - ✅ Xray (.csv)
+  - ✅ TestRail (.csv)
+  - ✅ Cucumber Studio (.zip) - **NOVO** ✅
+  - ✅ Postman Collection (.json) - **NOVO** ✅
 
-**Conclusão**: As exportações básicas e algumas avançadas (Xray, TestRail) foram implementadas, mas ainda faltam as específicas mencionadas no roadmap.
+**Conclusão**: Cucumber, Postman e Exportação em Lote implementados. Falta apenas Templates Customizáveis.
+
 
 ---
 
@@ -255,7 +272,7 @@ Nenhum item desta fase foi implementado ainda.
 | Fase | Status | Progresso |
 |------|--------|-----------|
 | **Fase 1: Estabilização e Qualidade** | 🟡 Parcial | ~75% |
-| **Fase 2: Expansão de Funcionalidades** | 🟡 Parcial | ~30% |
+| **Fase 2: Expansão de Funcionalidades** | 🟡 Parcial | ~75% |
 | **Fase 3: Escalabilidade e DevOps** | 🔴 Não Iniciado | 0% |
 | **Fase 4: Inovação e Diferenciação** | 🔴 Não Iniciado | 0% |
 
@@ -273,22 +290,15 @@ Nenhum item desta fase foi implementado ainda.
 ### ⚠️ Itens Parcialmente Implementados
 
 1. ⚠️ Testes unitários para provedores LLM (faltam testes para métodos não implementados)
-2. ⚠️ Modo escuro (detecção existe, mas falta toggle manual)
+2. 🚫 Modo escuro (removido do escopo)
 3. ⚠️ Cache de LLM com TTL configurável (cache existe, mas sem TTL)
 
 ### ❌ Itens Pendentes
 
-1. ❌ Completar provedores LLM (Azure OpenAI, OpenAI GPT, LLaMA)
-2. ❌ Preview de exportações
-3. ❌ Busca e filtros no histórico
-4. ❌ Comparação entre análises
-5. ❌ Indicadores de progresso avançados
-6. ❌ Exportação para Cucumber Studio
-7. ❌ Exportação para Postman Collections
-8. ❌ Templates customizáveis de exportação
-9. ❌ Exportação em lote
-10. ❌ Auditoria de secrets no CI/CD
-11. ❌ Todos os itens das Fases 3 e 4
+1. ❌ Indicadores de progresso avançados
+2. ❌ Templates customizáveis de exportação
+3. ❌ Auditoria de secrets no CI/CD
+4. ❌ Todos os itens das Fases 3 e 4
 
 ---
 
@@ -300,9 +310,8 @@ Nenhum item desta fase foi implementado ainda.
 3. Adicionar busca e filtros no histórico
 
 ### Média Prioridade
-1. Implementar preview de exportações
-2. Adicionar modo escuro com toggle manual
-3. Melhorar indicadores de progresso
+1. Implementar comparação entre análises
+2. Melhorar indicadores de progresso
 
 ### Baixa Prioridade
 1. Exportação para Cucumber Studio

@@ -125,8 +125,10 @@ Este documento define as regras, padrões e convenções que devem ser seguidos 
 
 #### 9.5 Exportações
 - [ ] Seção "Opções de Exportação" está visível
-- [ ] Botão "📄 Markdown (.md)" faz download
-- [ ] Botão "📕 PDF (.pdf)" faz download
+- [ ] Botão "📝 Relatório (.md)" faz download
+- [ ] Botão "📄 Relatório (.pdf)" faz download
+- [ ] Botão "🥒 Cucumber (.zip)" faz download 🆕
+- [ ] Botão "📮 Postman (.json)" faz download 🆕
 - [ ] Botão "☁️ Azure DevOps (.csv)" faz download
 - [ ] Botão "📊 Jira Zephyr (.xlsx)" faz download
 - [ ] Campo "Test Repository Folder" habilita botão Xray quando preenchido
@@ -138,6 +140,11 @@ Este documento define as regras, padrões e convenções que devem ser seguidos 
 - [ ] Análises anteriores são listadas (se houver)
 - [ ] Clicar em uma análise exibe os detalhes
 - [ ] Botão de exclusão funciona com confirmação
+- [ ] Checkbox "🔄 Modo de Comparação" ativa seleção 🆕
+- [ ] Seleção de 2 análises exibe comparação lado a lado 🆕
+- [ ] Diff visual HTML funciona nas abas de comparação 🆕
+- [ ] Checkbox "📦 Exportação em Lote" ativa seleção múltipla 🆕
+- [ ] Botão de download ZIP aparece ao selecionar análises 🆕
 
 #### 9.7 Acessibilidade Básica
 - [ ] Navegação por teclado (Tab) funciona nos elementos principais

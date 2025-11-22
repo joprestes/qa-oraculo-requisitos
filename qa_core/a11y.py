@@ -135,7 +135,7 @@ def _get_base_theme_css(dark_mode: bool = False) -> str:
     """Retorna CSS do tema base (claro ou escuro)."""
 
     # Modo escuro removido por decisão de design
-    
+
     # Tema claro (original)
     return """
     /* ==========================================================
@@ -546,9 +546,6 @@ def render_keyboard_shortcuts_guide():
         """,
             unsafe_allow_html=True,
         )
-
-
-
 
 
 def render_accessibility_info():
