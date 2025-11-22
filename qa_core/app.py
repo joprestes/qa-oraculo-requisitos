@@ -2417,9 +2417,21 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
             )
 
             from .utils.exporters import export_batch_zip
+            from .progress import track_progress
 
             try:
-                batch_zip = export_batch_zip(selected_for_batch)
+                # Cria lista de steps para o progresso
+                steps = [f"Exportando análise {i+1}/{len(selected_for_batch)}" 
+                        for i in range(len(selected_for_batch))]
+                
+                # Usa track_progress para mostrar barra de progresso
+                with track_progress(steps, "Exportação em lote") as tracker:
+                    # Define callback que atualiza o tracker
+                    def progress_callback(step_name):
+                        tracker.update(step_name)
+                    
+                    batch_zip = export_batch_zip(selected_for_batch, progress_callback)
+                
                 st.download_button(
                     label=f"📥 Baixar ZIP com {len(selected_for_batch)} análises",
                     data=batch_zip,

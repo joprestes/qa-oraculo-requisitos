@@ -320,6 +320,7 @@ graph TB
 | [**docs/CUCUMBER_EXPORT_GUIDE.md**](docs/CUCUMBER_EXPORT_GUIDE.md) | 🆕 Guia de Exportação Cucumber |
 | [**docs/POSTMAN_EXPORT_GUIDE.md**](docs/POSTMAN_EXPORT_GUIDE.md) | 🆕 Guia de Exportação Postman |
 | [**docs/BATCH_EXPORT_GUIDE.md**](docs/BATCH_EXPORT_GUIDE.md) | 🆕 Guia de Exportação em Lote |
+| [**docs/PROGRESS_INDICATORS_GUIDE.md**](docs/PROGRESS_INDICATORS_GUIDE.md) | 🆕 Guia de Indicadores de Progresso |
 | [**docs/CHANGELOG.md**](docs/CHANGELOG.md) | Histórico de mudanças |
 | [**docs/ACESSIBILIDADE.md**](docs/ACESSIBILIDADE.md) | Guia de acessibilidade |
 
