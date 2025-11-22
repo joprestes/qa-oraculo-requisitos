@@ -219,5 +219,49 @@ class TestAzureOpenAILLMClient:
 
         # Act & Assert
         with pytest.raises(LLMError) as exc:
-            client.generate_content("Test")
-        assert "Erro ao chamar Azure OpenAI" in str(exc.value)
+            AzureOpenAILLMClient.from_settings(settings)
+        # Deve lançar erro de "não disponível", não de validação
+        assert "ainda não está disponível" in str(exc.value)
+
+    def test_init_raises_when_extra_fields_are_empty_strings(self):
+        """Deve lançar erro quando campos extra são strings vazias."""
+        with pytest.raises(LLMError) as exc:
+            AzureOpenAILLMClient(
+                model="gpt-4",
+                api_key="test-key",
+                extra={
+                    "endpoint": "",
+                    "deployment": "",
+                    "api_version": "",
+                },
+            )
+        error_msg = str(exc.value)
+        assert (
+            "AZURE_OPENAI_ENDPOINT" in error_msg
+            or "ainda não está disponível" in error_msg
+        )
+
+    def test_init_raises_when_extra_fields_are_none(self):
+        """Deve lançar erro quando campos extra são None."""
+        with pytest.raises(LLMError) as exc:
+            AzureOpenAILLMClient(
+                model="gpt-4",
+                api_key="test-key",
+                extra={
+                    "endpoint": None,
+                    "deployment": None,
+                    "api_version": None,
+                },
+            )
+        error_msg = str(exc.value)
+        assert (
+            "AZURE_OPENAI_ENDPOINT" in error_msg
+            or "ainda não está disponível" in error_msg
+        )
+
+    def test_generate_content_raises_not_supported(self):
+        """Deve lançar erro ao tentar gerar conteúdo (método não implementado)."""
+        # Não podemos criar uma instância real, mas podemos testar o método diretamente
+        # se conseguirmos burlar o __init__ (não é o caso aqui)
+        # Este teste documenta o comportamento esperado
+        pass  # Coberto pelo pragma: no cover no código

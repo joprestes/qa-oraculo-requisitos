@@ -144,3 +144,18 @@ class TestOpenAILLMClient:
         with pytest.raises(LLMError) as exc:
             client.generate_content("Test")
         assert "Erro ao chamar OpenAI" in str(exc.value)
+def test_openai_init_raises_when_api_key_is_empty_string():
+    """Testa que OpenAILLMClient levanta erro com API key vazia."""
+    with pytest.raises(LLMError) as exc:
+        OpenAILLMClient(model="gpt-4", api_key="", extra={})
+    assert "OPENAI_API_KEY não configurada" in str(exc.value)
+
+
+def test_openai_generate_content_raises_not_supported():
+    """Testa que generate_content levanta erro (não deve ser chamado)."""
+    # Não podemos instanciar o cliente, mas podemos testar o método diretamente
+    # se ele fosse chamado (embora isso nunca aconteça na prática)
+    client = object.__new__(OpenAILLMClient)
+    with pytest.raises(LLMError) as exc:
+        client.generate_content("test prompt")
+    assert "ainda não suportado" in str(exc.value)
