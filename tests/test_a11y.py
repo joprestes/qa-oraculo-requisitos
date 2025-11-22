@@ -211,6 +211,8 @@ def test_a11y_main_block_imprime_comandos(capsys):
 def test_apply_accessible_styles_injeta_css():
     """Valida que apply_accessible_styles injeta CSS no Streamlit."""
     with patch("qa_core.a11y.st") as mock_st:
+        # Mock session_state para evitar detecção de preferências
+        mock_st.session_state = {}
         a11y._STYLES_APPLIED = False
         a11y.apply_accessible_styles()
 
@@ -223,7 +225,9 @@ def test_apply_accessible_styles_injeta_css():
         assert "</style>" in css_call
         assert "background-color" in css_call
         assert "focus" in css_call.lower()
-        assert "contrast" in css_call.lower()
+        # Verifica elementos que estão garantidos no CSS comum
+        assert "sr-only" in css_call.lower() or "screen reader" in css_call.lower()
+        assert "responsive" in css_call.lower() or "@media" in css_call
 
         # Valida que unsafe_allow_html=True
         assert mock_st.markdown.call_args[1]["unsafe_allow_html"] is True
@@ -336,3 +340,61 @@ def test_check_accessibility_preferences_retornado_detectado():
         "dark_mode": False,
     }
     assert a11y._A11Y_PREFS_CACHE == resultado
+
+
+def test_check_accessibility_preferences_returns_cache():
+    """Testa que check_accessibility_preferences retorna cache quando disponível."""
+    # Configura cache
+    cached_prefs = {
+        "reduced_motion": True,
+        "high_contrast": False,
+        "dark_mode": True,
+    }
+    a11y._A11Y_PREFS_CACHE = cached_prefs
+
+    # Chama sem force_refresh - deve retornar cache
+    resultado = a11y.check_accessibility_preferences(force_refresh=False)
+
+    assert resultado == cached_prefs
+    assert a11y._A11Y_PREFS_CACHE == cached_prefs
+
+    # Limpa cache para outros testes
+    a11y._A11Y_PREFS_CACHE = None
+
+
+def test_persist_preferences_handles_exception():
+    """Testa que _persist_preferences trata exceções graciosamente."""
+    from qa_core.a11y import _persist_preferences
+
+    # Simula erro ao acessar getattr
+    with patch("qa_core.a11y.getattr", side_effect=RuntimeError("Error")):
+        # Não deve levantar exceção (try/except interno)
+        try:
+            _persist_preferences({"reduced_motion": True, "high_contrast": False})
+        except Exception:
+            pytest.fail("_persist_preferences não deve levantar exceção")
+
+
+def test_persist_preferences_with_none_session_state():
+    """Testa _persist_preferences quando session_state é None."""
+    from qa_core.a11y import _persist_preferences
+
+    # Simula que getattr retorna None
+    with patch("builtins.getattr", return_value=None):
+        # Não deve levantar exceção
+        _persist_preferences({"reduced_motion": True, "high_contrast": False})
+
+
+def test_persist_preferences_with_exception_in_setitem():
+    """Testa que _persist_preferences trata exceção ao atribuir session_state."""
+    from qa_core.a11y import _persist_preferences
+
+    # Simula erro ao acessar getattr
+    def failing_getattr(obj, name, default=None):
+        if name == "session_state":
+            raise RuntimeError("Cannot access")
+        return default
+
+    with patch("builtins.getattr", side_effect=failing_getattr):
+        # Não deve levantar exceção (try/except interno)
+        _persist_preferences({"reduced_motion": True})

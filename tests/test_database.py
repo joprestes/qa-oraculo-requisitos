@@ -272,3 +272,26 @@ def test_get_all_analysis_history_vazio(monkeypatch):
 
     history = database.get_all_analysis_history()
     assert history == []
+
+
+def test_ensure_analysis_history_columns_with_error(monkeypatch, caplog):
+    """Testa que _ensure_analysis_history_columns trata erro sqlite3.Error."""
+    from qa_core.database import _ensure_analysis_history_columns
+    import sqlite3
+    from unittest.mock import MagicMock
+
+    # Cria um mock cursor que simula erro
+    mock_cursor = MagicMock(spec=sqlite3.Cursor)
+
+    def failing_execute(query, *args):
+        if "PRAGMA" in query or "ALTER TABLE" in query:
+            raise sqlite3.Error("Database locked")
+        # Para outras queries, retorna normalmente
+        return None
+
+    mock_cursor.execute.side_effect = failing_execute
+    mock_cursor.fetchall.return_value = []
+
+    # Não deve levantar exceção, apenas logar
+    _ensure_analysis_history_columns(mock_cursor)
+    assert "Falha ao ajustar colunas" in caplog.text

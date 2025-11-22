@@ -134,6 +134,27 @@ class TestHelperFunctions(BaseGraphTestCase):
         mock_model_instance.generate_content.assert_called_once()
         mock_sleep.assert_not_called()
 
+    @patch("qa_core.graph.log_graph_event")
+    @patch("qa_core.graph.time.sleep", return_value=None)
+    def test_chamar_modelo_com_llm_error(self, mock_sleep, mock_log_event):
+        """Testa tratamento de LLMError no chamar_modelo_com_retry."""
+        from qa_core.llm.providers.base import LLMError
+
+        mock_model_instance = MagicMock()
+        llm_error = LLMError("Erro no LLM")
+        mock_model_instance.generate_content.side_effect = llm_error
+
+        resultado = chamar_modelo_com_retry(
+            mock_model_instance, "prompt", trace_id="trace-123", node="test-node"
+        )
+
+        self.assertIsNone(resultado)
+        mock_model_instance.generate_content.assert_called_once()
+        # Verifica que evento de erro foi logado
+        mock_log_event.assert_called()
+        eventos = [call.args[0] for call in mock_log_event.call_args_list]
+        self.assertIn("model.call.error", eventos)
+
 
 class TestGraphNodes(BaseGraphTestCase):
     """Testes para a resiliência dos nós individuais do grafo."""
