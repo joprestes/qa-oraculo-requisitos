@@ -26,8 +26,8 @@ class LLMSettings(BaseModel):
         provider = self.provider.lower()
         api_key = self.api_key
 
-        # Se for mock, não precisa de chave
-        if provider == "mock":
+        # Se for mock ou llama (Ollama local), não precisa de chave
+        if provider in {"mock", "llama"}:
             return self
 
         # Verifica chaves específicas no extra se a principal não estiver definida
@@ -36,8 +36,6 @@ class LLMSettings(BaseModel):
                 api_key = self.extra.get("google_api_key")
             elif provider in {"openai", "gpt"}:
                 api_key = self.extra.get("openai_api_key")  # Ajustado para consistência
-            elif provider == "llama":
-                api_key = self.extra.get("llama_api_key")
 
         if not api_key:
             raise ValueError(
