@@ -5,7 +5,8 @@ import pandas as pd
 from qa_core import app
 
 
-def test_render_export_section_com_campos_xray_e_testrail(mocked_st):
+@patch("qa_core.app._render_export_previews")
+def test_render_export_section_com_campos_xray_e_testrail(mock_preview, mocked_st):
     df = pd.DataFrame(
         [
             {

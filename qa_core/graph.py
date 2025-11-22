@@ -114,7 +114,7 @@ def chamar_modelo_com_retry(
             )
             return resposta
         except LLMRateLimitError:
-            print(
+            logger.warning(
                 f"⚠️ Limite de Requisições (Tentativa {tentativa + 1}/{tentativas}). Aguardando {espera}s..."
             )
             log_graph_event(
@@ -206,7 +206,7 @@ def node_analisar_historia(state: AgentState) -> AgentState:
         Registra eventos de observabilidade (node.start, node.finish, node.error)
         para monitoramento e debugging.
     """
-    print("--- Etapa 1: Analisando a User Story... ---")
+    logger.info("--- Etapa 1: Analisando a User Story... ---")
     trace_id = state.get("trace_id")
     node_name = "analista_us"
     log_graph_event(
@@ -288,7 +288,7 @@ def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
         Utiliza PROMPT_GERAR_RELATORIO_ANALISE e CONFIG_GERACAO_RELATORIO
         para controlar a geração do relatório.
     """
-    print("--- Etapa 2: Compilando relatório de análise... ---")
+    logger.info("--- Etapa 2: Compilando relatório de análise... ---")
     trace_id = state.get("trace_id")
     node_name = "gerador_relatorio_analise"
     log_graph_event("node.start", trace_id=trace_id, node=node_name)
@@ -349,7 +349,7 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
         Os cenários são gerados em formato estruturado para facilitar
         exportação para ferramentas como Jira, Xray, Azure DevOps, etc.
     """
-    print("--- Etapa Extra: Criando Plano de Testes... ---")
+    logger.info("--- Etapa Extra: Criando Plano de Testes... ---")
     trace_id = state.get("trace_id")
     node_name = "criador_plano_testes"
     log_graph_event("node.start", trace_id=trace_id, node=node_name)
@@ -420,7 +420,7 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
 
 def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
     """Gera o relatório final do plano de testes (Markdown)."""
-    print("--- Etapa 4: Compilando relatório do plano... ---")
+    logger.info("--- Etapa 4: Compilando relatório do plano... ---")
     trace_id = state.get("trace_id")
     node_name = "gerador_relatorio_plano_de_testes"
     log_graph_event("node.start", trace_id=trace_id, node=node_name)
@@ -447,7 +447,7 @@ def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
     }
     contexto_str = json.dumps(contexto_reduzido, indent=2, ensure_ascii=False)
 
-    print(f"Tamanho do contexto enviado: {len(contexto_str)} caracteres")
+    logger.debug(f"Tamanho do contexto enviado: {len(contexto_str)} caracteres")
 
     # Chamada ao modelo
     client = _get_llm_client()
@@ -464,7 +464,7 @@ def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
 
     # Fallback local em caso de falha
     if not response or not getattr(response, "text", None):
-        print("⚠️ Gemini falhou — gerando relatório simplificado localmente.")
+        logger.warning("⚠️ Gemini falhou — gerando relatório simplificado localmente.")
         log_graph_event(
             "node.error",
             trace_id=trace_id,
@@ -509,7 +509,7 @@ def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
 @st.cache_resource
 def get_analysis_graph():
     """Cria, compila e cacheia o grafo para a análise inicial."""
-    print("--- ⚙️ COMPILANDO GRAFO DE ANÁLISE (deve aparecer só uma vez) ---")
+    logger.info("--- ⚙️ COMPILANDO GRAFO DE ANÁLISE (deve aparecer só uma vez) ---")
     workflow_analise = StateGraph(AgentState)
     workflow_analise.add_node("analista_us", node_analisar_historia)
     workflow_analise.add_node("gerador_relatorio_analise", node_gerar_relatorio_analise)
@@ -522,7 +522,9 @@ def get_analysis_graph():
 @st.cache_resource
 def get_test_plan_graph():
     """Cria, compila e cacheia o grafo para o plano de testes."""
-    print("--- ⚙️ COMPILANDO GRAFO DE PLANO DE TESTES (deve aparecer só uma vez) ---")
+    logger.info(
+        "--- ⚙️ COMPILANDO GRAFO DE PLANO DE TESTES (deve aparecer só uma vez) ---"
+    )
     workflow_plano_testes = StateGraph(AgentState)
     workflow_plano_testes.add_node(
         "criador_plano_testes", node_criar_plano_e_casos_de_teste

@@ -75,7 +75,7 @@ streamlit run main.py
 
 > ⚠️ **Atenção**
 > - O ambiente virtual oficial do projeto é `.venv/`. Se você possuir uma pasta `venv/` residual, remova-a com `make clean-venv` antes de continuar.
-> - Repositórios antigos podem conter o diretório legado `qa-oracolo-requisitos/`. Ele foi descontinuado e deve ser removido para evitar conflitos com ferramentas de automação.
+> - Repositórios antigos podem conter o diretório legado `qa-oraculo-requisitos/`. Ele foi descontinuado e deve ser removido para evitar conflitos com ferramentas de automação.
 > - Para alternar o provedor de LLM no futuro, ajuste `LLM_PROVIDER`, `LLM_MODEL` e as chaves específicas no arquivo `.env`. Veja o [Guia de Configuração de LLMs](docs/LLM_CONFIG_GUIDE.md) para exemplos de Google, Azure e OpenAI.
 
 ### 🛠️ Comandos de Desenvolvimento
@@ -147,18 +147,70 @@ make help
 | **Azure DevOps** | `.csv` | ✅ |
 | **Jira Zephyr** | `.xlsx` | ✅ |
 | **Xray Test Management** | `.csv` | ✅ |
-| **TestRail** | `.csv` | 🆕 |
+| **TestRail** | `.csv` | ✅ |
+| **Cucumber Studio** | `.zip` | 🆕 |
+| **Postman Collection** | `.json` | 🆕 |
 
 ### 📖 Histórico e Gestão
 - **Salve análises** para referência futura
 - **Visualize histórico** completo (sumário + cenários estruturados)
+- **Compare análises** lado a lado com diff visual 🆕
+- **Exporte em lote** múltiplas análises em um único ZIP 🆕
 - **Exclua análises** individuais ou em lote
 - **Busque análises** anteriores
 - **Sincronize alterações**: exclusões/edições refletem automaticamente no histórico
 
 ---
 
-## 🆕 Destaque: Exportação TestRail
+## 🆕 Destaque: Exportação Cucumber Studio
+
+Exporte seus cenários diretamente para o **Cucumber Studio**:
+
+### ✨ Recursos
+- ✅ **ZIP com arquivos .feature** - um arquivo por cenário
+- ✅ **Formato Gherkin completo** - Funcionalidade, Cenário, Dado, Quando, Então
+- ✅ **Nomes sanitizados** - caracteres especiais removidos automaticamente
+- ✅ **Pronto para importar** - compatível com Cucumber Studio
+
+---
+
+## 🆕 Destaque: Exportação Postman Collection
+
+Exporte seus cenários como **Postman Collection** para testes de API:
+
+### ✨ Recursos
+- ✅ **JSON v2.1** - formato padrão do Postman
+- ✅ **Requests automáticos** - cada cenário vira um request POST
+- ✅ **Steps Gherkin no body** - Dado, Quando, Então preservados
+- ✅ **User Story incluída** - contexto completo na descrição
+
+---
+
+## 🆕 Destaque: Exportação em Lote
+
+Exporte **múltiplas análises** de uma só vez:
+
+### ✨ Recursos
+- ✅ **Seleção múltipla** - checkboxes no histórico
+- ✅ **ZIP consolidado** - Markdown + PDF de cada análise
+- ✅ **Nomes organizados** - `{data}_analise_{id}.md` e `.pdf`
+- ✅ **Download único** - todas as análises em um arquivo
+
+---
+
+## 📖 Destaque: Comparação de Análises
+
+Compare **duas análises** lado a lado:
+
+### ✨ Recursos
+- ✅ **Seleção fácil** - checkboxes no modo de comparação
+- ✅ **Visualização lado a lado** - User Story e Relatório
+- ✅ **Diff visual HTML** - adições e remoções destacadas
+- ✅ **Abas organizadas** - User Story e Relatório separados
+
+---
+
+## Destaque: Exportação TestRail
 
 Exporte seus cenários em formato compatível com o **TestRail**:
 
@@ -264,6 +316,10 @@ graph TB
 | [**docs/DEVELOPER_QUICK_START.md**](docs/DEVELOPER_QUICK_START.md) | Guia para desenvolvedores |
 | [**docs/README.md**](docs/README.md) | Documentação técnica completa |
 | [**docs/XRAY_EXPORT_GUIDE.md**](docs/XRAY_EXPORT_GUIDE.md) | Guia de exportação Xray |
+| [**docs/COMPARISON_GUIDE.md**](docs/COMPARISON_GUIDE.md) | 🆕 Guia de Comparação de Análises |
+| [**docs/CUCUMBER_EXPORT_GUIDE.md**](docs/CUCUMBER_EXPORT_GUIDE.md) | 🆕 Guia de Exportação Cucumber |
+| [**docs/POSTMAN_EXPORT_GUIDE.md**](docs/POSTMAN_EXPORT_GUIDE.md) | 🆕 Guia de Exportação Postman |
+| [**docs/BATCH_EXPORT_GUIDE.md**](docs/BATCH_EXPORT_GUIDE.md) | 🆕 Guia de Exportação em Lote |
 | [**docs/CHANGELOG.md**](docs/CHANGELOG.md) | Histórico de mudanças |
 | [**docs/ACESSIBILIDADE.md**](docs/ACESSIBILIDADE.md) | Guia de acessibilidade |
 

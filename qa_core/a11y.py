@@ -40,7 +40,6 @@ def apply_accessible_styles(force: bool = False):
     - Suporte a prefers-reduced-motion
     - Suporte a prefers-contrast: high
     - Espaçamento melhorado para legibilidade
-    - Modo escuro com toggle manual
 
     Testado em:
     - Chrome + NVDA (Windows)
@@ -52,30 +51,8 @@ def apply_accessible_styles(force: bool = False):
     if _STYLES_APPLIED and not force:
         return
 
-    # Verifica se modo escuro está ativado manualmente ou por preferência do sistema
-    dark_mode_enabled = False
-    try:
-        session_state = getattr(st, "session_state", None)
-        if session_state is not None:
-            # Prioriza preferência manual sobre detecção automática
-            dark_mode_manual = session_state.get("dark_mode_manual", None)
-            if dark_mode_manual is not None:
-                dark_mode_enabled = dark_mode_manual
-            else:
-                # Fallback para detecção automática se não houver preferência manual
-                # Evita chamar check_accessibility_preferences durante testes para não interferir
-                try:
-                    prefs = check_accessibility_preferences()
-                    dark_mode_enabled = prefs.get("dark_mode", False)
-                except Exception:
-                    # Se falhar (ex: em testes), usa padrão
-                    dark_mode_enabled = False
-    except Exception:
-        pass
-
-    # Aplica estilos base + modo escuro se necessário
-    # Força reaplicação dos estilos quando modo escuro muda
-    _apply_theme_styles(dark_mode_enabled)
+    # Modo escuro removido por decisão de design - sempre usa modo claro
+    _apply_theme_styles(dark_mode=False)
 
     _STYLES_APPLIED = True
 
@@ -157,161 +134,7 @@ def _apply_theme_styles(dark_mode: bool = False) -> None:
 def _get_base_theme_css(dark_mode: bool = False) -> str:
     """Retorna CSS do tema base (claro ou escuro)."""
 
-    if dark_mode:
-        return """
-    /* ==========================================================
-       BASE — Tema Escuro Acessível (QA Oráculo)
-       ========================================================== */
-    html, body, [data-testid="stAppViewContainer"] {
-        background-color: #1A1A1A !important;
-        color: #E0E0E0 !important;
-        font-size: 16px !important;
-        line-height: 1.6 !important;
-        font-family: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
-
-    /* Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: #2D2D2D !important;
-        color: #E0E0E0 !important;
-        border-right: 1px solid #404040 !important;
-    }
-
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] strong {
-        color: #7C8FFF !important;
-        font-weight: 600 !important;
-    }
-
-    [data-testid="stSidebar"] a {
-        color: #64B5F6 !important;
-        text-decoration: underline !important;
-        font-weight: 500 !important;
-    }
-
-    [data-testid="stSidebar"] a:hover,
-    [data-testid="stSidebar"] a:focus {
-        color: #90CAF9 !important;
-        text-decoration: none !important;
-    }
-
-    /* ==========================================================
-       TIPOGRAFIA E LINKS (Conteúdo Principal) - Modo Escuro
-       ========================================================== */
-    .stMarkdown p,
-    .stMarkdown li,
-    .stMarkdown span {
-        color: #E0E0E0 !important;
-    }
-
-    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-    }
-
-    .stMarkdown a {
-        color: #64B5F6 !important;
-        text-decoration: underline !important;
-        font-weight: 600 !important;
-    }
-
-    .stMarkdown a:hover,
-    .stMarkdown a:focus {
-        color: #90CAF9 !important;
-        text-decoration: none !important;
-    }
-
-    /* ==========================================================
-       CAMPOS DE ENTRADA (TextArea / TextInput) - Modo Escuro
-       ========================================================== */
-    .stTextArea textarea,
-    .stTextInput input {
-        border: 2px solid #555555 !important;
-        background-color: #2D2D2D !important;
-        color: #E0E0E0 !important;
-        padding: 10px 12px !important;
-        border-radius: 6px !important;
-        font-size: 16px !important;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-    }
-
-    .stTextArea textarea:focus,
-    .stTextInput input:focus {
-        border-color: #64B5F6 !important;
-        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.25) !important;
-        outline: none !important;
-    }
-
-    /* ==========================================================
-       BOTÕES - Modo Escuro
-       ========================================================== */
-    .stButton > button {
-        background-color: #64B5F6 !important;
-        color: #1A1A1A !important;
-        font-weight: 600 !important;
-        padding: 10px 20px !important;
-        border-radius: 6px !important;
-        border: none !important;
-        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
-        cursor: pointer !important;
-    }
-
-    .stButton > button:hover,
-    .stButton > button:focus {
-        background-color: #90CAF9 !important;
-        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.3) !important;
-        outline: none !important;
-    }
-
-    /* ==========================================================
-       MENSAGENS DE ESTADO (announce) - Modo Escuro
-       ========================================================== */
-    .stSuccess {
-        border-left: 5px solid #4CAF50 !important;
-        background-color: #1B5E20 !important;
-        padding: 16px !important;
-        border-radius: 4px !important;
-        color: #C8E6C9 !important;
-    }
-
-    .stError {
-        border-left: 5px solid #EF5350 !important;
-        background-color: #4A1A1A !important;
-        padding: 16px !important;
-        border-radius: 4px !important;
-        color: #FFCDD2 !important;
-    }
-
-    .stWarning {
-        border-left: 5px solid #FFB74D !important;
-        background-color: #5D4037 !important;
-        padding: 16px !important;
-        border-radius: 4px !important;
-        color: #FFE0B2 !important;
-    }
-
-    .stInfo {
-        border-left: 5px solid #42A5F5 !important;
-        background-color: #0D47A1 !important;
-        padding: 16px !important;
-        border-radius: 4px !important;
-        color: #BBDEFB !important;
-    }
-
-    /* ==========================================================
-       EXPANDERS E DETALHES - Modo Escuro
-       ========================================================== */
-    .streamlit-expanderHeader {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-        padding: 12px !important;
-        background-color: #2D2D2D !important;
-        border: 1px solid #404040 !important;
-        border-radius: 4px !important;
-        color: #E0E0E0 !important;
-    }
-        """
+    # Modo escuro removido por decisão de design
 
     # Tema claro (original)
     return """
@@ -723,40 +546,6 @@ def render_keyboard_shortcuts_guide():
         """,
             unsafe_allow_html=True,
         )
-
-
-def render_dark_mode_toggle():
-    """
-    Renderiza toggle para alternar modo escuro na sidebar.
-
-    O toggle permite ao usuário alternar manualmente entre modo claro e escuro,
-    sobrescrevendo a detecção automática baseada na preferência do sistema.
-    """
-    try:
-        # Inicializa dark_mode_manual se não existir
-        if "dark_mode_manual" not in st.session_state:
-            # Tenta detectar preferência do sistema primeiro
-            prefs = check_accessibility_preferences()
-            st.session_state.dark_mode_manual = prefs.get("dark_mode", False)
-
-        # Renderiza toggle
-        dark_mode_enabled = st.sidebar.toggle(
-            "🌙 Modo Escuro",
-            value=st.session_state.dark_mode_manual,
-            key="dark_mode_toggle",
-            help="Alterna entre tema claro e escuro. Sobrescreve a preferência do sistema.",
-        )
-
-        # Atualiza session_state e força reaplicação de estilos
-        if st.session_state.dark_mode_manual != dark_mode_enabled:
-            st.session_state.dark_mode_manual = dark_mode_enabled
-            # Força reaplicação dos estilos
-            global _STYLES_APPLIED
-            _STYLES_APPLIED = False
-            apply_accessible_styles(force=True)
-    except Exception:
-        # Ignora erros para não quebrar o app
-        pass
 
 
 def render_accessibility_info():

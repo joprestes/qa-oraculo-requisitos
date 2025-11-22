@@ -35,7 +35,7 @@ def test_render_main_analysis_page_sem_user_story(mocked_st):
 
     app.render_main_analysis_page()
     mocked_st.warning.assert_called_once_with(
-        "Erro na User Story: String should have at least 10 characters"
+        "A User Story é muito curta. Digite pelo menos 10 caracteres."
     )
 
 
@@ -50,12 +50,15 @@ def test_render_main_analysis_page_downloads_sem_dados(mock_st):
         "user_story_input": "História teste",
     }
 
-    mock_st.columns.return_value = [
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-    ]
+    # Mock columns to return correct number based on argument
+    def columns_side_effect(arg):
+        if isinstance(arg, int):
+            return tuple(MagicMock() for _ in range(arg))
+        if isinstance(arg, list):
+            return tuple(MagicMock() for _ in arg)
+        return (MagicMock(), MagicMock())
+
+    mock_st.columns.side_effect = columns_side_effect
 
     app.render_main_analysis_page()
     mock_st.subheader.assert_called_with("Downloads Disponíveis")

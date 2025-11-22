@@ -66,22 +66,9 @@ A arquitetura permite escolher o provedor via `LLM_PROVIDER`. A tabela abaixo li
 | Provedor (`LLM_PROVIDER`) | Status | Variáveis necessárias | Onde pegar essas informações |
 |---------------------------|--------|------------------------|------------------------------|
 | `google` (padrão) | ✅ Ativo | `GOOGLE_API_KEY` <br> `LLM_MODEL` (opcional) | **Google AI Studio** → [Documentação](https://ai.google.dev/gemini-api/docs) |
-| `azure` / `azure_openai` | ⚠️ Em preparação | `AZURE_OPENAI_API_KEY` <br> `AZURE_OPENAI_ENDPOINT` <br> `AZURE_OPENAI_DEPLOYMENT` <br> `AZURE_OPENAI_API_VERSION` | **Portal Azure** → [Documentação oficial](https://learn.microsoft.com/azure/ai-services/openai/) |
-| `openai` / `gpt` | ⚠️ Em preparação | `OPENAI_API_KEY` <br> `OPENAI_BASE_URL` (opcional) <br> `OPENAI_ORGANIZATION` (opcional) | **OpenAI Platform** → [Documentação oficial](https://platform.openai.com/docs) |
-| `llama` | ⚠️ Em preparação | `LLAMA_API_KEY` <br> `LLAMA_ENDPOINT` (opcional) <br> `LLAMA_PROJECT_ID` (opcional) | **Meta AI** → [Documentação do LLaMA](https://ai.meta.com/llama/) |
-
-### LLaMA (Meta) – estrutura pronta, integração em desenvolvimento
-```bash
-LLM_PROVIDER="llama"
-LLM_MODEL="llama-3.1-405b"
-LLAMA_API_KEY="chave_da_meta"
-# LLAMA_ENDPOINT="https://api.meta.ai/v1"     # opcional, conforme fornecedor
-# LLAMA_PROJECT_ID="seu_projeto_meta"         # opcional
-```
-- **Onde obter:** Portal ou parceiro oficial do programa LLaMA → [https://ai.meta.com/llama/](https://ai.meta.com/llama/).
-- **Status atual:** O QA Oráculo valida se `LLAMA_API_KEY` e demais variáveis foram preenchidas e informa o roadmap caso o driver ainda não esteja liberado.
-
-> Mesmo para provedores ainda não suportados, configurar o `.env` com antecedência ajuda a identificar o que falta quando o suporte for liberado.
+| `azure` / `azure_openai` | ✅ Ativo | `AZURE_OPENAI_API_KEY` <br> `AZURE_OPENAI_ENDPOINT` <br> `AZURE_OPENAI_DEPLOYMENT` <br> `AZURE_OPENAI_API_VERSION` | **Portal Azure** → [Documentação oficial](https://learn.microsoft.com/azure/ai-services/openai/) |
+| `openai` / `gpt` | ✅ Ativo | `OPENAI_API_KEY` <br> `OPENAI_ORGANIZATION` (opcional) | **OpenAI Platform** → [Documentação oficial](https://platform.openai.com/docs) |
+| `llama` | ✅ Ativo (Ollama) | **Nenhuma** (local e gratuito!) | **Ollama** → [https://ollama.ai](https://ollama.ai) |
 
 ---
 
@@ -92,28 +79,86 @@ LLAMA_API_KEY="chave_da_meta"
 - Certifique-se de que `GOOGLE_API_KEY` está preenchida.
 - Opcionalmente ajuste `LLM_MODEL` se quiser usar outro modelo Gemini compatível.
 
-### Azure OpenAI (estrutura pronta, integração em desenvolvimento)
+### Azure OpenAI ✅ **DISPONÍVEL**
 ```bash
 LLM_PROVIDER="azure"
-LLM_MODEL="gpt-4o"
-AZURE_OPENAI_API_KEY="chave_azure"
+LLM_MODEL="gpt-4"
+AZURE_OPENAI_API_KEY="sua-chave-azure"
 AZURE_OPENAI_ENDPOINT="https://sua-instancia.openai.azure.com"
 AZURE_OPENAI_DEPLOYMENT="nome-do-deployment"
 AZURE_OPENAI_API_VERSION="2024-02-15-preview"
 ```
-- **Onde obter:** Portal Azure → Recurso Azure OpenAI → menu `Keys & Endpoint` (pegar endpoint e chave) e `Deployments` (nome do deployment e versão da API).
-- **Status atual:** o QA Oráculo valida se todos os campos foram preenchidos e informa claramente quais variáveis ainda faltam. A chamada ao modelo ainda não está habilitada.
 
-### OpenAI GPT (estrutura pronta, integração em desenvolvimento)
+**Onde obter:**
+1. Acesse o [Portal Azure](https://portal.azure.com)
+2. Navegue até seu recurso Azure OpenAI
+3. Menu `Keys & Endpoint`: copie a chave e o endpoint
+4. Menu `Deployments`: copie o nome do deployment
+5. Use a versão da API recomendada (ex: `2024-02-15-preview`)
+
+**Status:** ✅ Totalmente funcional! Suporta GPT-4, GPT-3.5-turbo e outros modelos disponíveis no Azure.
+
+### OpenAI GPT ✅ **DISPONÍVEL**
 ```bash
 LLM_PROVIDER="openai"
-LLM_MODEL="gpt-4.1"
-OPENAI_API_KEY="chave_do_openai"
-# OPENAI_BASE_URL="https://api.openai.com/v1"      # opcional
-# OPENAI_ORGANIZATION="org_xxxxx"                 # opcional
+LLM_MODEL="gpt-4"
+OPENAI_API_KEY="sk-..."
+# OPENAI_ORGANIZATION="org-xxxxx"  # opcional
 ```
-- **Onde obter:** OpenAI Platform → User (canto superior direito) → `View API keys`. Organization ID em `Settings → Organizations`.
-- **Status atual:** semelhante ao Azure, o QA Oráculo valida variáveis e informa que a integração será liberada em uma versão futura.
+
+**Onde obter:**
+1. Acesse [OpenAI Platform](https://platform.openai.com)
+2. Clique em seu perfil (canto superior direito) → `View API keys`
+3. Crie uma nova chave ou use uma existente
+4. (Opcional) Em `Settings → Organizations`, copie o Organization ID
+
+**Status:** ✅ Totalmente funcional! Suporta GPT-4, GPT-3.5-turbo, GPT-4-turbo e outros modelos.
+
+### LLaMA (Ollama) ✅ **DISPONÍVEL E GRATUITO** 🎉
+```bash
+LLM_PROVIDER="llama"
+LLM_MODEL="llama2"
+# Não precisa de API key!
+```
+
+**Como configurar:**
+
+1. **Instalar Ollama:**
+   - Acesse [https://ollama.ai](https://ollama.ai)
+   - Baixe e instale para seu sistema operacional
+   - Verifique a instalação: `ollama --version`
+
+2. **Baixar um modelo:**
+   ```bash
+   ollama pull llama2        # LLaMA 2 (7B)
+   ollama pull llama2:13b    # LLaMA 2 (13B)
+   ollama pull llama3        # LLaMA 3 (mais recente)
+   ```
+
+3. **Verificar que Ollama está rodando:**
+   ```bash
+   ollama list  # Lista modelos instalados
+   ```
+
+4. **Configurar o `.env`:**
+   ```bash
+   LLM_PROVIDER="llama"
+   LLM_MODEL="llama2"  # ou llama3, llama2:13b, etc.
+   ```
+
+**Vantagens:**
+- ✅ **100% Gratuito** - roda localmente
+- ✅ **Privacidade total** - dados não saem da sua máquina
+- ✅ **Sem limites de quota** - use quanto quiser
+- ✅ **Offline** - funciona sem internet (após baixar o modelo)
+
+**Modelos disponíveis:**
+- `llama2` - LLaMA 2 (7B) - Rápido e leve
+- `llama2:13b` - LLaMA 2 (13B) - Mais preciso
+- `llama3` - LLaMA 3 - Versão mais recente
+- E muitos outros! Veja a lista completa em [https://ollama.ai/library](https://ollama.ai/library)
+
+**Status:** ✅ Totalmente funcional! Perfeito para desenvolvimento local e testes.
 
 ### Alternando rapidamente
 1. Edite o `.env` com o provedor desejado.
@@ -125,7 +170,7 @@ OPENAI_API_KEY="chave_do_openai"
 ## 🧠 Como a camada de LLM funciona
 
 1. **Leitura do `.env`**: o projeto carrega `LLM_PROVIDER`, `LLM_MODEL` e chaves específicas conforme a opção escolhida.
-2. **Fábrica de provedores**: o QA Oráculo seleciona automaticamente o driver. Google já está implementado; Azure/OpenAI retornam mensagens indicando o que falta.
+2. **Fábrica de provedores**: o QA Oráculo seleciona automaticamente o driver correto (Google, Azure, OpenAI ou Ollama).
 3. **Chamadas com retry e observabilidade**: toda chamada registra eventos (`model.call.start`, `model.call.success`, `model.call.error`) com **trace IDs** para troubleshooting.
 4. **Resultados**: a IA retorna JSONs estruturados com análise, plano de testes e relatórios. Falhas geram mensagens amigáveis e logs detalhados.
 
@@ -151,8 +196,10 @@ OPENAI_API_KEY="chave_do_openai"
 |---------|----------------|------------------|
 | `LLMError: GOOGLE_API_KEY não configurada` | `.env` incompleto ou variável mal escrita | Verifique se `GOOGLE_API_KEY` consta no `.env` e se o arquivo está na raiz do projeto |
 | `LLMError: Azure OpenAI requer variáveis...` | Variável obrigatória do Azure ausente | Preencha todas as variáveis listadas na tabela de provedores |
-| `LLMError: OpenAI GPT ainda não suportado` | Integração em desenvolvimento | Aguarde a versão correspondente ou acompanhe o roadmap |
-| `LLMRateLimitError` | Limite de requisições do Gemini atingido | Aguarde alguns minutos e tente novamente. Para evitar reincidência, alinhe quotas com o time |
+| `LLMError: OPENAI_API_KEY não configurada` | API key do OpenAI ausente | Adicione `OPENAI_API_KEY` ao `.env` |
+| `LLMError: Ollama não está acessível` | Ollama não está instalado ou não está rodando | Instale Ollama ([https://ollama.ai](https://ollama.ai)) e verifique com `ollama list` |
+| `LLMError: modelo 'llama3' not found` | Modelo não foi baixado | Execute `ollama pull llama3` para baixar o modelo |
+| `LLMRateLimitError` | Limite de requisições atingido | Aguarde alguns minutos e tente novamente. Para evitar reincidência, alinhe quotas com o time |
 | Resposta vazia / relatório em fallback | Instabilidade temporária do provedor | Tente novamente e consulte os logs (`model.call.error`) |
 | `streamlit run` não abre navegador | Porta ocupada ou Streamlit em segundo plano | Use `streamlit run main.py --server.port 8502` ou encerre instâncias anteriores |
 
@@ -162,6 +209,7 @@ OPENAI_API_KEY="chave_do_openai"
 
 - **Centralize as chaves** em um cofre seguro e distribua com parcimônia.
 - **Defina quotas internas** para evitar estouro dos limites da API durante sprints.
+- **Use Ollama para desenvolvimento local** - economize custos e mantenha privacidade.
 - **Revise sempre** as análises geradas pela IA antes de exportar.
 - **Registre feedbacks**: logs estruturados ajudam a reportar problemas com embasamento.
 

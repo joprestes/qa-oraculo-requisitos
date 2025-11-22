@@ -1,10 +1,12 @@
 """Testes unitários para o provedor Azure OpenAI."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from qa_core.llm.config import LLMSettings
 from qa_core.llm.providers.azure_openai import AzureOpenAILLMClient
-from qa_core.llm.providers.base import LLMError
+from qa_core.llm.providers.base import LLMError, LLMRateLimitError
 
 
 class TestAzureOpenAILLMClient:
@@ -77,21 +79,24 @@ class TestAzureOpenAILLMClient:
         assert "AZURE_OPENAI_DEPLOYMENT" in error_msg
         assert "AZURE_OPENAI_API_VERSION" in error_msg
 
-    def test_init_raises_not_available_with_all_fields(self):
-        """Deve lançar erro 'não disponível' mesmo com todos os campos preenchidos."""
-        with pytest.raises(LLMError) as exc:
-            AzureOpenAILLMClient(
-                model="gpt-4",
-                api_key="test-key",
-                extra={
-                    "endpoint": "https://test.openai.azure.com/",
-                    "deployment": "gpt-4",
-                    "api_version": "2024-02-15-preview",
-                },
-            )
-        assert "ainda não está disponível" in str(exc.value)
+    @patch("qa_core.llm.providers.azure_openai.AzureOpenAI")
+    def test_init_succeeds_with_all_fields(self, mock_azure_openai):
+        """Deve criar cliente com sucesso quando todos os campos estão presentes."""
+        client = AzureOpenAILLMClient(
+            model="gpt-4",
+            api_key="test-key",
+            extra={
+                "endpoint": "https://test.openai.azure.com/",
+                "deployment": "gpt-4",
+                "api_version": "2024-02-15-preview",
+            },
+        )
+        assert client._model_name == "gpt-4"
+        assert client._api_key == "test-key"
+        mock_azure_openai.assert_called_once()
 
-    def test_from_settings_creates_client(self):
+    @patch("qa_core.llm.providers.azure_openai.AzureOpenAI")
+    def test_from_settings_creates_client(self, mock_azure_openai):
         """Deve criar cliente a partir de LLMSettings."""
         settings = LLMSettings(
             provider="azure",
@@ -103,6 +108,116 @@ class TestAzureOpenAILLMClient:
                 "api_version": "2024-02-15-preview",
             },
         )
+        client = AzureOpenAILLMClient.from_settings(settings)
+        assert client._model_name == "gpt-4"
+        assert client._api_key == "test-key"
+
+    @patch("qa_core.llm.providers.azure_openai.AzureOpenAI")
+    def test_generate_content_success(self, mock_azure_openai):
+        """Deve gerar conteúdo com sucesso."""
+        # Arrange
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "Conteúdo gerado"
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_azure_openai.return_value = mock_client
+
+        client = AzureOpenAILLMClient(
+            model="gpt-4",
+            api_key="test-key",
+            extra={
+                "endpoint": "https://test.openai.azure.com/",
+                "deployment": "gpt-4",
+                "api_version": "2024-02-15-preview",
+            },
+        )
+
+        # Act
+        result = client.generate_content("Test prompt")
+
+        # Assert
+        assert result == "Conteúdo gerado"
+        mock_client.chat.completions.create.assert_called_once()
+
+    @patch("qa_core.llm.providers.azure_openai.AzureOpenAI")
+    def test_generate_content_with_config(self, mock_azure_openai):
+        """Deve passar configurações para a API."""
+        # Arrange
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "Resposta"
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_azure_openai.return_value = mock_client
+
+        client = AzureOpenAILLMClient(
+            model="gpt-4",
+            api_key="test-key",
+            extra={
+                "endpoint": "https://test.openai.azure.com/",
+                "deployment": "gpt-4",
+                "api_version": "2024-02-15-preview",
+            },
+        )
+
+        # Act
+        config = {"temperature": 0.7, "max_tokens": 100}
+        client.generate_content("Test", config=config)
+
+        # Assert
+        call_kwargs = mock_client.chat.completions.create.call_args[1]
+        assert call_kwargs["temperature"] == 0.7
+        assert call_kwargs["max_tokens"] == 100
+
+    @patch("qa_core.llm.providers.azure_openai.AzureOpenAI")
+    def test_generate_content_raises_rate_limit_error(self, mock_azure_openai):
+        """Deve lançar LLMRateLimitError quando atingir limite de taxa."""
+        # Arrange
+        from openai import RateLimitError as OpenAIRateLimitError
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = OpenAIRateLimitError(
+            "Rate limit exceeded", response=MagicMock(), body=None
+        )
+        mock_azure_openai.return_value = mock_client
+
+        client = AzureOpenAILLMClient(
+            model="gpt-4",
+            api_key="test-key",
+            extra={
+                "endpoint": "https://test.openai.azure.com/",
+                "deployment": "gpt-4",
+                "api_version": "2024-02-15-preview",
+            },
+        )
+
+        # Act & Assert
+        with pytest.raises(LLMRateLimitError) as exc:
+            client.generate_content("Test")
+        assert "Limite de taxa" in str(exc.value)
+
+    @patch("qa_core.llm.providers.azure_openai.AzureOpenAI")
+    def test_generate_content_raises_llm_error_on_exception(self, mock_azure_openai):
+        """Deve lançar LLMError para outros erros."""
+        # Arrange
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = Exception("API Error")
+        mock_azure_openai.return_value = mock_client
+
+        client = AzureOpenAILLMClient(
+            model="gpt-4",
+            api_key="test-key",
+            extra={
+                "endpoint": "https://test.openai.azure.com/",
+                "deployment": "gpt-4",
+                "api_version": "2024-02-15-preview",
+            },
+        )
+
+        # Act & Assert
         with pytest.raises(LLMError) as exc:
             AzureOpenAILLMClient.from_settings(settings)
         # Deve lançar erro de "não disponível", não de validação

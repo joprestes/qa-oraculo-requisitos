@@ -13,11 +13,29 @@ def _make_context():
     return ctx
 
 
+@patch(
+    "qa_core.app._render_history_filters",
+    return_value={"search_text": "", "date_filter": "Todos", "type_filter": []},
+)
+@patch(
+    "qa_core.app._apply_history_filters", side_effect=lambda entries, filters: entries
+)
 @patch("qa_core.app.st")
-def test_render_history_page_com_historico(mock_st):
+def test_render_history_page_com_historico(
+    mock_st, mock_apply_filters, mock_render_filters
+):
     mock_st.session_state = {}
     mock_st.query_params.get.return_value = [None]
-    mock_st.columns.return_value = [MagicMock(), MagicMock()]
+
+    # Mock columns to return correct number based on argument
+    def columns_side_effect(arg):
+        if isinstance(arg, int):
+            return tuple(MagicMock() for _ in range(arg))
+        if isinstance(arg, list):
+            return tuple(MagicMock() for _ in arg)
+        return (MagicMock(), MagicMock())
+
+    mock_st.columns.side_effect = columns_side_effect
 
     history = [{"id": 1, "created_at": "2025-09-26", "user_story": "US exemplo"}]
     with patch("qa_core.app.get_all_analysis_history", return_value=history):
@@ -27,8 +45,15 @@ def test_render_history_page_com_historico(mock_st):
     assert any("2025-09-26" in call_str for call_str in calls)
 
 
+@patch(
+    "qa_core.app._render_history_filters",
+    return_value={"search_text": "", "date_filter": "Todos", "type_filter": []},
+)
+@patch(
+    "qa_core.app._apply_history_filters", side_effect=lambda entries, filters: entries
+)
 @patch("qa_core.app.st")
-def test_render_history_page_detalhes(mock_st):
+def test_render_history_page_detalhes(mock_st, mock_apply_filters, mock_render_filters):
     mock_st.session_state = {}
     mock_st.query_params.get.return_value = ["1"]
 
@@ -56,7 +81,16 @@ def test_render_history_sem_historico(mocked_st):
     )
 
 
-def test_render_history_com_historico_lista(mocked_st):
+@patch(
+    "qa_core.app._render_history_filters",
+    return_value={"search_text": "", "date_filter": "Todos", "type_filter": []},
+)
+@patch(
+    "qa_core.app._apply_history_filters", side_effect=lambda entries, filters: entries
+)
+def test_render_history_com_historico_lista(
+    mock_apply_filters, mock_render_filters, mocked_st
+):
     mocked_st.query_params.get.return_value = [None]
     history = [{"id": 1, "created_at": "2025-09-26", "user_story": "US exemplo"}]
     with patch("qa_core.app.get_all_analysis_history", return_value=history):
@@ -64,7 +98,16 @@ def test_render_history_com_historico_lista(mocked_st):
     mocked_st.container.assert_called()
 
 
-def test_render_history_com_analysis_id_valido(mocked_st):
+@patch(
+    "qa_core.app._render_history_filters",
+    return_value={"search_text": "", "date_filter": "Todos", "type_filter": []},
+)
+@patch(
+    "qa_core.app._apply_history_filters", side_effect=lambda entries, filters: entries
+)
+def test_render_history_com_analysis_id_valido(
+    mock_apply_filters, mock_render_filters, mocked_st
+):
     mocked_st.query_params.get.return_value = ["1"]
     analysis_entry = {
         "id": 1,
@@ -79,7 +122,16 @@ def test_render_history_com_analysis_id_valido(mocked_st):
     mocked_st.code.assert_called_with("User Story completa", language="gherkin")
 
 
-def test_render_history_com_analysis_id_invalido(mocked_st):
+@patch(
+    "qa_core.app._render_history_filters",
+    return_value={"search_text": "", "date_filter": "Todos", "type_filter": []},
+)
+@patch(
+    "qa_core.app._apply_history_filters", side_effect=lambda entries, filters: entries
+)
+def test_render_history_com_analysis_id_invalido(
+    mock_apply_filters, mock_render_filters, mocked_st
+):
     mocked_st.query_params.get.return_value = ["99"]
     with patch("qa_core.app.get_analysis_by_id", return_value=None):
         app.render_history_page()
@@ -217,7 +269,16 @@ def test_render_history_sem_plano_exibe_aviso(mocked_st):
     )
 
 
-def test_render_history_lista_formata_datas(mocked_st):
+@patch(
+    "qa_core.app._render_history_filters",
+    return_value={"search_text": "", "date_filter": "Todos", "type_filter": []},
+)
+@patch(
+    "qa_core.app._apply_history_filters", side_effect=lambda entries, filters: entries
+)
+def test_render_history_lista_formata_datas(
+    mock_apply_filters, mock_render_filters, mocked_st
+):
     mocked_st.query_params.get.return_value = None
     history = [
         {"id": 1, "created_at": "2025-10-01 10:00", "user_story": "Story 1"},
@@ -395,11 +456,22 @@ def test_render_history_page_impl_confirma_limpeza_total(
     mock_st.rerun.assert_called_once()
 
 
+@patch(
+    "qa_core.app._render_history_filters",
+    return_value={"search_text": "", "date_filter": "Todos", "type_filter": []},
+)
+@patch(
+    "qa_core.app._apply_history_filters", side_effect=lambda entries, filters: entries
+)
 @patch("qa_core.app.accessible_button")
 @patch("qa_core.app.get_all_analysis_history")
 @patch("qa_core.app.st")
 def test_render_history_page_impl_lista_dispara_confirm_clear_all(
-    mock_st, mock_get_history, mock_accessible_button
+    mock_st,
+    mock_get_history,
+    mock_accessible_button,
+    mock_apply_filters,
+    mock_render_filters,
 ):
     mock_st.session_state = {}
     mock_st.query_params.get.return_value = None
