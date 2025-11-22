@@ -5,6 +5,22 @@ Todas as mudanças notáveis deste projeto serão documentadas aqui.
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## [Unreleased]
+
+### Tests
+- **Conclusão da Fase 1 do Roadmap - Cobertura de Testes LLM Completa** (Novembro 2025):
+  - Adicionados testes de edge cases para provedores LLM (Azure OpenAI, OpenAI, LLaMA)
+  - Testes para validação de campos vazios e None nos campos extra
+  - Testes para validação de API keys vazias
+  - Adicionado teste unitário para `openai.py` que estava faltando
+  - Total: 396 testes passando (+4 novos)
+  - **Fase 1 do Roadmap: 100% completa** (14/14 itens implementados)
+
+### Documentation
+- Atualizado `ROADMAP.md` com status completo da Fase 1 (Novembro 2025)
+- Criado `PENDENCIAS.md` com resumo detalhado do que falta implementar
+- Atualizado `ROADMAP_STATUS.md` refletindo conclusão da Fase 1 (Novembro 2025)
+
 ## [1.8.0] - 2025-11-21
 
 ### Refactor
