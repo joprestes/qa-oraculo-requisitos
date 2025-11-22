@@ -1,5 +1,7 @@
 # 🗺️ Roadmap de Melhorias - QA Oráculo
 
+> 📋 **Status de Implementação**: Consulte [ROADMAP_STATUS.md](./ROADMAP_STATUS.md) para análise detalhada do que já foi implementado.
+
 ## 📊 Análise Atual do Projeto
 
 ### ✅ Pontos Fortes
@@ -37,12 +39,13 @@
 #### 1.1 Aumentar Cobertura de Testes LLM
 **Prioridade**: Alta  
 **Esforço**: Médio  
-**Impacto**: Alto
+**Impacto**: Alto  
+**Status**: 🟡 Parcialmente Implementado
 
-- [ ] Implementar testes unitários para `azure_openai.py` (43% → 90%)
-- [ ] Implementar testes unitários para `llama.py` (56% → 90%)
-- [ ] Implementar testes unitários para `mock.py` (52% → 90%)
-- [ ] Adicionar testes de integração para factory pattern
+- [x] Implementar testes unitários para `azure_openai.py` (43% → 90%) ✅ *Implementado - cobrem validação e erros*
+- [x] Implementar testes unitários para `llama.py` (56% → 90%) ✅ *Implementado - cobrem validação e erros*
+- [x] Implementar testes unitários para `mock.py` (52% → 90%) ✅ *Implementado - cobertura completa*
+- [x] Adicionar testes de integração para factory pattern ✅ *Implementado*
 
 **Benefícios**:
 - Garantir robustez dos provedores LLM
@@ -52,12 +55,13 @@
 #### 1.2 Otimização de Performance
 **Prioridade**: Média  
 **Esforço**: Baixo  
-**Impacto**: Médio
+**Impacto**: Médio  
+**Status**: 🟢 Implementado
 
-- [ ] Revisar estratégia de cache do Streamlit
-- [ ] Implementar cache de resultados LLM (opcional, com TTL)
-- [ ] Otimizar queries ao banco de dados SQLite
-- [ ] Adicionar índices nas tabelas de histórico
+- [x] Revisar estratégia de cache do Streamlit ✅ *@st.cache_data com TTL implementado*
+- [x] Implementar cache de resultados LLM (opcional, com TTL) ✅ *CachedLLMClient implementado (sem TTL configurável ainda)*
+- [x] Otimizar queries ao banco de dados SQLite ✅ *PRAGMA WAL e synchronous implementados*
+- [x] Adicionar índices nas tabelas de histórico ✅ *Índice em created_at implementado*
 
 **Benefícios**:
 - Reduzir latência da aplicação
@@ -67,13 +71,14 @@
 #### 1.3 Hardening de Segurança
 **Prioridade**: Alta  
 **Esforço**: Baixo  
-**Impacto**: Alto
+**Impacto**: Alto  
+**Status**: 🟢 Implementado (4/5 itens)
 
-- [ ] Implementar validação de entrada com Pydantic em todos os endpoints
-- [ ] Adicionar rate limiting para chamadas LLM
-- [ ] Implementar sanitização de logs (evitar vazamento de PII)
-- [ ] Adicionar auditoria de secrets no CI/CD
-- [ ] Implementar rotação de API keys (documentação)
+- [x] Implementar validação de entrada com Pydantic em todos os endpoints ✅ *Schemas implementados em qa_core/schemas.py*
+- [x] Adicionar rate limiting para chamadas LLM ✅ *RateLimiter implementado + retry em graph.py*
+- [x] Implementar sanitização de logs (evitar vazamento de PII) ✅ *sanitize_for_logging + SanitizedLogger implementados*
+- [ ] Adicionar auditoria de secrets no CI/CD ❌ *Pendente - adicionar ao pipeline*
+- [x] Implementar rotação de API keys (documentação) ✅ *docs/API_KEY_ROTATION.md criado*
 
 **Benefícios**:
 - Proteger contra ataques de injeção
@@ -87,20 +92,21 @@
 #### 2.1 Completar Provedores LLM
 **Prioridade**: Média  
 **Esforço**: Alto  
-**Impacto**: Alto
+**Impacto**: Alto  
+**Status**: 🔴 Não Implementado (apenas validação existe)
 
-- [ ] Implementar provedor Azure OpenAI completo
-  - [ ] Configuração de endpoint e deployment
-  - [ ] Testes de integração
-  - [ ] Documentação de uso
-- [ ] Implementar provedor OpenAI GPT completo
-  - [ ] Suporte a modelos GPT-4/GPT-3.5
-  - [ ] Configuração de organização
-  - [ ] Testes de integração
-- [ ] Implementar provedor LLaMA completo
-  - [ ] Integração com API Meta
-  - [ ] Configuração de projeto
-  - [ ] Testes de integração
+- [ ] Implementar provedor Azure OpenAI completo ❌ *Ainda retorna "não disponível"*
+  - [x] Configuração de endpoint e deployment ✅ *Validação implementada*
+  - [ ] Testes de integração ❌ *Aguardando implementação completa*
+  - [ ] Documentação de uso ❌ *Aguardando implementação completa*
+- [ ] Implementar provedor OpenAI GPT completo ❌ *Ainda retorna "não disponível"*
+  - [ ] Suporte a modelos GPT-4/GPT-3.5 ❌
+  - [ ] Configuração de organização ❌
+  - [ ] Testes de integração ❌
+- [ ] Implementar provedor LLaMA completo ❌ *Ainda retorna "não disponível"*
+  - [ ] Integração com API Meta ❌
+  - [ ] Configuração de projeto ❌
+  - [ ] Testes de integração ❌
 
 **Benefícios**:
 - Flexibilidade para escolher provedor
@@ -110,13 +116,14 @@
 #### 2.2 Melhorias na UI/UX
 **Prioridade**: Média  
 **Esforço**: Médio  
-**Impacto**: Médio
+**Impacto**: Médio  
+**Status**: 🟡 Parcialmente Implementado
 
-- [ ] Adicionar modo escuro (tema dark)
-- [ ] Implementar preview de exportações antes do download
-- [ ] Adicionar busca e filtros no histórico
-- [ ] Implementar comparação entre análises
-- [ ] Adicionar indicadores de progresso para operações longas
+- [ ] Adicionar modo escuro (tema dark) ⚠️ *Detecção de preferência existe, falta toggle manual*
+- [ ] Implementar preview de exportações antes do download ❌
+- [ ] Adicionar busca e filtros no histórico ❌
+- [ ] Implementar comparação entre análises ❌
+- [ ] Adicionar indicadores de progresso para operações longas ⚠️ *st.spinner existe, pode melhorar*
 
 **Benefícios**:
 - Melhor experiência do usuário
@@ -126,12 +133,14 @@
 #### 2.3 Exportações Avançadas
 **Prioridade**: Baixa  
 **Esforço**: Médio  
-**Impacto**: Médio
+**Impacto**: Médio  
+**Status**: 🟡 Parcialmente Implementado
 
-- [ ] Adicionar exportação para Cucumber Studio
-- [ ] Implementar exportação para Postman Collections (para APIs)
-- [ ] Adicionar templates customizáveis de exportação
-- [ ] Implementar exportação em lote (múltiplas análises)
+- [ ] Adicionar exportação para Cucumber Studio ❌
+- [ ] Implementar exportação para Postman Collections (para APIs) ❌
+- [ ] Adicionar templates customizáveis de exportação ❌
+- [ ] Implementar exportação em lote (múltiplas análises) ❌
+- ✅ *Nota: Exportações para Xray e TestRail foram implementadas além do roadmap*
 
 **Benefícios**:
 - Maior integração com ferramentas de mercado
@@ -243,11 +252,11 @@
 
 ### 🚀 Quick Wins (1-3 dias)
 
-1. **Adicionar testes para provedores LLM** (azure, llama, mock)
-2. **Implementar validação de entrada com Pydantic**
-3. **Adicionar índices no banco de dados**
-4. **Documentar rotação de API keys**
-5. **Implementar sanitização de logs**
+1. ✅ **Adicionar testes para provedores LLM** (azure, llama, mock) - *Parcialmente completo*
+2. ✅ **Implementar validação de entrada com Pydantic** - *Completo*
+3. ✅ **Adicionar índices no banco de dados** - *Completo*
+4. ✅ **Documentar rotação de API keys** - *Completo*
+5. ✅ **Implementar sanitização de logs** - *Completo*
 
 ### 📊 Métricas de Sucesso
 

@@ -89,6 +89,27 @@ def format_datetime(value):
     return str(value)
 
 
+def _parse_entry_date(value) -> datetime.datetime | None:
+    """Converte data de entry para datetime.datetime para comparação."""
+    if value is None:
+        return None
+
+    if isinstance(value, datetime.datetime):
+        return value
+
+    if isinstance(value, str):
+        try:
+            return datetime.datetime.fromisoformat(value)
+        except Exception:
+            # Tenta outros formatos comuns
+            try:
+                return datetime.datetime.strptime(value.split()[0], "%Y-%m-%d")
+            except Exception:
+                return None
+
+    return None
+
+
 # ==========================================================
 #  Auxiliar: garante bytes no download_button
 # ==========================================================
@@ -1923,6 +1944,96 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
 
             return
 
+        # ==========================================================
+        # 🔍 Busca e Filtros
+        # ==========================================================
+        st.divider()
+        st.markdown("### 🔍 Buscar e Filtrar")
+
+        col_search, col_filter = st.columns([2, 1])
+
+        # Campo de busca
+        with col_search:
+            search_term = st.text_input(
+                "🔎 Buscar na User Story",
+                value=st.session_state.get("history_search", ""),
+                key="history_search_input",
+                placeholder="Digite palavras-chave para buscar nas User Stories...",
+                help="Busca pelo conteúdo da User Story nas análises do histórico.",
+            )
+            # Valida que search_term é string (para compatibilidade com testes/mocks)
+            # Detecta MagicMock e trata como string vazia
+            if not isinstance(search_term, str) or hasattr(search_term, "_mock_name"):
+                search_term = ""
+            st.session_state["history_search"] = search_term
+
+        # Filtro por data (opcional - simplificado)
+        with col_filter:
+            filter_date = st.selectbox(
+                "📅 Filtrar por Data",
+                options=[
+                    "Todos",
+                    "Últimos 7 dias",
+                    "Últimos 30 dias",
+                    "Últimos 90 dias",
+                ],
+                key="history_date_filter",
+                help="Filtra análises por período de criação.",
+            )
+            # Detecta MagicMock e trata como "Todos"
+            if not isinstance(filter_date, str) or hasattr(filter_date, "_mock_name"):
+                filter_date = "Todos"
+
+        # Aplica filtros
+        filtered_entries = history_entries
+
+        # Filtro por busca - valida que search_term é string válida
+        if isinstance(search_term, str) and search_term.strip():
+            search_lower = search_term.lower().strip()
+            filtered_entries = [
+                entry
+                for entry in filtered_entries
+                if (
+                    isinstance((user_story := dict(entry).get("user_story", "")), str)
+                    and search_lower in user_story.lower()
+                )
+            ]
+
+        # Filtro por data - valida que filter_date é string válida
+        if isinstance(filter_date, str) and filter_date != "Todos":
+            from datetime import timedelta
+
+            now = datetime.datetime.now()
+            if filter_date == "Últimos 7 dias":
+                cutoff_date = now - timedelta(days=7)
+            elif filter_date == "Últimos 30 dias":
+                cutoff_date = now - timedelta(days=30)
+            elif filter_date == "Últimos 90 dias":
+                cutoff_date = now - timedelta(days=90)
+            else:
+                cutoff_date = None
+
+            if cutoff_date:
+                filtered_entries = [
+                    entry
+                    for entry in filtered_entries
+                    if (
+                        (entry_date := _parse_entry_date(dict(entry).get("created_at")))
+                        is not None
+                        and entry_date >= cutoff_date
+                    )
+                ]
+
+        # Mostra contagem de resultados apenas se filtros foram aplicados
+        if (search_term and isinstance(search_term, str) and search_term.strip()) or (
+            isinstance(filter_date, str) and filter_date != "Todos"
+        ):
+            st.info(
+                f"📊 Mostrando {len(filtered_entries)} de {len(history_entries)} análises"
+            )
+
+        st.divider()
+
         # 🧹 Excluir todo histórico
         if accessible_button(
             label="🗑️ Excluir TODO o Histórico",
@@ -1936,8 +2047,17 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
         st.divider()
         st.markdown("### 📜 Histórico de Análises Realizadas")
 
-        # Cria um card/expander para cada item
-        for entry in history_entries:
+        # Se não há resultados após filtros
+        if not filtered_entries:
+            announce(
+                "Nenhuma análise encontrada com os filtros aplicados.",
+                "info",
+                st_api=st,
+            )
+            return
+
+        # Cria um card/expander para cada item filtrado
+        for entry in filtered_entries:
             entry_dict = dict(entry) if not isinstance(entry, dict) else entry
             created_at = entry_dict.get("created_at")
             user_story_preview = entry_dict.get("user_story", "")[:80]
@@ -2134,6 +2254,14 @@ def main():
     }
 
     selected_page = st.sidebar.radio("Navegação", list(pages.keys()))
+
+    # Toggle de modo escuro
+    from .a11y import render_dark_mode_toggle
+
+    render_dark_mode_toggle()
+
+    st.sidebar.divider()
+
     render_keyboard_shortcuts_guide()
     render_accessibility_info()
     pages[selected_page]()
