@@ -799,13 +799,15 @@ def render_dark_mode_toggle():
             help="Alterna entre tema claro e escuro. Sobrescreve a preferência do sistema.",
         )
 
-        # Atualiza session_state e força reaplicação de estilos
+        # Atualiza session_state se mudou
         if st.session_state.dark_mode_manual != dark_mode_enabled:
             st.session_state.dark_mode_manual = dark_mode_enabled
-            # Força reaplicação dos estilos
-            global _STYLES_APPLIED
-            _STYLES_APPLIED = False
-            apply_accessible_styles(force=True)
+            # Força rerun para aplicar mudanças imediatamente
+            st.rerun()
+        
+        # SEMPRE aplica os estilos, pois o Streamlit limpa o CSS a cada navegação/rerun
+        # A variável global _STYLES_APPLIED impedia isso incorretamente entre reruns
+        apply_accessible_styles(force=True)
     except Exception:
         # Ignora erros para não quebrar o app
         pass
