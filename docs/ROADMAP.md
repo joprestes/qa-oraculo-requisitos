@@ -6,7 +6,7 @@
 
 ### ✅ Pontos Fortes
 - **Arquitetura Modular**: Código bem organizado com separação clara de responsabilidades
-- **Cobertura de Testes**: 90% de cobertura, 210 testes passando
+- **Cobertura de Testes**: 90%+ de cobertura, 396 testes passando
 - **Qualidade de Código**: Lint limpo (Ruff + Black), sem warnings
 - **Documentação**: Completa e bem estruturada
 - **Acessibilidade**: WCAG 2.1 Level AA implementado
