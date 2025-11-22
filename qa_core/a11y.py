@@ -336,9 +336,26 @@ def _get_base_theme_css(dark_mode: bool = False) -> str:
         font-weight: 600 !important;
         padding: 12px !important;
         background-color: #2D2D2D !important;
-        border: 1px solid #404040 !important;
+        border: 1px solid #64B5F6 !important; /* Borda azul visível */
         border-radius: 4px !important;
         color: #E0E0E0 !important;
+    }
+    
+    .streamlit-expanderContent {
+        border: 1px solid #404040 !important;
+        border-top: none !important;
+        border-radius: 0 0 4px 4px !important;
+        padding: 16px !important;
+        background-color: #252525 !important;
+    }
+
+    /* ==========================================================
+       SEPARADORES (HR) - Modo Escuro
+       ========================================================== */
+    hr {
+        border-color: #64B5F6 !important; /* Linha azul visível */
+        opacity: 0.5 !important;
+        margin: 2em 0 !important;
     }
         """
 
