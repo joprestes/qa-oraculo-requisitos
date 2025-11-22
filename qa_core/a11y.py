@@ -281,7 +281,7 @@ def _get_base_theme_css(dark_mode: bool = False) -> str:
         font-weight: 600 !important;
         padding: 10px 20px !important;
         border-radius: 6px !important;
-        border: none !important;
+        border: 2px solid #64B5F6 !important; /* Borda explícita */
         transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
         cursor: pointer !important;
     }
@@ -339,6 +339,12 @@ def _get_base_theme_css(dark_mode: bool = False) -> str:
         border: 1px solid #64B5F6 !important; /* Borda azul visível */
         border-radius: 4px !important;
         color: #E0E0E0 !important;
+    }
+    
+    /* Forçar borda em expanders dentro do sidebar */
+    [data-testid="stSidebar"] .streamlit-expanderHeader {
+        border: 1px solid #64B5F6 !important;
+        background-color: #333333 !important;
     }
     
     .streamlit-expanderContent {
