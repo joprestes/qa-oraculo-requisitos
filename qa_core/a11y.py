@@ -223,6 +223,30 @@ def _get_base_theme_css(dark_mode: bool = False) -> str:
     }
 
     /* ==========================================================
+       LABELS E TEXTOS DE INPUTS - Modo Escuro
+       ========================================================== */
+    label, 
+    .stRadio label,
+    .stCheckbox label,
+    .stTextArea label,
+    .stTextInput label,
+    .stSelectbox label,
+    .stMultiSelect label,
+    .stNumberInput label,
+    .stDateInput label,
+    .stTimeInput label,
+    .stFileUploader label,
+    .stRadio div[data-testid="stMarkdownContainer"] p,
+    .stCheckbox div[data-testid="stMarkdownContainer"] p {
+        color: #E0E0E0 !important;
+    }
+
+    /* Forçar cor branca para labels principais */
+    div[data-testid="stWidgetLabel"] label {
+        color: #FFFFFF !important;
+    }
+
+    /* ==========================================================
        CAMPOS DE ENTRADA (TextArea / TextInput) - Modo Escuro
        ========================================================== */
     .stTextArea textarea,
