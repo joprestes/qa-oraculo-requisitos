@@ -2454,10 +2454,9 @@ def main():
 
     selected_page = st.sidebar.radio("Navegação", list(pages.keys()))
 
-    # Toggle de modo escuro
-    from .a11y import render_dark_mode_toggle
-
-    render_dark_mode_toggle()
+    # Toggle de modo escuro removido por decisão de design
+    # from .a11y import render_dark_mode_toggle
+    # render_dark_mode_toggle()
 
     st.sidebar.divider()
 
