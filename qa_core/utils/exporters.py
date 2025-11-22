@@ -141,24 +141,30 @@ def export_to_postman_collection(df: pd.DataFrame, user_story: str = "") -> str:
     return json.dumps(collection, ensure_ascii=False, indent=2)
 
 
-def export_batch_zip(analysis_ids: list[int]) -> bytes:
+def export_batch_zip(analysis_ids: list[int], progress_callback=None) -> bytes:
     """
     Gera um arquivo ZIP contendo exportações de múltiplas análises.
 
     Args:
         analysis_ids: Lista de IDs de análises para exportar.
+        progress_callback: Função opcional para atualizar progresso (recebe step_name).
 
     Returns:
         Bytes do arquivo ZIP.
     """
     from ..database import get_analysis_by_id
-    from ..exporters import gerar_relatorio_md_completo
+    from ..exports import gerar_relatorio_md_completo
     from ..pdf_generator import generate_pdf_report
 
     zip_buffer = io.BytesIO()
+    total = len(analysis_ids)
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for analysis_id in analysis_ids:
+        for i, analysis_id in enumerate(analysis_ids, 1):
+            # Atualiza progresso se callback fornecido
+            if progress_callback:
+                progress_callback(f"Exportando análise {i}/{total}")
+
             analysis = get_analysis_by_id(analysis_id)
 
             if not analysis:

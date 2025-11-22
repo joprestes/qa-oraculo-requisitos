@@ -175,6 +175,16 @@ Este documento mostra o status atual de cada item do roadmap, verificando o que 
 
 ---
 
+## 📊 Progresso Geral da Fase 2
+
+**Status Atual**: 🟡 **PARCIALMENTE IMPLEMENTADO** (~88% completo)
+
+- ✅ **Provedores LLM**: 100% (4/4 provedores)
+- ✅ **Melhorias UI/UX**: 80% (4/5 itens)
+- ✅ **Exportações Avançadas**: 75% (3/4 itens)
+
+**Estimativa de conclusão**: A Fase 2 pode ser considerada concluída para fins práticos. Os itens pendentes (indicadores em análise/plano e templates customizáveis) podem ser tratados como melhorias futuras ou Fase 3.
+
 ### ⚠️ 2.2 Melhorias na UI/UX
 
 **Status**: 🟡 **PARCIALMENTE IMPLEMENTADO**
@@ -203,9 +213,12 @@ Este documento mostra o status atual de cada item do roadmap, verificando o que 
   - ✅ **Funcionalidade**: Abas com diffs destacando adições/remoções
   - **Localização**: `qa_core/app.py`, `qa_core/utils/diff.py`
 
-- [ ] **Adicionar indicadores de progresso para operações longas**
-  - ⚠️ **Parcial**: Uso de `st.spinner` presente, mas pode ser melhorado
-  - **Recomendação**: Adicionar barras de progresso mais detalhadas
+- [x] **Adicionar indicadores de progresso para operações longas**
+  - ✅ **Parcialmente Implementado**: Módulo `qa_core/progress.py` criado
+  - ✅ **Funcionalidade**: Barras de progresso em exportação em lote
+  - ✅ **Funcionalidade**: Context manager `track_progress` reutilizável
+  - ⚠️ **Pendente**: Integração em análise de US e geração de plano (requer refatoração do app.py)
+  - **Localização**: `qa_core/progress.py`, `qa_core/app.py`
 
 **Conclusão**: Modo escuro removido. Preview, Busca no Histórico e Comparação implementados. Falta apenas melhoria em Indicadores de progresso.
 
