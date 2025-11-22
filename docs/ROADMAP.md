@@ -40,11 +40,12 @@
 **Prioridade**: Alta  
 **Esforço**: Médio  
 **Impacto**: Alto  
-**Status**: 🟡 Parcialmente Implementado
+**Status**: 🟢 Implementado
 
-- [x] Implementar testes unitários para `azure_openai.py` (43% → 90%) ✅ *Implementado - cobrem validação e erros*
-- [x] Implementar testes unitários para `llama.py` (56% → 90%) ✅ *Implementado - cobrem validação e erros*
+- [x] Implementar testes unitários para `azure_openai.py` (43% → 90%) ✅ *Implementado - cobrem validação, erros e edge cases*
+- [x] Implementar testes unitários para `llama.py` (56% → 90%) ✅ *Implementado - cobrem validação, erros e edge cases*
 - [x] Implementar testes unitários para `mock.py` (52% → 90%) ✅ *Implementado - cobertura completa*
+- [x] Implementar testes unitários para `openai.py` ✅ *Implementado - cobrem validação, erros e edge cases*
 - [x] Adicionar testes de integração para factory pattern ✅ *Implementado*
 
 **Benefícios**:
@@ -59,7 +60,7 @@
 **Status**: 🟢 Implementado
 
 - [x] Revisar estratégia de cache do Streamlit ✅ *@st.cache_data com TTL implementado*
-- [x] Implementar cache de resultados LLM (opcional, com TTL) ✅ *CachedLLMClient implementado (sem TTL configurável ainda)*
+- [x] Implementar cache de resultados LLM (opcional, com TTL) ✅ *CachedLLMClient implementado com TTL configurável*
 - [x] Otimizar queries ao banco de dados SQLite ✅ *PRAGMA WAL e synchronous implementados*
 - [x] Adicionar índices nas tabelas de histórico ✅ *Índice em created_at implementado*
 
@@ -72,12 +73,12 @@
 **Prioridade**: Alta  
 **Esforço**: Baixo  
 **Impacto**: Alto  
-**Status**: 🟢 Implementado (4/5 itens)
+**Status**: 🟢 Implementado (5/5 itens)
 
 - [x] Implementar validação de entrada com Pydantic em todos os endpoints ✅ *Schemas implementados em qa_core/schemas.py*
 - [x] Adicionar rate limiting para chamadas LLM ✅ *RateLimiter implementado + retry em graph.py*
 - [x] Implementar sanitização de logs (evitar vazamento de PII) ✅ *sanitize_for_logging + SanitizedLogger implementados*
-- [ ] Adicionar auditoria de secrets no CI/CD ❌ *Pendente - adicionar ao pipeline*
+- [x] Adicionar auditoria de secrets no CI/CD ✅ *Gitleaks e Dependabot configurados no pipeline*
 - [x] Implementar rotação de API keys (documentação) ✅ *docs/API_KEY_ROTATION.md criado*
 
 **Benefícios**:
@@ -117,11 +118,11 @@
 **Prioridade**: Média  
 **Esforço**: Médio  
 **Impacto**: Médio  
-**Status**: 🟡 Parcialmente Implementado
+**Status**: 🟡 Parcialmente Implementado (2/5 itens)
 
-- [ ] Adicionar modo escuro (tema dark) ⚠️ *Detecção de preferência existe, falta toggle manual*
+- [x] Adicionar modo escuro (tema dark) ✅ *Toggle manual implementado na sidebar*
 - [ ] Implementar preview de exportações antes do download ❌
-- [ ] Adicionar busca e filtros no histórico ❌
+- [x] Adicionar busca e filtros no histórico ✅ *Busca por conteúdo e filtro por data implementados*
 - [ ] Implementar comparação entre análises ❌
 - [ ] Adicionar indicadores de progresso para operações longas ⚠️ *st.spinner existe, pode melhorar*
 
