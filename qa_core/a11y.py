@@ -227,9 +227,9 @@ def _get_base_theme_css(dark_mode: bool = False) -> str:
        ========================================================== */
     .stTextArea textarea,
     .stTextInput input {
-        border: 2px solid #555555 !important;
-        background-color: #2D2D2D !important;
-        color: #E0E0E0 !important;
+        border: 2px solid #64B5F6 !important;
+        background-color: #1A1A1A !important;
+        color: #FFFFFF !important;
         padding: 10px 12px !important;
         border-radius: 6px !important;
         font-size: 16px !important;
@@ -238,9 +238,14 @@ def _get_base_theme_css(dark_mode: bool = False) -> str:
 
     .stTextArea textarea:focus,
     .stTextInput input:focus {
-        border-color: #64B5F6 !important;
-        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.25) !important;
+        border-color: #90CAF9 !important;
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.4) !important;
         outline: none !important;
+    }
+    
+    .stTextArea textarea::placeholder,
+    .stTextInput input::placeholder {
+        color: #888888 !important;
     }
 
     /* ==========================================================
