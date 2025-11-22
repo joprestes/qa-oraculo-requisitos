@@ -1340,6 +1340,91 @@ def _render_basic_exports():
     return col_azure, col_zephyr, col_xray
 
 
+def _render_export_previews():
+    """
+    Renderiza previews dos arquivos de exportação em um expander com abas.
+    Permite ao usuário verificar o conteúdo antes de baixar.
+    """
+    if not st.session_state.get("test_plan_df") is not None:
+        return
+
+    with st.expander("👁️ Visualizar Arquivos de Exportação (Preview)", expanded=False):
+        tabs = st.tabs(["Markdown", "Azure CSV", "TestRail CSV", "Xray CSV", "Zephyr (Dados)"])
+        
+        # 1. Markdown Preview
+        with tabs[0]:
+            content = (
+                f"{(st.session_state.get('analysis_state', {}).get('relatorio_analise_inicial') or '')}\n\n"
+                f"---\n\n"
+                f"{(st.session_state.get('test_plan_report') or '')}"
+            )
+            st.caption(f"Total: {len(content)} caracteres")
+            st.code(content, language="markdown")
+            
+        # 2. Azure CSV Preview
+        with tabs[1]:
+            try:
+                csv_azure = gerar_csv_azure_from_df(
+                    st.session_state.get("test_plan_df"),
+                    st.session_state.get("area_path_input", ""),
+                    st.session_state.get("assigned_to_input", ""),
+                )
+                st.caption(f"Preview das primeiras 50 linhas")
+                st.code("\n".join(csv_azure.split("\n")[:50]), language="csv")
+            except Exception as e:
+                st.error(f"Erro ao gerar preview: {e}")
+
+        # 3. TestRail CSV Preview
+        with tabs[2]:
+            try:
+                csv_testrail = gerar_csv_testrail_from_df(
+                    st.session_state.get("test_plan_df"),
+                    st.session_state.get("testrail_section", ""),
+                    st.session_state.get("testrail_priority", "Medium"),
+                    "Test Case (Steps)",
+                    st.session_state.get("testrail_references", ""),
+                )
+                st.caption(f"Preview das primeiras 50 linhas")
+                st.code("\n".join(csv_testrail.split("\n")[:50]), language="csv")
+            except Exception as e:
+                st.error(f"Erro ao gerar preview: {e}")
+
+        # 4. Xray CSV Preview
+        with tabs[3]:
+            try:
+                # Recria lógica de campos do Xray (simplificada para preview)
+                xray_fields = {}
+                if st.session_state.get("xray_labels"):
+                    xray_fields["Labels"] = st.session_state.get("xray_labels")
+                if st.session_state.get("xray_priority"):
+                    xray_fields["Priority"] = st.session_state.get("xray_priority")
+                
+                csv_xray = gerar_csv_xray_from_df(
+                    st.session_state.get("test_plan_df"),
+                    st.session_state.get("xray_test_folder", "Preview_Folder"),
+                    xray_fields,
+                    st.session_state.get("xray_custom_fields", "")
+                )
+                st.caption(f"Preview das primeiras 50 linhas")
+                st.code("\n".join(csv_xray.split("\n")[:50]), language="csv")
+            except Exception as e:
+                st.error(f"Erro ao gerar preview: {e}")
+
+        # 5. Zephyr Preview (mostra DataFrame preparado)
+        with tabs[4]:
+            try:
+                df_zephyr = preparar_df_para_zephyr_xlsx(
+                    st.session_state.get("test_plan_df"),
+                    st.session_state.get("jira_priority", "Medium"),
+                    st.session_state.get("jira_labels", ""),
+                    st.session_state.get("jira_description", ""),
+                )
+                st.dataframe(df_zephyr.head(20), use_container_width=True)
+                st.caption("Mostrando primeiras 20 linhas dos dados preparados para Excel")
+            except Exception as e:
+                st.error(f"Erro ao gerar preview: {e}")
+
+
 def _render_export_section():  # noqa: C901, PLR0915
     """
     Renderiza a seção de downloads e exportações.
@@ -1348,6 +1433,9 @@ def _render_export_section():  # noqa: C901, PLR0915
     """
     st.divider()
     st.subheader("Downloads Disponíveis")
+
+    # Preview dos arquivos antes do download
+    _render_export_previews()
 
     col_azure, col_zephyr, col_xray = _render_basic_exports()
 
@@ -1726,6 +1814,97 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
 # ==========================================================
 #  Página de Histórico
 # ==========================================================
+def _render_history_filters():
+    """Renderiza filtros de histórico."""
+    with st.expander("🔍 Filtros e Busca", expanded=False):
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            search_text = st.text_input(
+                "Buscar",
+                placeholder="Digite palavras-chave...",
+                help="Busca em User Story, análise e plano de testes"
+            )
+        
+        with col2:
+            date_filter = st.selectbox(
+                "Período",
+                options=["Todos", "Última semana", "Último mês", "Últimos 3 meses"],
+                help="Filtrar por data de criação"
+            )
+        
+        with col3:
+            type_filter = st.multiselect(
+                "Tipo",
+                options=["Com análise", "Com plano de testes"],
+                default=[],
+                help="Filtrar por tipo de conteúdo (vazio = todos)"
+            )
+        
+        return {
+            "search_text": search_text.lower() if search_text else "",
+            "date_filter": date_filter,
+            "type_filter": type_filter
+        }
+
+
+def _apply_history_filters(entries: list, filters: dict) -> list:
+    """Aplica filtros aos registros do histórico."""
+    if not filters:
+        return entries
+        
+    filtered = entries
+    
+    # Filtro de texto
+    if filters["search_text"]:
+        search = filters["search_text"]
+        filtered = [
+            e for e in filtered
+            if search in (e.get("user_story", "") or "").lower()
+            or search in (e.get("analysis_report", "") or "").lower()
+            or search in (e.get("test_plan_report", "") or "").lower()
+        ]
+    
+    # Filtro de data
+    if filters["date_filter"] != "Todos":
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        
+        if filters["date_filter"] == "Última semana":
+            cutoff = now - timedelta(days=7)
+        elif filters["date_filter"] == "Último mês":
+            cutoff = now - timedelta(days=30)
+        else:  # Últimos 3 meses
+            cutoff = now - timedelta(days=90)
+            
+        filtered = [
+            e for e in filtered
+            if _parse_date_safe(e.get("created_at")) >= cutoff
+        ]
+    
+    # Filtro de tipo
+    if filters["type_filter"]:
+        if "Com análise" in filters["type_filter"]:
+            filtered = [e for e in filtered if e.get("analysis_report")]
+        if "Com plano de testes" in filters["type_filter"]:
+            filtered = [e for e in filtered if e.get("test_plan_report")]
+            
+    return filtered
+
+
+def _parse_date_safe(date_str):
+    """Converte string de data para datetime de forma segura."""
+    from datetime import datetime
+    try:
+        if isinstance(date_str, datetime):
+            return date_str
+        if not date_str:
+            return datetime.min
+        return datetime.fromisoformat(date_str)
+    except Exception:
+        return datetime.min
+
+
 def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
     """
     Exibe o histórico de análises realizadas e permite:
@@ -1834,6 +2013,10 @@ def _render_history_page_impl():  # noqa: C901, PLR0912, PLR0915
     # ==========================================================
 
     history_entries = get_all_analysis_history()
+
+    # Filtros de busca e data
+    filters = _render_history_filters()
+    history_entries = _apply_history_filters(history_entries, filters)
 
     # Debug logs
 
