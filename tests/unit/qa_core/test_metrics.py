@@ -78,20 +78,20 @@ class TestMetricsCollector:
     def test_multiple_record_calls_when_disabled(self):
         """Testa múltiplas chamadas de record quando desabilitado."""
         collector = MetricsCollector(enabled=False)
-        
+
         # Múltiplas análises
         for _ in range(5):
             collector.record_analysis(status="success")
             collector.record_analysis(status="error")
-        
+
         # Múltiplas exportações
         for fmt in ["markdown", "pdf", "csv"]:
             collector.record_export(format=fmt, status="success")
-        
+
         # Múltiplas chamadas LLM
         for provider in ["google", "openai", "azure"]:
             collector.record_llm_call(provider=provider, status="success")
-        
+
         # Múltiplos erros
         for error_type in ["ValidationError", "LLMError", "DatabaseError"]:
             collector.record_error(error_type=error_type)
