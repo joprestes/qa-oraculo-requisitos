@@ -1920,23 +1920,26 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     4) Exportações (MD, PDF, CSV Azure, XLSX Zephyr).
     5) Botão para iniciar uma nova análise (reset).
     """
-    st.title("🤖 QA Oráculo")
-    st.markdown(
-        """
-    ###  Olá, viajante do código!  
-    Sou o **Oráculo de QA**, pronto para analisar suas User Stories e revelar ambiguidades, riscos e critérios de aceitação.  
-    Cole sua história abaixo e inicie a jornada da qualidade! 🚀
-    """
-    )
-
     # ------------------------------------------------------
     # 1) Entrada e execução da análise inicial
     # ------------------------------------------------------
     if not st.session_state.get("analysis_finished", False):
+        
+        # Container de cabeçalho para garantir ordem
+        with st.container():
+            st.title("🤖 QA Oráculo")
+            st.markdown(
+                """
+            ###  Olá, viajante do código!  
+            Sou o **Oráculo de QA**, pronto para analisar suas User Stories e revelar ambiguidades, riscos e critérios de aceitação.  
+            Cole sua história abaixo e inicie a jornada da qualidade! 🚀
+            """
+            )
 
         # Se ainda não há análise no estado, exibimos o input inicial
         if not st.session_state.get("analysis_state"):
-            _render_user_story_input()
+            with st.container():
+                _render_user_story_input()
 
         # ------------------------------------------------------
         # 2) Edição dos blocos gerados pela IA

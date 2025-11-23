@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock, patch
 from qa_core.app import run_analysis_graph
 

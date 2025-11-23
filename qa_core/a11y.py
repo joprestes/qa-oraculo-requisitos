@@ -14,7 +14,7 @@
 # ==========================================================
 
 
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 
 import streamlit as st
 from streamlit.components.v1 import html as components_html

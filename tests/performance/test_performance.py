@@ -6,8 +6,7 @@ Usa pytest-benchmark para medir e comparar performance de operações importante
 
 import pytest
 import pandas as pd
-from unittest.mock import patch, MagicMock
-from qa_core.database import save_analysis_to_history, get_all_analysis_history
+from unittest.mock import patch
 from qa_core.llm.factory import get_llm_client
 from qa_core.llm.config import LLMSettings
 from qa_core.pdf_generator import generate_pdf_report
