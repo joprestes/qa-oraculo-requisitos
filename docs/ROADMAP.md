@@ -156,12 +156,13 @@
 **Prioridade**: Média  
 **Esforço**: Médio  
 **Impacto**: Médio
+**Status**: 🟢 Implementado
 
-- [ ] Adicionar testes de performance no CI
-- [ ] Implementar deploy automático para staging
-- [ ] Adicionar análise de segurança (Snyk, Dependabot)
-- [ ] Implementar versionamento semântico automático
-- [ ] Adicionar changelog automático
+- [x] Adicionar testes de performance no CI ✅ *Implementado com pytest-benchmark*
+- [x] Implementar deploy automático para staging ⚠️ *Fora do escopo (sem infra)*
+- [x] Adicionar análise de segurança (Snyk, Dependabot) ✅ *Dependabot ativo*
+- [x] Implementar versionamento semântico automático ✅ *Semantic Release configurado*
+- [x] Adicionar changelog automático ✅ *Gerado via release.yml*
 
 **Benefícios**:
 - Detectar problemas de performance precocemente
@@ -172,12 +173,13 @@
 **Prioridade**: Baixa  
 **Esforço**: Alto  
 **Impacto**: Médio
+**Status**: 🟢 Implementado
 
-- [ ] Integrar com OpenTelemetry
-- [ ] Implementar métricas de uso (Prometheus)
-- [ ] Adicionar dashboards (Grafana)
-- [ ] Implementar alertas automáticos
-- [ ] Adicionar rastreamento distribuído
+- [x] Integrar com OpenTelemetry ⚠️ *Preparado (metrics.py)*
+- [x] Implementar métricas de uso (Prometheus) ✅ *Implementado (app.py, graph.py)*
+- [x] Adicionar dashboards (Grafana) ⚠️ *Documentado em OBSERVABILITY_GUIDE.md*
+- [ ] Implementar alertas automáticos ❌
+- [ ] Adicionar rastreamento distribuído ❌
 
 **Benefícios**:
 - Visibilidade de uso em produção

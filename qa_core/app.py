@@ -72,6 +72,17 @@ from .exports import (
 
 # from .github_integration import get_github_integration, GitHubIntegration  # TODO: Descomentar quando implementar
 
+# Métricas Prometheus (opcional)
+# Métricas Prometheus (opcional)
+from .metrics import track_analysis, track_export, start_metrics_server
+
+@st.cache_resource
+def init_metrics():
+    """Inicializa o servidor de métricas (executa apenas uma vez)."""
+    start_metrics_server(port=8000)
+
+init_metrics()
+
 logger = logging.getLogger(__name__)
 
 
@@ -263,6 +274,7 @@ def save_analysis_to_history(update_existing: bool = False):
 # ==========================================================
 #  Funções cacheadas (IA via LangGraph)
 # ==========================================================
+@track_analysis
 @st.cache_data(show_spinner=False, ttl=3600)
 def run_analysis_graph(user_story: str):
     """
@@ -1324,6 +1336,26 @@ def _render_results_section():
         _render_test_cases_table()
 
 
+# ==========================================================
+#  Wrappers de Exportação com Métricas
+# ==========================================================
+@track_export(format="markdown")
+def _prepare_markdown_export(analysis_report: str, test_plan_report: str) -> bytes:
+    """Prepara o conteúdo Markdown para exportação, registrando métricas."""
+    content = f"{analysis_report or ''}\n\n---\n\n{test_plan_report or ''}"
+    return _ensure_bytes(content)
+
+
+@track_export(format="pdf")
+def _prepare_pdf_export(analysis_report: str, test_plan_df) -> bytes:
+    """Gera o PDF para exportação, registrando métricas."""
+    # Se já tivermos os bytes em cache (session_state), poderíamos retornar direto,
+    # mas para registrar a métrica de 'exportação realizada', vamos chamar o gerador
+    # ou apenas registrar que foi feito.
+    # Aqui, vamos assumir que se chama esta função, é para gerar/obter o PDF.
+    return generate_pdf_report(analysis_report, test_plan_df)
+
+
 def _render_basic_exports():
     """
     Renderiza os botões de exportação básicos (MD, PDF) e avançados (Cucumber, Postman).
@@ -1331,29 +1363,66 @@ def _render_basic_exports():
     col_md, col_pdf, col_cucumber, col_postman = st.columns(4)
 
     # 📝 Exporta relatório Markdown
+    # Preparamos o conteúdo sob demanda (lazy) seria ideal, mas o st.download_button
+    # pede os dados já prontos ou uma função callback.
+    # Para simplificar e garantir o tracking, vamos preparar os dados aqui.
+    # Nota: O tracking ocorrerá a cada re-render se chamarmos a função aqui.
+    # O ideal para download_button é usar o callback, mas ele não permite retornar dados,
+    # apenas executar ações.
+    # Abordagem: Vamos preparar os dados (o que dispara a métrica) apenas se o usuário clicar?
+    # O Streamlit não facilita isso no download_button padrão sem recarregar.
+    # Vamos manter a geração prévia, mas cuidado com métricas duplicadas a cada render.
+    # Melhoria: Usar st.cache_data nos wrappers se quisermos evitar re-processamento,
+    # mas queremos contar EXPORTAÇÕES (cliques).
+    # Com download_button, a contagem de cliques é difícil via backend puro do Streamlit.
+    # Vamos aceitar que a métrica será "geração de arquivo para exportação" por enquanto.
+
+    md_content = _prepare_markdown_export(
+        st.session_state.get("analysis_state", {}).get("relatorio_analise_inicial", ""),
+        st.session_state.get("test_plan_report", ""),
+    )
+
     col_md.download_button(
         "📝 Relatório (.md)",
-        _ensure_bytes(
-            f"{(st.session_state.get('analysis_state', {}).get('relatorio_analise_inicial') or '')}\n\n"
-            f"---\n\n"
-            f"{(st.session_state.get('test_plan_report') or '')}"
-        ),
+        md_content,
         file_name=gerar_nome_arquivo_seguro(
-            st.session_state.get("user_story_input", ""), "md"
+            st.session_state.get("analysis_state", {}).get("user_story", ""), "md"
         ),
-        use_container_width=True,
+        help="Baixa a análise e o plano de testes em Markdown",
     )
 
     # 📄 Exporta relatório PDF
-    if st.session_state.get("pdf_report_bytes"):
-        col_pdf.download_button(
-            "📄 Relatório (.pdf)",
-            _ensure_bytes(st.session_state.get("pdf_report_bytes")),
-            file_name=gerar_nome_arquivo_seguro(
-                st.session_state.get("user_story_input", ""), "pdf"
-            ),
-            use_container_width=True,
-        )
+    # O PDF pode ser pesado para gerar a cada render.
+    # Vamos usar o que está no session_state se existir, mas para tracking
+    # precisaríamos saber quando baixou.
+    # Como limitação do Streamlit, vamos registrar a métrica quando o PDF é GERADO/ATUALIZADO
+    # (que acontece no _update_test_plan_outputs ou na geração inicial).
+    # A função _prepare_pdf_export acima pode ser usada lá.
+    # AQUI apenas entregamos os bytes.
+
+    pdf_bytes = st.session_state.get("pdf_report_bytes")
+    if not pdf_bytes:
+        # Tenta gerar se não existir
+        try:
+            pdf_bytes = _prepare_pdf_export(
+                st.session_state.get("analysis_state", {}).get(
+                    "relatorio_analise_inicial", ""
+                ),
+                st.session_state.get("test_plan_df"),
+            )
+            st.session_state["pdf_report_bytes"] = pdf_bytes
+        except Exception:
+            pdf_bytes = b""
+
+    col_pdf.download_button(
+        "📄 Relatório (.pdf)",
+        pdf_bytes,
+        file_name=gerar_nome_arquivo_seguro(
+            st.session_state.get("analysis_state", {}).get("user_story", ""), "pdf"
+        ),
+        help="Baixa um relatório PDF formatado",
+        disabled=not pdf_bytes,
+    )
 
     # 🥒 Exporta para Cucumber Studio (ZIP de .feature files)
     df_para_cucumber = st.session_state.get("test_plan_df")
