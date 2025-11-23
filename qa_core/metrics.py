@@ -6,14 +6,14 @@ As métricas são opcionais e só funcionam se prometheus-client estiver instala
 """
 
 import logging
-from typing import Optional
 from functools import wraps
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 # Imports condicionais para não quebrar se prometheus não estiver instalado
 try:
-    from prometheus_client import Counter, Histogram, Gauge, Info
+    from prometheus_client import Counter, Gauge, Histogram, Info, start_http_server
 
     PROMETHEUS_AVAILABLE = True
 except ImportError:
@@ -22,6 +22,26 @@ except ImportError:
         "Para habilitar, instale: pip install -r requirements-observability.txt"
     )
     PROMETHEUS_AVAILABLE = False
+
+
+def start_metrics_server(port: int = 8000):
+    """Inicia servidor HTTP para expor métricas Prometheus.
+
+    Args:
+        port: Porta para expor as métricas (padrão: 8000).
+    """
+    if not PROMETHEUS_AVAILABLE:
+        logger.warning("Prometheus não disponível, servidor de métricas não iniciado")
+        return
+
+    try:
+        start_http_server(port)
+        logger.info(f"Servidor de métricas iniciado na porta {port}")
+    except Exception as e:
+        # Se a porta já estiver em uso (ex: reload do Streamlit), apenas loga
+        logger.warning(
+            f"Não foi possível iniciar servidor de métricas na porta {port}: {e}"
+        )
 
 
 class MetricsCollector:

@@ -19,6 +19,7 @@ from .prompts import (
     PROMPT_GERAR_RELATORIO_PLANO_DE_TESTES,
 )
 from .observability import log_graph_event
+from .metrics import get_metrics_collector
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,9 @@ def chamar_modelo_com_retry(
         - Em caso de LLMError ou exceções genéricas, retorna None imediatamente.
         - Todos os eventos são registrados via log_graph_event para observabilidade.
     """
+    metrics = get_metrics_collector()
+    provider = getattr(client, "provider_name", "unknown")
+
     log_graph_event(
         "model.call.start",
         trace_id=trace_id,
@@ -91,83 +95,109 @@ def chamar_modelo_com_retry(
         payload={"tentativas": tentativas},
     )
     started_at = time.perf_counter()
-    for tentativa in range(tentativas):
-        tentativa_at = time.perf_counter()
-        try:
-            resposta = client.generate_content(
-                prompt_completo,
-                config=config,
-                trace_id=trace_id,
-                node=node,
-            )
-            log_graph_event(
-                "model.call.success",
-                trace_id=trace_id,
-                node=node,
-                payload={
-                    "tentativa": tentativa + 1,
-                    "duracao_ms": round((time.perf_counter() - tentativa_at) * 1000, 2),
-                    "tempo_total_ms": round(
-                        (time.perf_counter() - started_at) * 1000, 2
-                    ),
-                },
-            )
-            return resposta
-        except LLMRateLimitError:
-            logger.warning(
-                f"⚠️ Limite de Requisições (Tentativa {tentativa + 1}/{tentativas}). Aguardando {espera}s..."
-            )
-            log_graph_event(
-                "model.call.rate_limited",
-                trace_id=trace_id,
-                node=node,
-                payload={
-                    "tentativa": tentativa + 1,
-                    "espera_s": espera,
-                },
-                level=logging.WARNING,
-            )
-            if tentativa < tentativas - 1:
-                time.sleep(espera)
-            else:
-                logger.error("Esgotado o número de tentativas após rate limiting")
-        except LLMError as e:
-            logger.error(f"Erro ao chamar provedor LLM: {e}", exc_info=True)
-            log_graph_event(
-                "model.call.error",
-                trace_id=trace_id,
-                node=node,
-                payload={
-                    "tentativa": tentativa + 1,
-                    "erro": repr(e),
-                },
-                level=logging.ERROR,
-            )
-            return None
-        except Exception as e:  # pragma: no cover - salvaguarda final
-            logger.error(f"Erro inesperado na comunicação com LLM: {e}", exc_info=True)
-            log_graph_event(
-                "model.call.error",
-                trace_id=trace_id,
-                node=node,
-                payload={
-                    "tentativa": tentativa + 1,
-                    "erro": repr(e),
-                },
-                level=logging.ERROR,
-            )
-            return None
-    log_graph_event(
-        "model.call.failed",
-        trace_id=trace_id,
-        node=node,
-        payload={
-            "tentativas": tentativas,
-            "tempo_total_ms": round((time.perf_counter() - started_at) * 1000, 2),
-        },
-        level=logging.ERROR,
-    )
-    return None
+
+    # Registra métrica de duração total da chamada (incluindo retries)
+    # Usamos o context manager manualmente ou apenas registramos no final?
+    # O time_llm_call espera um bloco. Vamos usar try/finally para garantir registro.
+
+    # Inicia cronômetro de métricas
+    timer_context = metrics.time_llm_call(provider=provider)
+    timer_context.__enter__()
+
+    try:
+        for tentativa in range(tentativas):
+            tentativa_at = time.perf_counter()
+            try:
+                resposta = client.generate_content(
+                    prompt_completo,
+                    config=config,
+                    trace_id=trace_id,
+                    node=node,
+                )
+                log_graph_event(
+                    "model.call.success",
+                    trace_id=trace_id,
+                    node=node,
+                    payload={
+                        "tentativa": tentativa + 1,
+                        "duracao_ms": round(
+                            (time.perf_counter() - tentativa_at) * 1000, 2
+                        ),
+                        "tempo_total_ms": round(
+                            (time.perf_counter() - started_at) * 1000, 2
+                        ),
+                    },
+                )
+                metrics.record_llm_call(provider=provider, status="success")
+                return resposta
+            except LLMRateLimitError:
+                logger.warning(
+                    f"⚠️ Limite de Requisições (Tentativa {tentativa + 1}/{tentativas}). Aguardando {espera}s..."
+                )
+                log_graph_event(
+                    "model.call.rate_limited",
+                    trace_id=trace_id,
+                    node=node,
+                    payload={
+                        "tentativa": tentativa + 1,
+                        "espera_s": espera,
+                    },
+                    level=logging.WARNING,
+                )
+                if tentativa < tentativas - 1:
+                    time.sleep(espera)
+                else:
+                    logger.error("Esgotado o número de tentativas após rate limiting")
+            except LLMError as e:
+                logger.error(f"Erro ao chamar provedor LLM: {e}", exc_info=True)
+                log_graph_event(
+                    "model.call.error",
+                    trace_id=trace_id,
+                    node=node,
+                    payload={
+                        "tentativa": tentativa + 1,
+                        "erro": repr(e),
+                    },
+                    level=logging.ERROR,
+                )
+                metrics.record_llm_call(provider=provider, status="error")
+                metrics.record_error(error_type="LLMError")
+                return None
+            except Exception as e:  # pragma: no cover - salvaguarda final
+                logger.error(
+                    f"Erro inesperado na comunicação com LLM: {e}", exc_info=True
+                )
+                log_graph_event(
+                    "model.call.error",
+                    trace_id=trace_id,
+                    node=node,
+                    payload={
+                        "tentativa": tentativa + 1,
+                        "erro": repr(e),
+                    },
+                    level=logging.ERROR,
+                )
+                metrics.record_llm_call(provider=provider, status="error")
+                metrics.record_error(error_type=type(e).__name__)
+                return None
+
+        # Se saiu do loop, falhou por retries esgotados
+        log_graph_event(
+            "model.call.failed",
+            trace_id=trace_id,
+            node=node,
+            payload={
+                "tentativas": tentativas,
+                "tempo_total_ms": round((time.perf_counter() - started_at) * 1000, 2),
+            },
+            level=logging.ERROR,
+        )
+        metrics.record_llm_call(provider=provider, status="failed_retries")
+        return None
+
+    finally:
+        # Encerra cronômetro de métricas
+        timer_context.__exit__(None, None, None)
 
 
 class AgentState(TypedDict):

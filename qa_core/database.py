@@ -21,6 +21,7 @@ import datetime
 import logging
 import sqlite3
 from contextlib import closing
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -112,8 +113,8 @@ def save_analysis_to_history(
     user_story: str,
     analysis_report: str,
     test_plan_report: str,
-    test_plan_summary: str | None = None,
-    test_plan_df_json: str | None = None,
+    test_plan_summary: Optional[str] = None,
+    test_plan_df_json: Optional[str] = None,
 ):
     """
     Salva uma nova análise no histórico.
@@ -182,6 +183,8 @@ def get_all_analysis_history():
                     id,
                     created_at,
                     user_story,
+                    analysis_report,
+                    test_plan_report,
                     test_plan_summary
                 FROM analysis_history
                 ORDER BY created_at DESC;
