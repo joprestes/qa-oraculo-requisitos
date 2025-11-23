@@ -75,6 +75,50 @@ class TestMetricsCollector:
         collector.inc_active_analyses()
         collector.dec_active_analyses()
 
+    def test_multiple_record_calls_when_disabled(self):
+        """Testa múltiplas chamadas de record quando desabilitado."""
+        collector = MetricsCollector(enabled=False)
+        
+        # Múltiplas análises
+        for _ in range(5):
+            collector.record_analysis(status="success")
+            collector.record_analysis(status="error")
+        
+        # Múltiplas exportações
+        for fmt in ["markdown", "pdf", "csv"]:
+            collector.record_export(format=fmt, status="success")
+        
+        # Múltiplas chamadas LLM
+        for provider in ["google", "openai", "azure"]:
+            collector.record_llm_call(provider=provider, status="success")
+        
+        # Múltiplos erros
+        for error_type in ["ValidationError", "LLMError", "DatabaseError"]:
+            collector.record_error(error_type=error_type)
+
+    def test_context_managers_nested_when_disabled(self):
+        """Testa context managers aninhados quando desabilitados."""
+        collector = MetricsCollector(enabled=False)
+
+        with collector.time_analysis():
+            with collector.time_export(format="pdf"):
+                with collector.time_llm_call(provider="openai"):
+                    pass  # Operação simulada
+
+    def test_set_cache_size_multiple_times_when_disabled(self):
+        """Testa múltiplas atualizações de cache size quando desabilitado."""
+        collector = MetricsCollector(enabled=False)
+        for size in [0, 10, 100, 1000]:
+            collector.set_cache_size(size)
+
+    def test_inc_dec_active_analyses_multiple_times_when_disabled(self):
+        """Testa múltiplos incrementos/decrementos quando desabilitado."""
+        collector = MetricsCollector(enabled=False)
+        for _ in range(10):
+            collector.inc_active_analyses()
+        for _ in range(10):
+            collector.dec_active_analyses()
+
 
 class TestDecorators:
     """Testes para decorators de métricas."""

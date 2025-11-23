@@ -41,7 +41,7 @@ def sample_analysis():
 class TestDatabasePerformance:
     """Testes de performance para operações de banco de dados."""
 
-    def test_save_analysis_performance(self, benchmark, sample_analysis):
+    def test_save_analysis_performance(self, sample_analysis):
         """Benchmark para salvar análise no banco de dados."""
         # Teste ignorado por enquanto pois requer setup de banco complexo
         pass

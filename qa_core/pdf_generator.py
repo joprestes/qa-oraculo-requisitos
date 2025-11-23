@@ -193,9 +193,17 @@ def add_test_case_table(pdf: "PDF", df: pd.DataFrame):
         titulo = clean_text_for_pdf(row.get("titulo", "-")) or "-"
 
         pdf.set_font("DejaVu", "B", 11)
-        pdf.cell(0, 10, f"Caso de Teste {int(index) + 1} - {row.get('titulo', 'Sem Título')}", ln=True)  # type: ignore
-        pdf.multi_cell(0, 10, f"Prioridade: {row.get('prioridade', 'Normal')}")  # type: ignore
-        pdf.ln(1)
+        pdf.cell(
+            0,
+            10,
+            f"Caso de Teste {int(index) + 1} - {row.get('titulo', 'Sem Título')}",  # type: ignore
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
+        pdf.set_font("DejaVu", "", 10)
+        pdf.multi_cell(
+            0, 10, f"Prioridade: {row.get('prioridade', 'Normal')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT  # type: ignore
+        )
 
         detalhes = [
             ("Prioridade", row.get("prioridade", "-")),
