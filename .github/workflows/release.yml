@@ -1,0 +1,120 @@
+---
+# =====================================================================
+# 🚀 Release Automático - QA Oráculo
+# ---------------------------------------------------------------------
+# Este workflow automatiza o processo de release usando conventional commits.
+#
+# O que ele faz:
+# 1. Analisa commits desde a última release
+# 2. Determina a próxima versão (major/minor/patch) baseado em conventional commits
+# 3. Gera changelog automaticamente
+# 4. Cria tag e release no GitHub
+# 5. Atualiza CHANGELOG.md no repositório
+# =====================================================================
+
+name: Release
+
+# ---------------------------------------------------------------------
+# 🔔 Gatilhos de execução
+# Executa quando:
+# - houver push na branch main (após merge de PR)
+# - ou manualmente via workflow_dispatch
+# ---------------------------------------------------------------------
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Tipo de release (major/minor/patch)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - major
+          - minor
+          - patch
+
+# ---------------------------------------------------------------------
+# 👷 Job de Release
+# ---------------------------------------------------------------------
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Só executa se não for um commit de release (evita loop)
+    if: ${{ !contains(github.event.head_commit.message, 'chore(release):') }}
+
+    steps:
+      # ---------------------------------------------------------------
+      # 1️⃣ Checkout do código com histórico completo
+      # ---------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessário para analisar histórico de commits
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------------------------------------------
+      # 2️⃣ Configura Node.js para semantic-release
+      # ---------------------------------------------------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ---------------------------------------------------------------
+      # 3️⃣ Instala semantic-release e plugins
+      # ---------------------------------------------------------------
+      - name: Install semantic-release
+        run: |
+          npm install -g \
+            semantic-release@^22 \
+            @semantic-release/changelog@^6 \
+            @semantic-release/git@^10 \
+            @semantic-release/github@^9 \
+            conventional-changelog-conventionalcommits@^7
+
+      # ---------------------------------------------------------------
+      # 4️⃣ Configura Git para commits automáticos
+      # ---------------------------------------------------------------
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # ---------------------------------------------------------------
+      # 5️⃣ Executa semantic-release
+      # Analisa commits, determina versão, gera changelog e cria release
+      # ---------------------------------------------------------------
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx semantic-release
+
+      # ---------------------------------------------------------------
+      # 6️⃣ Upload do changelog atualizado como artefato
+      # ---------------------------------------------------------------
+      - name: Upload changelog
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: docs/CHANGELOG.md
+
+# ---------------------------------------------------------------------
+# 📝 Notas sobre Conventional Commits
+# ---------------------------------------------------------------------
+# Este workflow usa conventional commits para determinar a versão:
+#
+# - feat: nova funcionalidade → MINOR version bump (1.0.0 → 1.1.0)
+# - fix: correção de bug → PATCH version bump (1.0.0 → 1.0.1)
+# - BREAKING CHANGE: mudança incompatível → MAJOR version bump (1.0.0 → 2.0.0)
+# - chore/docs/style/refactor: sem bump de versão
+#
+# Exemplos:
+# - "feat: adicionar exportação para Postman" → 1.0.0 → 1.1.0
+# - "fix: corrigir erro na validação de US" → 1.0.0 → 1.0.1
+# - "feat!: remover suporte a Python 3.10" → 1.0.0 → 2.0.0
+# ---------------------------------------------------------------------

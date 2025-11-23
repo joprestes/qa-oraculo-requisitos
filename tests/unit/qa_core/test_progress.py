@@ -1,6 +1,7 @@
 """
 Testes unitários para o módulo de progresso.
 """
+
 import pytest
 from unittest.mock import MagicMock, patch
 from qa_core.progress import ProgressTracker, track_progress

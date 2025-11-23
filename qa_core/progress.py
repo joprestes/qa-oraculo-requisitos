@@ -4,6 +4,7 @@ Módulo de indicadores de progresso para operações longas.
 Este módulo fornece uma interface simples para rastrear o progresso
 de operações que levam tempo, como análise de IA e geração de relatórios.
 """
+
 import streamlit as st
 from typing import List, Optional
 from contextlib import contextmanager

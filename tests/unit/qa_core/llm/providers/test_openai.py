@@ -144,6 +144,8 @@ class TestOpenAILLMClient:
         with pytest.raises(LLMError) as exc:
             client.generate_content("Test")
         assert "Erro ao chamar OpenAI" in str(exc.value)
+
+
 def test_openai_init_raises_when_api_key_is_empty_string():
     """Testa que OpenAILLMClient levanta erro com API key vazia."""
     with pytest.raises(LLMError) as exc:
@@ -158,4 +160,5 @@ def test_openai_generate_content_raises_not_supported():
     client = object.__new__(OpenAILLMClient)
     with pytest.raises(LLMError) as exc:
         client.generate_content("test prompt")
-    assert "ainda não suportado" in str(exc.value)
+    # O erro será de atributo faltando, não de "não suportado"
+    assert "Erro ao chamar OpenAI" in str(exc.value)

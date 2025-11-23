@@ -103,3 +103,59 @@ jobs:
             --cov-report=term-missing \
             --cov-report=xml \
             --cov-fail-under=90
+
+  # -----------------------------------------------------------------
+  # 🚀 Performance Benchmarks
+  # Executa testes de performance e detecta regressões
+  # -----------------------------------------------------------------
+  performance:
+    runs-on: ubuntu-latest
+    # Só executa em PRs para main ou pushes na main
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessário para comparar com baseline
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Install deps + benchmark
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run performance benchmarks
+        run: |
+          pytest tests/performance/ \
+            --benchmark-only \
+            --benchmark-json=benchmark-results.json \
+            -v
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          tool: 'pytest'
+          output-file-path: benchmark-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          # Alerta se performance degradar mais de 20%
+          alert-threshold: '120%'
+          comment-on-alert: true
+          fail-on-alert: false
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
