@@ -26,20 +26,22 @@ except ImportError:
 
 def start_metrics_server(port: int = 8000):
     """Inicia servidor HTTP para expor métricas Prometheus.
-    
+
     Args:
         port: Porta para expor as métricas (padrão: 8000).
     """
     if not PROMETHEUS_AVAILABLE:
         logger.warning("Prometheus não disponível, servidor de métricas não iniciado")
         return
-    
+
     try:
         start_http_server(port)
         logger.info(f"Servidor de métricas iniciado na porta {port}")
     except Exception as e:
         # Se a porta já estiver em uso (ex: reload do Streamlit), apenas loga
-        logger.warning(f"Não foi possível iniciar servidor de métricas na porta {port}: {e}")
+        logger.warning(
+            f"Não foi possível iniciar servidor de métricas na porta {port}: {e}"
+        )
 
 
 class MetricsCollector:

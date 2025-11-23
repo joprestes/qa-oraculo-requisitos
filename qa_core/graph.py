@@ -99,7 +99,7 @@ def chamar_modelo_com_retry(
     # Registra métrica de duração total da chamada (incluindo retries)
     # Usamos o context manager manualmente ou apenas registramos no final?
     # O time_llm_call espera um bloco. Vamos usar try/finally para garantir registro.
-    
+
     # Inicia cronômetro de métricas
     timer_context = metrics.time_llm_call(provider=provider)
     timer_context.__enter__()
@@ -120,7 +120,9 @@ def chamar_modelo_com_retry(
                     node=node,
                     payload={
                         "tentativa": tentativa + 1,
-                        "duracao_ms": round((time.perf_counter() - tentativa_at) * 1000, 2),
+                        "duracao_ms": round(
+                            (time.perf_counter() - tentativa_at) * 1000, 2
+                        ),
                         "tempo_total_ms": round(
                             (time.perf_counter() - started_at) * 1000, 2
                         ),
@@ -162,7 +164,9 @@ def chamar_modelo_com_retry(
                 metrics.record_error(error_type="LLMError")
                 return None
             except Exception as e:  # pragma: no cover - salvaguarda final
-                logger.error(f"Erro inesperado na comunicação com LLM: {e}", exc_info=True)
+                logger.error(
+                    f"Erro inesperado na comunicação com LLM: {e}", exc_info=True
+                )
                 log_graph_event(
                     "model.call.error",
                     trace_id=trace_id,
@@ -176,7 +180,7 @@ def chamar_modelo_com_retry(
                 metrics.record_llm_call(provider=provider, status="error")
                 metrics.record_error(error_type=type(e).__name__)
                 return None
-        
+
         # Se saiu do loop, falhou por retries esgotados
         log_graph_event(
             "model.call.failed",

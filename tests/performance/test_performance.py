@@ -20,15 +20,21 @@ def sample_analysis():
         "user_story": "Como usuário, quero fazer login no sistema",
         "analysis_report": "# Relatório de Análise\n\n...",
         "test_plan_report": "# Plano de Testes\n\n...",
-        "test_plan_df": pd.DataFrame([
-            {
-                "titulo": "Login com sucesso",
-                "cenario": ["Dado que estou na tela de login", "Quando informo credenciais válidas", "Então devo ser autenticado"],
-                "prioridade": "Alta",
-                "criterio_de_aceitacao_relacionado": "Validar credenciais",
-                "justificativa_acessibilidade": "N/A"
-            }
-        ])
+        "test_plan_df": pd.DataFrame(
+            [
+                {
+                    "titulo": "Login com sucesso",
+                    "cenario": [
+                        "Dado que estou na tela de login",
+                        "Quando informo credenciais válidas",
+                        "Então devo ser autenticado",
+                    ],
+                    "prioridade": "Alta",
+                    "criterio_de_aceitacao_relacionado": "Validar credenciais",
+                    "justificativa_acessibilidade": "N/A",
+                }
+            ]
+        ),
     }
 
 
@@ -62,7 +68,7 @@ class TestExportPerformance:
         def export_pdf():
             return generate_pdf_report(
                 analysis_report=sample_analysis["analysis_report"],
-                test_plan_df=sample_analysis["test_plan_df"]
+                test_plan_df=sample_analysis["test_plan_df"],
             )
 
         result = benchmark(export_pdf)
@@ -76,7 +82,7 @@ class TestExportPerformance:
             return gerar_csv_azure_from_df(
                 df_original=sample_analysis["test_plan_df"],
                 area_path="Area/Path",
-                assigned_to="User"
+                assigned_to="User",
             )
 
         result = benchmark(export_csv)
@@ -114,7 +120,7 @@ class TestCachePerformance:
 
         settings = LLMSettings(provider="mock", api_key="mock", model="mock")
         client = get_llm_client(settings)
-        
+
         prompt = "Teste de cache"
 
         # Primeira chamada para popular cache

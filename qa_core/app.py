@@ -76,10 +76,12 @@ from .exports import (
 # Métricas Prometheus (opcional)
 from .metrics import track_analysis, track_export, start_metrics_server
 
+
 @st.cache_resource
 def init_metrics():
     """Inicializa o servidor de métricas (executa apenas uma vez)."""
     start_metrics_server(port=8000)
+
 
 init_metrics()
 
@@ -1924,7 +1926,7 @@ def render_main_analysis_page():  # noqa: C901, PLR0912, PLR0915
     # 1) Entrada e execução da análise inicial
     # ------------------------------------------------------
     if not st.session_state.get("analysis_finished", False):
-        
+
         # Container de cabeçalho para garantir ordem
         with st.container():
             st.title("🤖 QA Oráculo")
