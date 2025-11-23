@@ -66,6 +66,8 @@ class GitHubIntegration:
                 "Formato inválido. Use 'owner/repo' (ex: 'joprestes/qa-oraculo-requisitos')"
             )
 
+        if self.github is None:
+            raise ValueError("GitHub client not initialized")
         try:
             repo = self.github.get_repo(repo_path)
             return repo
@@ -283,6 +285,8 @@ class GitHubIntegration:
         if language:
             search_query += f" language:{language}"
 
+        if self.github is None:
+            raise ValueError("GitHub client not initialized")
         try:
             results = self.github.search_code(search_query)
             return [

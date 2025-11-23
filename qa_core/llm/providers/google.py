@@ -44,7 +44,7 @@ class GoogleLLMClient(LLMClient):
         try:
             model = genai.GenerativeModel(
                 self._model_name,
-                generation_config=config or self._default_config or None,
+                generation_config=config,  # type: ignore
             )
             return model.generate_content(prompt)
         except (

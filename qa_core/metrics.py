@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Imports condicionais para não quebrar se prometheus não estiver instalado
 try:
-    from prometheus_client import Counter, Gauge, Histogram, Info, start_http_server
+    from prometheus_client import Counter, Gauge, Histogram, Info, start_http_server  # type: ignore
 
     PROMETHEUS_AVAILABLE = True
 except ImportError:

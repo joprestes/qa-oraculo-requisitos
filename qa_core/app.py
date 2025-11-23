@@ -70,7 +70,6 @@ from .exports import (
     to_excel,
 )
 
-# from .github_integration import get_github_integration, GitHubIntegration  # TODO: Descomentar quando implementar
 
 # Métricas Prometheus (opcional)
 # Métricas Prometheus (opcional)
@@ -1069,7 +1068,7 @@ def _render_test_cases_table():
                             ):
                                 st.session_state.pop("pending_case_deletion", None)
                                 announce(
-                                    "Cenário mantido no plano de testes.",
+                                    f"Cenário {index + 1}",  # type: ignore
                                     "info",
                                     st_api=st,
                                 )
@@ -1219,7 +1218,7 @@ def _render_history_test_cases_table(df: pd.DataFrame):
 
     with st.expander("📁 Casos de Teste (Expandir para ver todos)", expanded=False):
         for index, row in df.iterrows():
-            test_id = row.get("id", f"CT-{index + 1:03d}")
+            test_id = row.get("id", f"CT-{int(index) + 1:03d}")  # type: ignore
             titulo = row.get("titulo", "-")
             with st.expander(f"📋 {test_id} — {titulo}", expanded=False):
                 st.markdown(f"**Prioridade:** {row.get('prioridade', '-')}")

@@ -50,7 +50,7 @@ def log_graph_event(
     if not _LOGGER.isEnabledFor(level):
         return
 
-    record = {
+    record: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc)
         .isoformat(timespec="milliseconds")
         .replace("+00:00", "Z"),

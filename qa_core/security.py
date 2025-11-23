@@ -104,7 +104,7 @@ class RateLimiter:
     def __init__(self, max_calls: int, period_seconds: int):
         self.max_calls = max_calls
         self.period_seconds = period_seconds
-        self.calls = []
+        self.calls: list[float] = []
 
     def is_allowed(self) -> bool:
         import time

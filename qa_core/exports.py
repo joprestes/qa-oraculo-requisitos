@@ -62,7 +62,7 @@ def preparar_df_para_zephyr_xlsx(
     ]
 
     for index, row in df_original.iterrows():
-        summary = row.get("titulo", f"Caso de Teste {index+1}")
+        summary = row.get("titulo", f"Caso de Teste {int(index)+1}")  # type: ignore
         cenario_steps = row.get("cenario", [])
 
         if isinstance(cenario_steps, str):
@@ -151,7 +151,7 @@ def gerar_csv_azure_from_df(  # noqa: C901
 
     # Cada linha do DF é um caso de teste
     for index, row in df_original.iterrows():
-        title = row.get("titulo", f"Caso de Teste {index+1}")
+        title = row.get("titulo", f"Caso de Teste {int(index)+1}")  # type: ignore
         priority_raw = str(row.get("prioridade", default_priority)).lower().strip()
         priority_value = priority_map.get(priority_raw, default_priority)
 
@@ -288,7 +288,7 @@ def gerar_csv_xray_from_df(
     # Cada linha do DataFrame é um caso de teste
     for index, row in df_original.iterrows():
         # Summary: usa o título do caso de teste
-        summary = row.get("titulo", f"Caso de Teste {index+1}")
+        summary = row.get("titulo", f"Caso de Teste {int(index)+1}")  # type: ignore
 
         # Description: combina critério de aceitação e justificativa de acessibilidade
         criterio = row.get("criterio_de_aceitacao_relacionado", "")
@@ -394,7 +394,7 @@ def gerar_csv_testrail_from_df(
     references = (references or "").strip()
 
     for index, row in df_original.iterrows():
-        title = row.get("titulo", f"Caso de Teste {index+1}")
+        title = row.get("titulo", f"Caso de Teste {int(index)+1}")  # type: ignore
 
         steps_raw = row.get("cenario", [])
         if isinstance(steps_raw, str):
@@ -441,3 +441,39 @@ def gerar_csv_testrail_from_df(
     csv_bytes = buffer.getvalue().encode("utf-8")
     buffer.close()
     return csv_bytes
+
+
+# ==========================================================
+#  GERAÇÃO DE RELATÓRIOS (MARKDOWN)
+# ==========================================================
+
+
+def gerar_relatorio_md_completo(
+    user_story: str, analysis_report: str, test_plan_report: str
+) -> str:
+    """
+    Gera um relatório Markdown completo consolidando todas as etapas.
+
+    Args:
+        user_story: Texto original da User Story.
+        analysis_report: Relatório da análise de requisitos.
+        test_plan_report: Relatório do plano de testes.
+
+    Returns:
+        String contendo o relatório completo formatado em Markdown.
+    """
+    return f"""# 🔮 Relatório Completo - QA Oráculo
+
+## 📋 User Story Original
+{user_story}
+
+---
+
+## 🔍 Análise de Requisitos
+{analysis_report}
+
+---
+
+## 🧪 Plano de Testes
+{test_plan_report}
+"""

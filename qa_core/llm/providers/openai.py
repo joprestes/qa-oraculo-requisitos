@@ -72,7 +72,7 @@ class OpenAILLMClient(LLMClient):
             # Chamar API OpenAI
             response = self._client.chat.completions.create(
                 model=self._model_name,
-                messages=messages,
+                messages=messages,  # type: ignore
                 **generation_config,
             )
 

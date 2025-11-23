@@ -147,7 +147,7 @@ def add_section_title(pdf: FPDF, text: str):
 # ==========================================================
 # Seção — Casos de teste formatados
 # ==========================================================
-def add_test_case_table(pdf: FPDF, df: pd.DataFrame):
+def add_test_case_table(pdf: "PDF", df: pd.DataFrame):
     """Adiciona os casos de teste em um formato semelhante à interface web."""
     if df.empty:
         return
@@ -164,7 +164,7 @@ def add_test_case_table(pdf: FPDF, df: pd.DataFrame):
 
     pdf.set_font("DejaVu", "", 10)
     for index, row in df.iterrows():
-        test_id = row.get("id") or f"CT-{index + 1:03d}"
+        test_id = row.get("id") or f"CT-{int(index) + 1:03d}"  # type: ignore
         titulo = clean_text_for_pdf(row.get("titulo", "-")) or "-"
         prioridade = clean_text_for_pdf(row.get("prioridade", "-")) or "-"
         pdf.multi_cell(
@@ -189,11 +189,12 @@ def add_test_case_table(pdf: FPDF, df: pd.DataFrame):
     pdf.ln(2)
 
     for index, row in df.iterrows():
-        test_id = row.get("id") or f"CT-{index + 1:03d}"
+        test_id = row.get("id") or f"CT-{int(index) + 1:03d}"  # type: ignore
         titulo = clean_text_for_pdf(row.get("titulo", "-")) or "-"
 
         pdf.set_font("DejaVu", "B", 11)
-        pdf.multi_cell(0, 7, f"{test_id} — {titulo}")
+        pdf.cell(0, 10, f"Caso de Teste {int(index) + 1} - {row.get('titulo', 'Sem Título')}", ln=True)  # type: ignore
+        pdf.multi_cell(0, 10, f"Prioridade: {row.get('prioridade', 'Normal')}")  # type: ignore
         pdf.ln(1)
 
         detalhes = [
@@ -227,7 +228,7 @@ def add_test_case_table(pdf: FPDF, df: pd.DataFrame):
             pdf.set_font("DejaVu", "", 10)
             pdf.multi_cell(0, 6, cenario, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-        if index < len(df) - 1:
+        if int(index) < len(df) - 1:  # type: ignore
             pdf.divider()
 
 

@@ -100,7 +100,7 @@ def export_to_postman_collection(df: pd.DataFrame, user_story: str = "") -> str:
     }
 
     for idx, row in df.iterrows():
-        titulo = row.get("titulo", f"Cenário {idx + 1}")
+        titulo = row.get("titulo", f"Cenário {idx + 1}")  # type: ignore
         cenario = row.get("cenario", "")
         dado = row.get("dado", "")
         quando = row.get("quando", "")
@@ -136,7 +136,7 @@ def export_to_postman_collection(df: pd.DataFrame, user_story: str = "") -> str:
             "response": [],
         }
 
-        collection["item"].append(request_item)
+        collection["item"].append(request_item)  # type: ignore
 
     return json.dumps(collection, ensure_ascii=False, indent=2)
 

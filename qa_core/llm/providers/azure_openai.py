@@ -88,7 +88,7 @@ class AzureOpenAILLMClient(LLMClient):
             # Chamar API Azure OpenAI
             response = self._client.chat.completions.create(
                 model=self._extra["deployment"],
-                messages=messages,
+                messages=messages,  # type: ignore
                 **generation_config,
             )
 

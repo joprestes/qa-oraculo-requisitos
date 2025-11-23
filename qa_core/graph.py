@@ -212,7 +212,7 @@ class AgentState(TypedDict):
 
 
 # --- Nós do Grafo ---
-def node_analisar_historia(state: AgentState) -> AgentState:
+def node_analisar_historia(state: AgentState) -> dict[str, Any]:
     """Nó do grafo que analisa a User Story fornecida.
 
     Primeiro nó do grafo de análise. Envia a User Story para o LLM com um
@@ -297,7 +297,7 @@ def node_analisar_historia(state: AgentState) -> AgentState:
     return {"analise_da_us": analise_json}
 
 
-def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
+def node_gerar_relatorio_analise(state: AgentState) -> dict[str, Any]:
     """Nó do grafo que gera o relatório Markdown da análise.
 
     Segundo nó do grafo de análise. Recebe a análise estruturada (JSON) e
@@ -353,7 +353,7 @@ def node_gerar_relatorio_analise(state: AgentState) -> AgentState:
     return resultado
 
 
-def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
+def node_criar_plano_e_casos_de_teste(state: AgentState) -> dict[str, Any]:
     """Nó do grafo que cria o plano de testes e cenários Gherkin.
 
     Primeiro nó do grafo de plano de testes. Recebe a análise da User Story
@@ -448,7 +448,7 @@ def node_criar_plano_e_casos_de_teste(state: AgentState) -> AgentState:
     return {"plano_e_casos_de_teste": plano_json}
 
 
-def node_gerar_relatorio_plano_de_testes(state: AgentState) -> AgentState:
+def node_gerar_relatorio_plano_de_testes(state: AgentState) -> dict[str, Any]:
     """Gera o relatório final do plano de testes (Markdown)."""
     logger.info("--- Etapa 4: Compilando relatório do plano... ---")
     trace_id = state.get("trace_id")

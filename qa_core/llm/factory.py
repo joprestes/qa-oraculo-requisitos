@@ -24,7 +24,7 @@ _PROVIDER_BUILDERS: Dict[str, ProviderBuilder] = {
 }
 
 
-class CachedLLMClient:
+class CachedLLMClient(LLMClient):
     """Wrapper para cache em memória de chamadas LLM com suporte a TTL opcional.
 
     O cache armazena resultados de chamadas LLM para evitar requisições duplicadas.
@@ -50,7 +50,7 @@ class CachedLLMClient:
         self._ttl_seconds = ttl_seconds
 
     @property
-    def provider_name(self) -> str:
+    def provider_name(self) -> str:  # type: ignore[override]
         return self._client.provider_name
 
     def _cleanup_expired(self) -> None:
