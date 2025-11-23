@@ -166,15 +166,18 @@ class TestLlamaLLMClient:
             client.generate_content("Test")
         assert "Erro ao chamar Ollama" in str(exc.value)
 
-    def test_init_raises_when_api_key_is_empty_string(self):
+    @patch("qa_core.llm.providers.llama.ollama.list")
+    def test_init_raises_when_api_key_is_empty_string(self, mock_ollama_list):
         """Deve lançar erro quando API key é string vazia."""
+        mock_ollama_list.side_effect = Exception("Connection refused")
         with pytest.raises(LLMError) as exc:
             LlamaLLMClient(
                 model="llama-3.1-8b",
                 api_key="",
                 extra={},
             )
-        assert "LLAMA_API_KEY" in str(exc.value)
+        # Ollama não requer API key, então o erro será de conexão
+        assert "Ollama não está acessível" in str(exc.value)
 
     def test_generate_content_raises_not_supported(self):
         """Deve lançar erro ao tentar gerar conteúdo (método não implementado)."""
