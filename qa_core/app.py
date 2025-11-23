@@ -2655,11 +2655,6 @@ def main():
     apply_accessible_styles()
 
     # ------------------------------------------------------
-    #  Seleção de Repositório GitHub (Sidebar)
-    # ------------------------------------------------------
-    # _render_github_repo_selector()  # TODO: Implementar seletor de repositório GitHub
-
-    # ------------------------------------------------------
     #  Mapa de páginas (sidebar)
     # ------------------------------------------------------
     pages = {

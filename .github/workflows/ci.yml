@@ -159,3 +159,22 @@ jobs:
         with:
           name: benchmark-results
           path: benchmark-results.json
+
+  # -----------------------------------------------------------------
+  # 🔒 Secret Scanning
+  # Detecta secrets, API keys e credenciais vazadas no código
+  # -----------------------------------------------------------------
+  secret-scan:
+    runs-on: ubuntu-latest
+    # Executa em todos os eventos (push, PR, workflow_dispatch)
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessário para escanear todo o histórico
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # Opcional, para versão pro
