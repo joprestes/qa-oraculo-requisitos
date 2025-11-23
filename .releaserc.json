@@ -1,0 +1,136 @@
+{
+  "branches": [
+    "main"
+  ],
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits",
+        "releaseRules": [
+          {
+            "type": "feat",
+            "release": "minor"
+          },
+          {
+            "type": "fix",
+            "release": "patch"
+          },
+          {
+            "type": "perf",
+            "release": "patch"
+          },
+          {
+            "type": "revert",
+            "release": "patch"
+          },
+          {
+            "type": "docs",
+            "release": false
+          },
+          {
+            "type": "style",
+            "release": false
+          },
+          {
+            "type": "chore",
+            "release": false
+          },
+          {
+            "type": "refactor",
+            "release": "patch"
+          },
+          {
+            "type": "test",
+            "release": false
+          },
+          {
+            "type": "build",
+            "release": false
+          },
+          {
+            "type": "ci",
+            "release": false
+          }
+        ]
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            {
+              "type": "feat",
+              "section": "✨ Novas Funcionalidades"
+            },
+            {
+              "type": "fix",
+              "section": "🐛 Correções de Bugs"
+            },
+            {
+              "type": "perf",
+              "section": "⚡ Melhorias de Performance"
+            },
+            {
+              "type": "revert",
+              "section": "⏪ Reversões"
+            },
+            {
+              "type": "docs",
+              "section": "📝 Documentação"
+            },
+            {
+              "type": "style",
+              "section": "💄 Estilo"
+            },
+            {
+              "type": "refactor",
+              "section": "♻️ Refatorações"
+            },
+            {
+              "type": "test",
+              "section": "✅ Testes"
+            },
+            {
+              "type": "build",
+              "section": "🔨 Build"
+            },
+            {
+              "type": "ci",
+              "section": "👷 CI/CD"
+            }
+          ]
+        }
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "docs/RELEASE_NOTES.md",
+        "changelogTitle": "# 📋 Release Notes\\n\\nTodas as mudanças notáveis neste projeto serão documentadas neste arquivo.\\n\\nO formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),\\ne este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).\\n"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "docs/RELEASE_NOTES.md",
+            "label": "Release Notes"
+          }
+        ]
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "docs/RELEASE_NOTES.md"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\\n\\n${nextRelease.notes}"
+      }
+    ]
+  ]
+}

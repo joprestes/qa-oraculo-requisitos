@@ -5,7 +5,7 @@
 # do projeto QA Oráculo.
 # ==========================================================
 
-.PHONY: help install install-dev setup run test lint format clean docs
+.PHONY: help install install-dev install-observability setup run test lint format clean docs benchmark metrics-check
 
 # === Configuração ===
 PYTHON := python3.12
@@ -72,6 +72,29 @@ test-fast: ## Executa apenas testes rápidos
 	@echo "$(GREEN)Executando testes rápidos...$(NC)"
 	$(PYTHON_VENV) -m pytest tests/ -v -m "not slow"
 
+benchmark: ## Executa testes de performance
+	@echo "$(GREEN)Executando benchmarks de performance...$(NC)"
+	$(PYTHON_VENV) -m pytest tests/performance/ --benchmark-only -v
+
+benchmark-compare: ## Compara benchmarks com baseline
+	@echo "$(GREEN)Comparando benchmarks com baseline...$(NC)"
+	$(PYTHON_VENV) -m pytest tests/performance/ --benchmark-compare --benchmark-compare-fail=mean:20% -v
+
+benchmark-save: ## Salva benchmark como baseline
+	@echo "$(GREEN)Salvando benchmark como baseline...$(NC)"
+	$(PYTHON_VENV) -m pytest tests/performance/ --benchmark-only --benchmark-save=baseline -v
+
+# === Observabilidade ===
+install-observability: ## Instala dependências de observabilidade (Prometheus)
+	@echo "$(GREEN)Instalando dependências de observabilidade...$(NC)"
+	$(PIP_VENV) install -r requirements-observability.txt
+
+metrics-check: ## Verifica se métricas estão habilitadas
+	@echo "$(GREEN)Verificando métricas...$(NC)"
+	@$(PYTHON_VENV) -c "from qa_core.metrics import get_metrics_collector; c = get_metrics_collector(); print('✅ Métricas habilitadas' if c.enabled else '❌ Métricas desabilitadas (instale requirements-observability.txt)')"
+
+
+
 # === Qualidade de Código ===
 lint: ## Executa verificação de linting
 	@echo "$(GREEN)Executando linting...$(NC)"
@@ -133,6 +156,10 @@ dev-setup: setup install-pkg ## Setup completo para desenvolvimento
 
 dev-check: lint format-check test ## Verifica qualidade antes do commit
 	@echo "$(GREEN)Verificação de qualidade concluída!$(NC)"
+
+dev-check-full: lint format-check test benchmark ## Verifica qualidade + performance
+	@echo "$(GREEN)Verificação completa concluída!$(NC)"
+
 
 # === Utilitários ===
 requirements: ## Atualiza requirements.txt

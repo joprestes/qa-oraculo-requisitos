@@ -219,9 +219,8 @@ class TestAzureOpenAILLMClient:
 
         # Act & Assert
         with pytest.raises(LLMError) as exc:
-            AzureOpenAILLMClient.from_settings(settings)
-        # Deve lançar erro de "não disponível", não de validação
-        assert "ainda não está disponível" in str(exc.value)
+            client.generate_content("Test")
+        assert "Erro ao chamar Azure OpenAI" in str(exc.value)
 
     def test_init_raises_when_extra_fields_are_empty_strings(self):
         """Deve lançar erro quando campos extra são strings vazias."""

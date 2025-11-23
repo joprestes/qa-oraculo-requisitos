@@ -144,6 +144,8 @@ class TestOpenAILLMClient:
         with pytest.raises(LLMError) as exc:
             client.generate_content("Test")
         assert "Erro ao chamar OpenAI" in str(exc.value)
+
+
 def test_openai_init_raises_when_api_key_is_empty_string():
     """Testa que OpenAILLMClient levanta erro com API key vazia."""
     with pytest.raises(LLMError) as exc:

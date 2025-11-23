@@ -1,0 +1,21 @@
+# Dependências de Observabilidade - QA Oráculo
+# =====================================================
+# Estas dependências são OPCIONAIS e devem ser instaladas
+# apenas em ambientes de produção/staging onde observabilidade
+# é necessária.
+#
+# Instalação:
+#   pip install -r requirements-observability.txt
+# =====================================================
+
+# === OpenTelemetry ===
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+opentelemetry-instrumentation-logging>=0.41b0
+
+# === Exportadores ===
+opentelemetry-exporter-prometheus>=0.41b0
+opentelemetry-exporter-otlp>=1.20.0
+
+# === Métricas ===
+prometheus-client>=0.19.0
