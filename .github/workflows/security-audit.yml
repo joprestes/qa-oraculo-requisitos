@@ -27,7 +27,7 @@ jobs:
       
       - name: Upload Gitleaks Report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: gitleaks-report
           path: gitleaks-report.json
@@ -60,7 +60,7 @@ jobs:
       
       - name: Upload Security Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: security-reports
           path: |
